@@ -1,0 +1,1496 @@
+{
+  "schema_version": "1.0",
+  "last_researched_at": "2026-07-10",
+  "model_name_policy": "Every recommended_models[].model value must not be normalized before passing to --model.",
+  "selection_rules": [
+    "Use the first recommended model unless cost, latency, privacy, or provider availability pushes you to another listed model.",
+    "Use High, Thinking, fable, opus, or gpt-5.6-sol for ambiguous, high-risk, multi-file, long-context, security, or architecture work.",
+    "Use Low, mini, haiku, gpt-5.6-luna, or GPT-OSS 120B (Medium) for bounded, repetitive, low-risk, or private/offline work.",
+    "Use provider diversity for review: ask a different provider than the one that produced the first draft."
+  ],
+  "providers": {
+    "Codex": [
+      "gpt-5.6-sol",
+      "gpt-5.6-terra",
+      "gpt-5.6-luna",
+      "gpt-5.5",
+      "gpt-5.4",
+      "gpt-5.4-mini"
+    ],
+    "Antigravity CLI": [
+      "Gemini 3.5 Flash (Medium)",
+      "Gemini 3.5 Flash (High)",
+      "Gemini 3.5 Flash (Low)",
+      "Gemini 3.1 Pro (High)",
+      "Claude Sonnet 4.6 (Thinking)",
+      "Claude Opus 4.6 (Thinking)",
+      "GPT-OSS 120B (Medium)"
+    ],
+    "Claude Code": [
+      "fable",
+      "opus",
+      "sonnet",
+      "haiku"
+    ]
+  },
+  "model_catalog": {
+    "codex.gpt-5.6-sol": {
+      "provider": "Codex",
+      "model": "gpt-5.6-sol",
+      "role": "Latest frontier agentic coding model.",
+      "best_for": [
+        "architecture_design",
+        "code_review_quality",
+        "debugging_root_cause",
+        "discovery_research",
+        "monitoring_incident_ops",
+        "retrospective_process_improvement",
+        "security_review",
+        "sprint_planning",
+        "ui_ux_prototyping"
+      ]
+    },
+    "codex.gpt-5.6-terra": {
+      "provider": "Codex",
+      "model": "gpt-5.6-terra",
+      "role": "Balanced agentic coding model for everyday work.",
+      "best_for": [
+        "backlog_refinement_prioritization",
+        "documentation_knowledge_transfer",
+        "implementation_coding",
+        "release_deployment",
+        "requirements_user_stories",
+        "testing_qa",
+        "ui_ux_prototyping",
+        "workspace_setup"
+      ]
+    },
+    "codex.gpt-5.6-luna": {
+      "provider": "Codex",
+      "model": "gpt-5.6-luna",
+      "role": "Fast and affordable agentic coding model.",
+      "best_for": [
+        "backlog_refinement_prioritization",
+        "implementation_coding",
+        "testing_qa",
+        "workspace_setup"
+      ]
+    },
+    "codex.gpt-5.5": {
+      "provider": "Codex",
+      "model": "gpt-5.5",
+      "role": "OpenAI flagship for complex reasoning, coding, tools, and long-context professional work.",
+      "best_for": [
+        "architecture_design",
+        "code_review_quality",
+        "debugging_root_cause",
+        "discovery_research",
+        "monitoring_incident_ops",
+        "retrospective_process_improvement",
+        "security_review",
+        "sprint_planning",
+        "ui_ux_prototyping"
+      ]
+    },
+    "codex.gpt-5.4": {
+      "provider": "Codex",
+      "model": "gpt-5.4",
+      "role": "Strong general coding and professional-work model with good cost/performance.",
+      "best_for": [
+        "backlog_refinement_prioritization",
+        "documentation_knowledge_transfer",
+        "implementation_coding",
+        "release_deployment",
+        "requirements_user_stories",
+        "testing_qa",
+        "ui_ux_prototyping",
+        "workspace_setup"
+      ]
+    },
+    "codex.gpt-5.4-mini": {
+      "provider": "Codex",
+      "model": "gpt-5.4-mini",
+      "role": "Fast, lower-cost option for simpler coding, test, doc, and subagent-style tasks.",
+      "best_for": [
+        "backlog_refinement_prioritization",
+        "implementation_coding",
+        "testing_qa",
+        "workspace_setup"
+      ]
+    },
+    "antigravity.gemini-3.5-flash-medium": {
+      "provider": "Antigravity CLI",
+      "model": "Gemini 3.5 Flash (Medium)",
+      "role": "Default balanced Gemini option for agentic coding, iterative implementation, and most tasks.",
+      "best_for": [
+        "backlog_refinement_prioritization",
+        "discovery_research",
+        "implementation_coding",
+        "release_deployment",
+        "testing_qa",
+        "workspace_setup"
+      ]
+    },
+    "antigravity.gemini-3.5-flash-high": {
+      "provider": "Antigravity CLI",
+      "model": "Gemini 3.5 Flash (High)",
+      "role": "Higher-reasoning Gemini option for hard coding, planning, tool use, and debugging.",
+      "best_for": [
+        "code_review_quality",
+        "debugging_root_cause",
+        "monitoring_incident_ops",
+        "sprint_planning",
+        "ui_ux_prototyping"
+      ]
+    },
+    "antigravity.gemini-3.5-flash-low": {
+      "provider": "Antigravity CLI",
+      "model": "Gemini 3.5 Flash (Low)",
+      "role": "Fast Gemini option for simple analysis, writing, and low-risk code loops.",
+      "best_for": [
+        "documentation_knowledge_transfer",
+        "requirements_user_stories"
+      ]
+    },
+    "antigravity.gemini-3.1-pro-high": {
+      "provider": "Antigravity CLI",
+      "model": "Gemini 3.1 Pro (High)",
+      "role": "Deep-reasoning, multimodal, long-context option for broad datasets and complex tradeoffs.",
+      "best_for": [
+        "architecture_design",
+        "discovery_research",
+        "monitoring_incident_ops",
+        "retrospective_process_improvement",
+        "security_review"
+      ]
+    },
+    "antigravity.claude-sonnet-4.6-thinking": {
+      "provider": "Antigravity CLI",
+      "model": "Claude Sonnet 4.6 (Thinking)",
+      "role": "Balanced high-quality Claude option for coding, agent planning, knowledge work, and design.",
+      "best_for": [
+        "backlog_refinement_prioritization",
+        "code_review_quality",
+        "documentation_knowledge_transfer",
+        "implementation_coding",
+        "release_deployment",
+        "requirements_user_stories",
+        "retrospective_process_improvement",
+        "ui_ux_prototyping"
+      ]
+    },
+    "antigravity.claude-opus-4.6-thinking": {
+      "provider": "Antigravity CLI",
+      "model": "Claude Opus 4.6 (Thinking)",
+      "role": "Careful, long-context Claude option for hard planning, debugging, code review, and large codebases.",
+      "best_for": [
+        "architecture_design",
+        "code_review_quality",
+        "debugging_root_cause",
+        "discovery_research",
+        "monitoring_incident_ops",
+        "security_review",
+        "sprint_planning"
+      ]
+    },
+    "antigravity.gpt-oss-120b-medium": {
+      "provider": "Antigravity CLI",
+      "model": "GPT-OSS 120B (Medium)",
+      "role": "Open-weight high-reasoning option for private, local, offline, or vendor-diverse work.",
+      "best_for": [
+        "security_review",
+        "testing_qa"
+      ]
+    },
+    "claude-code.fable": {
+      "provider": "Claude Code",
+      "model": "fable",
+      "role": "Top Claude Code alias for long-running agentic work, hard planning, and expert review.",
+      "best_for": [
+        "architecture_design",
+        "code_review_quality",
+        "discovery_research",
+        "retrospective_process_improvement",
+        "security_review",
+        "sprint_planning"
+      ]
+    },
+    "claude-code.opus": {
+      "provider": "Claude Code",
+      "model": "opus",
+      "role": "Claude Code alias for complex agentic coding, large refactors, root-cause analysis, and review.",
+      "best_for": [
+        "architecture_design",
+        "debugging_root_cause",
+        "monitoring_incident_ops"
+      ]
+    },
+    "claude-code.sonnet": {
+      "provider": "Claude Code",
+      "model": "sonnet",
+      "role": "Default Claude Code alias for everyday coding, planning, review, docs, and tests.",
+      "best_for": [
+        "backlog_refinement_prioritization",
+        "debugging_root_cause",
+        "documentation_knowledge_transfer",
+        "implementation_coding",
+        "release_deployment",
+        "requirements_user_stories",
+        "retrospective_process_improvement",
+        "sprint_planning",
+        "testing_qa",
+        "ui_ux_prototyping",
+        "workspace_setup"
+      ]
+    },
+    "claude-code.haiku": {
+      "provider": "Claude Code",
+      "model": "haiku",
+      "role": "Fast Claude Code alias for simple, bounded, low-risk writing and coding tasks.",
+      "best_for": [
+        "documentation_knowledge_transfer",
+        "release_deployment",
+        "requirements_user_stories",
+        "workspace_setup"
+      ]
+    }
+  },
+  "roles": {
+    "product_owner": {
+      "role_name": "Product Owner",
+      "framework_origin": "Scrum Guide 2020",
+      "description": "Maximizes the value of the product by owning the Product Backlog — ordering, clarifying, and communicating work items so the team always builds the most valuable thing next.",
+      "accountabilities": [
+        "Define and communicate product goal and vision",
+        "Create, order, and refine Product Backlog items",
+        "Ensure the backlog is transparent, visible, and understood",
+        "Accept or reject Increments against acceptance criteria",
+        "Stakeholder engagement and expectation management"
+      ],
+      "primary_task_types": [
+        "requirements_user_stories",
+        "backlog_refinement_prioritization"
+      ],
+      "secondary_task_types": [
+        "discovery_research",
+        "sprint_planning",
+        "ui_ux_prototyping",
+        "release_deployment",
+        "retrospective_process_improvement"
+      ]
+    },
+    "scrum_master": {
+      "role_name": "Scrum Master",
+      "framework_origin": "Scrum Guide 2020",
+      "description": "Accountable for the Scrum Team's effectiveness. Serves the team by facilitating Scrum events, removing impediments, and coaching the organization on empirical process control.",
+      "accountabilities": [
+        "Facilitate Scrum events (Sprint Planning, Daily Scrum, Sprint Review, Sprint Retrospective)",
+        "Coach the team on self-management and cross-functionality",
+        "Remove impediments to the team's progress",
+        "Ensure all Scrum artifacts maintain transparency",
+        "Help the organization adopt Scrum and empirical practices"
+      ],
+      "primary_task_types": [
+        "sprint_planning",
+        "retrospective_process_improvement"
+      ],
+      "secondary_task_types": [
+        "backlog_refinement_prioritization",
+        "workspace_setup",
+        "release_deployment"
+      ]
+    },
+    "software_engineer": {
+      "role_name": "Software Engineer (Developer)",
+      "framework_origin": "Scrum Guide 2020",
+      "description": "Cross-functional team member committed to creating a usable Increment each Sprint. Responsible for all aspects of implementation — coding, testing, integrating, and verifying working software.",
+      "accountabilities": [
+        "Create a plan for the Sprint (Sprint Backlog)",
+        "Adapt the daily plan toward the Sprint Goal",
+        "Hold each other accountable as professionals",
+        "Write, test, and integrate production-quality code",
+        "Participate in code review and pair programming"
+      ],
+      "primary_task_types": [
+        "implementation_coding",
+        "debugging_root_cause",
+        "workspace_setup"
+      ],
+      "secondary_task_types": [
+        "architecture_design",
+        "code_review_quality",
+        "testing_qa",
+        "sprint_planning",
+        "documentation_knowledge_transfer",
+        "backlog_refinement_prioritization"
+      ]
+    },
+    "tech_lead": {
+      "role_name": "Tech Lead / Software Architect",
+      "framework_origin": "SAFe (System Architect/Engineer), Industry Practice",
+      "description": "Provides technical leadership and architectural vision across the team or Agile Release Train. Guides system design decisions, ensures technical alignment with business goals, and maintains the architectural runway.",
+      "accountabilities": [
+        "Define and maintain architectural vision and runway",
+        "Guide technical decisions and design tradeoffs",
+        "Lead code review for architectural consistency",
+        "Ensure non-functional requirements (performance, scalability, security) are met",
+        "Mentor engineers on design patterns and best practices"
+      ],
+      "primary_task_types": [
+        "architecture_design",
+        "code_review_quality",
+        "sprint_planning"
+      ],
+      "secondary_task_types": [
+        "discovery_research",
+        "implementation_coding",
+        "debugging_root_cause",
+        "security_review",
+        "documentation_knowledge_transfer",
+        "retrospective_process_improvement"
+      ]
+    },
+    "qa_engineer": {
+      "role_name": "QA Engineer / Tester",
+      "framework_origin": "Industry Practice, SAFe (Team-level)",
+      "description": "Ensures quality throughout the SDLC by designing test strategies, writing and automating tests, validating acceptance criteria, and driving continuous testing practices within the Agile team.",
+      "accountabilities": [
+        "Define test strategy (unit, integration, e2e, acceptance)",
+        "Write and maintain automated test suites",
+        "Validate acceptance criteria and edge cases",
+        "Perform exploratory testing and regression verification",
+        "Report defects and verify fixes"
+      ],
+      "primary_task_types": [
+        "testing_qa"
+      ],
+      "secondary_task_types": [
+        "requirements_user_stories",
+        "code_review_quality",
+        "debugging_root_cause",
+        "release_deployment",
+        "backlog_refinement_prioritization"
+      ]
+    },
+    "ux_ui_designer": {
+      "role_name": "UX/UI Designer",
+      "framework_origin": "Industry Practice, Lean UX",
+      "description": "Owns user experience and interface design. Works iteratively with the team to research user needs, create prototypes, design UX flows, and ensure accessibility and interaction design meet user expectations.",
+      "accountabilities": [
+        "Conduct user research and usability testing",
+        "Design UX flows, wireframes, and interactive prototypes",
+        "Maintain design system consistency",
+        "Ensure accessibility (a11y) and interaction design standards",
+        "Collaborate with developers on frontend implementation fidelity"
+      ],
+      "primary_task_types": [
+        "ui_ux_prototyping"
+      ],
+      "secondary_task_types": [
+        "discovery_research",
+        "requirements_user_stories",
+        "architecture_design"
+      ]
+    },
+    "devops_engineer": {
+      "role_name": "DevOps / Release Engineer",
+      "framework_origin": "DevOps Movement, SAFe (Release Management)",
+      "description": "Bridges development and operations by building and maintaining CI/CD pipelines, automating deployments, managing infrastructure as code, and ensuring smooth, repeatable release processes.",
+      "accountabilities": [
+        "Build and maintain CI/CD pipelines",
+        "Automate deployment, rollback, and migration processes",
+        "Manage infrastructure as code (IaC)",
+        "Configure and maintain development environments and workspaces",
+        "Support release planning and deployment checklists"
+      ],
+      "primary_task_types": [
+        "release_deployment",
+        "workspace_setup",
+        "monitoring_incident_ops"
+      ],
+      "secondary_task_types": [
+        "testing_qa",
+        "security_review",
+        "architecture_design"
+      ]
+    },
+    "security_engineer": {
+      "role_name": "Security Engineer",
+      "framework_origin": "DevSecOps, SAFe (Shared Services)",
+      "description": "Embeds security into every phase of the SDLC by conducting threat modeling, implementing automated security scanning (SAST/DAST/SCA), reviewing auth and data boundaries, and driving secure design practices.",
+      "accountabilities": [
+        "Conduct threat modeling and secure design review",
+        "Implement and maintain security scanning in CI/CD pipelines",
+        "Review auth, data boundary, and access control implementations",
+        "Triage vulnerabilities and coordinate remediation",
+        "Define security policies and compliance guardrails"
+      ],
+      "primary_task_types": [
+        "security_review"
+      ],
+      "secondary_task_types": [
+        "architecture_design",
+        "code_review_quality",
+        "monitoring_incident_ops",
+        "release_deployment",
+        "discovery_research"
+      ]
+    },
+    "sre": {
+      "role_name": "Site Reliability Engineer (SRE)",
+      "framework_origin": "Google SRE Practice, DevOps Movement",
+      "description": "Ensures system reliability, availability, and performance in production. Manages error budgets, automates operational toil, designs monitoring and alerting, and leads incident response and postmortem processes.",
+      "accountabilities": [
+        "Define and manage SLOs, SLIs, and error budgets",
+        "Design monitoring, alerting, and observability systems",
+        "Lead incident response, triage, and postmortem processes",
+        "Automate operational toil and runbook procedures",
+        "Advise on architecture for reliability and scalability"
+      ],
+      "primary_task_types": [
+        "monitoring_incident_ops"
+      ],
+      "secondary_task_types": [
+        "release_deployment",
+        "debugging_root_cause",
+        "architecture_design",
+        "retrospective_process_improvement",
+        "workspace_setup"
+      ]
+    },
+    "engineering_manager": {
+      "role_name": "Engineering Manager",
+      "framework_origin": "Industry Practice",
+      "description": "Owns the 'how' and 'who' of engineering execution. Manages team health, hiring, technical quality, and delivery cadence. Partners with Product Manager/Owner to balance scope, quality, and timeline trade-offs.",
+      "accountabilities": [
+        "People management — hiring, coaching, career growth",
+        "Technical delivery oversight and quality standards",
+        "Sprint planning facilitation and capacity management",
+        "Technical debt prioritization and architectural decisions",
+        "Cross-team coordination and dependency management"
+      ],
+      "primary_task_types": [
+        "sprint_planning",
+        "retrospective_process_improvement"
+      ],
+      "secondary_task_types": [
+        "backlog_refinement_prioritization",
+        "architecture_design",
+        "release_deployment",
+        "documentation_knowledge_transfer",
+        "discovery_research"
+      ]
+    },
+    "product_manager": {
+      "role_name": "Product Manager",
+      "framework_origin": "SAFe (ART-level), Industry Practice",
+      "description": "Defines product vision, strategy, and roadmap at the program or ART level. Owns the ART backlog, prioritizes features using WSJF, and bridges market/customer needs with engineering capacity across multiple teams.",
+      "accountabilities": [
+        "Define product vision, strategy, and roadmap",
+        "Own and prioritize the ART backlog (features and enablers)",
+        "Conduct market research and competitive analysis",
+        "Align stakeholders on product direction and trade-offs",
+        "Validate product-market fit and business outcomes"
+      ],
+      "primary_task_types": [
+        "discovery_research",
+        "requirements_user_stories",
+        "backlog_refinement_prioritization"
+      ],
+      "secondary_task_types": [
+        "sprint_planning",
+        "release_deployment",
+        "retrospective_process_improvement",
+        "ui_ux_prototyping"
+      ]
+    },
+    "technical_writer": {
+      "role_name": "Technical Writer",
+      "framework_origin": "Industry Practice",
+      "description": "Ensures clear, accurate, and maintainable documentation for developers, users, and stakeholders. Works iteratively with the team, participating in sprint planning to align documentation with feature delivery.",
+      "accountabilities": [
+        "Write and maintain developer docs, API references, and ADRs",
+        "Create onboarding guides and knowledge base articles",
+        "Write release notes, changelogs, and handoff documentation",
+        "Review code comments and inline documentation quality",
+        "Collaborate with engineers on doc-as-code workflows"
+      ],
+      "primary_task_types": [
+        "documentation_knowledge_transfer"
+      ],
+      "secondary_task_types": [
+        "requirements_user_stories",
+        "release_deployment"
+      ]
+    },
+    "business_analyst": {
+      "role_name": "Business Analyst",
+      "framework_origin": "Industry Practice, IIBA",
+      "description": "Bridges business stakeholders and the technical team by analyzing business requirements, refining user stories, mapping business processes, and ensuring the team understands the functional needs of the business.",
+      "accountabilities": [
+        "Elicit and analyze business requirements and constraints",
+        "Translate business needs into user stories and acceptance criteria",
+        "Map and optimize business processes",
+        "Conduct feasibility and impact analysis",
+        "Facilitate stakeholder workshops and requirements sessions"
+      ],
+      "primary_task_types": [
+        "discovery_research",
+        "requirements_user_stories"
+      ],
+      "secondary_task_types": [
+        "backlog_refinement_prioritization",
+        "testing_qa",
+        "retrospective_process_improvement"
+      ]
+    },
+    "data_analyst": {
+      "role_name": "Data Analyst",
+      "framework_origin": "Industry Practice, Agile Data",
+      "description": "Explores data sources, identifies data-driven insights, and translates quantitative analysis into actionable requirements or product decisions. Supports discovery with market data and retrospectives with delivery metrics.",
+      "accountabilities": [
+        "Analyze data to inform product and engineering decisions",
+        "Build dashboards, reports, and data visualizations",
+        "Define and track delivery and product metrics",
+        "Support discovery with quantitative market and user research",
+        "Provide data for retrospective process analysis"
+      ],
+      "primary_task_types": [
+        "discovery_research"
+      ],
+      "secondary_task_types": [
+        "requirements_user_stories",
+        "monitoring_incident_ops",
+        "retrospective_process_improvement"
+      ]
+    },
+    "agile_coach": {
+      "role_name": "Agile Coach",
+      "framework_origin": "SAFe (RTE at ART level), Scrum Alliance",
+      "description": "Operates across multiple teams and organizational levels as a strategic change agent. Mentors Scrum Masters, Product Owners, and leadership on Agile mindsets. Drives enterprise-wide process improvement and removes systemic organizational barriers.",
+      "accountabilities": [
+        "Drive organizational Agile transformation and cultural change",
+        "Coach Scrum Masters, Product Owners, and leadership",
+        "Facilitate cross-team retrospectives and improvement experiments",
+        "Identify and remove systemic organizational impediments",
+        "Assess and improve team maturity and Agile adoption"
+      ],
+      "primary_task_types": [
+        "retrospective_process_improvement"
+      ],
+      "secondary_task_types": [
+        "sprint_planning",
+        "backlog_refinement_prioritization"
+      ]
+    },
+    "stakeholder": {
+      "role_name": "Stakeholder / Business Owner",
+      "framework_origin": "Scrum Guide 2020, SAFe (Business Owner)",
+      "description": "Provides business context, defines strategic goals, and participates in Sprint Reviews to inspect Increments and give feedback. In SAFe, Business Owners are accountable for the business outcomes of the Agile Release Train.",
+      "accountabilities": [
+        "Provide business vision, strategy, and funding context",
+        "Participate in Sprint Reviews and PI System Demos",
+        "Give feedback on delivered Increments and product direction",
+        "Approve or adjust business priorities and constraints",
+        "Champion the product within the organization"
+      ],
+      "primary_task_types": [],
+      "secondary_task_types": [
+        "discovery_research",
+        "requirements_user_stories",
+        "backlog_refinement_prioritization",
+        "retrospective_process_improvement"
+      ]
+    }
+  },
+  "task_types": {
+    "discovery_research": {
+      "sdlc_stage": "discovery",
+      "agile_context": "Product goal discovery, domain research, user/problem exploration, market and technical feasibility.",
+      "task_aliases": [
+        "research",
+        "product_discovery",
+        "domain_research",
+        "feasibility"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Best when the research may turn into long-running agentic planning."
+        },
+        {
+          "rank": 2,
+          "provider": "Codex",
+          "model": "gpt-5.6-sol",
+          "why": "Strong for complex synthesis and professional reasoning."
+        },
+        {
+          "rank": 3,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.1 Pro (High)",
+          "why": "Good for broad-context, multimodal, and dataset-heavy research."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Claude Opus 4.6 (Thinking)",
+          "why": "Careful long-context research and expert-grade synthesis."
+        },
+        {
+          "rank": 5,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (Medium)",
+          "why": "Balanced research when latency matters."
+        }
+      ]
+    },
+    "requirements_user_stories": {
+      "sdlc_stage": "requirements",
+      "agile_context": "Write user stories, acceptance criteria, edge cases, constraints, and definition of done.",
+      "task_aliases": [
+        "user_story",
+        "acceptance_criteria",
+        "requirements",
+        "spec"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Best default for clear, practical story/spec writing."
+        },
+        {
+          "rank": 2,
+          "provider": "Antigravity CLI",
+          "model": "Claude Sonnet 4.6 (Thinking)",
+          "why": "Strong instruction following, knowledge work, and design detail."
+        },
+        {
+          "rank": 3,
+          "provider": "Codex",
+          "model": "gpt-5.6-terra",
+          "why": "Solid professional writing plus coding awareness."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (Low)",
+          "why": "Fast for straightforward story cleanup."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "haiku",
+          "why": "Cheap fast option for low-risk formatting and story splitting."
+        }
+      ]
+    },
+    "backlog_refinement_prioritization": {
+      "sdlc_stage": "planning",
+      "agile_context": "Split backlog items, refine scope, estimate, find dependencies, rank by value and risk.",
+      "task_aliases": [
+        "backlog",
+        "refinement",
+        "grooming",
+        "prioritize",
+        "estimate"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Default for practical backlog cleanup and task splitting."
+        },
+        {
+          "rank": 2,
+          "provider": "Antigravity CLI",
+          "model": "Claude Sonnet 4.6 (Thinking)",
+          "why": "Good for product, design, and implementation tradeoffs."
+        },
+        {
+          "rank": 3,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (Medium)",
+          "why": "Good agentic planner for iterative backlog work."
+        },
+        {
+          "rank": 4,
+          "provider": "Codex",
+          "model": "gpt-5.6-terra",
+          "why": "Good cost/performance for everyday engineering planning."
+        },
+        {
+          "rank": 5,
+          "provider": "Codex",
+          "model": "gpt-5.6-luna",
+          "why": "Fast option for small, obvious refinement."
+        }
+      ]
+    },
+    "sprint_planning": {
+      "sdlc_stage": "planning",
+      "agile_context": "Create sprint goals, implementation plans, task breakdowns, dependency checks, and risk notes.",
+      "task_aliases": [
+        "write_plan",
+        "plan",
+        "implementation_plan",
+        "sprint_plan",
+        "viet_plan"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Codex",
+          "model": "gpt-5.6-sol",
+          "why": "Best OpenAI option for complex reasoning and coding plans."
+        },
+        {
+          "rank": 2,
+          "provider": "Antigravity CLI",
+          "model": "Claude Opus 4.6 (Thinking)",
+          "why": "Careful planning for larger codebases and long-horizon tasks."
+        },
+        {
+          "rank": 3,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Use when the plan may need long-running agentic execution."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (High)",
+          "why": "High-effort Gemini path for hard code and agent plans."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Default for normal sprint/task plans."
+        }
+      ]
+    },
+    "architecture_design": {
+      "sdlc_stage": "design",
+      "agile_context": "System design, architecture tradeoffs, data model/API design, migration strategy, non-functional requirements.",
+      "task_aliases": [
+        "architecture",
+        "design",
+        "system_design",
+        "api_design",
+        "data_model"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Strongest option for high-stakes long-horizon architecture."
+        },
+        {
+          "rank": 2,
+          "provider": "Codex",
+          "model": "gpt-5.6-sol",
+          "why": "Strong complex reasoning and coding-aware design."
+        },
+        {
+          "rank": 3,
+          "provider": "Antigravity CLI",
+          "model": "Claude Opus 4.6 (Thinking)",
+          "why": "Careful design review for large codebases and edge cases."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.1 Pro (High)",
+          "why": "Good for broad multimodal/long-context tradeoff analysis."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "opus",
+          "why": "Good Claude Code option for implementation-oriented architecture."
+        }
+      ]
+    },
+    "ui_ux_prototyping": {
+      "sdlc_stage": "design",
+      "agile_context": "UX flows, frontend prototypes, design-system-aware UI implementation, accessibility and interaction design.",
+      "task_aliases": [
+        "ui",
+        "ux",
+        "prototype",
+        "frontend_design",
+        "mockup"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Antigravity CLI",
+          "model": "Claude Sonnet 4.6 (Thinking)",
+          "why": "Strong balance of frontend code, design sense, and knowledge work."
+        },
+        {
+          "rank": 2,
+          "provider": "Codex",
+          "model": "gpt-5.6-terra",
+          "why": "Strong for frontend coding and computer-use workflows."
+        },
+        {
+          "rank": 3,
+          "provider": "Codex",
+          "model": "gpt-5.6-sol",
+          "why": "Use for complex frontend architecture or production-grade flows."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (High)",
+          "why": "Good for coding agents and interactive prototyping."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Good default for everyday frontend work."
+        }
+      ]
+    },
+    "implementation_coding": {
+      "sdlc_stage": "development",
+      "agile_context": "Implement backlog items, refactor small areas, wire APIs, edit code, and run local verification.",
+      "task_aliases": [
+        "code",
+        "implement",
+        "build",
+        "refactor",
+        "feature"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Best default for everyday implementation."
+        },
+        {
+          "rank": 2,
+          "provider": "Codex",
+          "model": "gpt-5.6-terra",
+          "why": "Strong coding model with good cost/performance."
+        },
+        {
+          "rank": 3,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (Medium)",
+          "why": "Good for iterative coding loops and agentic execution."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Claude Sonnet 4.6 (Thinking)",
+          "why": "Use for higher-quality implementation and design-sensitive code."
+        },
+        {
+          "rank": 5,
+          "provider": "Codex",
+          "model": "gpt-5.6-luna",
+          "why": "Fast for small, bounded changes."
+        }
+      ]
+    },
+    "debugging_root_cause": {
+      "sdlc_stage": "development",
+      "agile_context": "Reproduce bugs, trace callers, find root cause, patch shared logic, and verify regressions.",
+      "task_aliases": [
+        "debug",
+        "bugfix",
+        "root_cause",
+        "triage",
+        "investigate_failure"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Antigravity CLI",
+          "model": "Claude Opus 4.6 (Thinking)",
+          "why": "Strong at careful debugging, code review, and large codebases."
+        },
+        {
+          "rank": 2,
+          "provider": "Claude Code",
+          "model": "opus",
+          "why": "Good Claude Code path for root-cause work."
+        },
+        {
+          "rank": 3,
+          "provider": "Codex",
+          "model": "gpt-5.6-sol",
+          "why": "Strong for hard reasoning and coding fixes."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (High)",
+          "why": "Good for hard coding/debugging with tools."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Default for normal bugfixes."
+        }
+      ]
+    },
+    "code_review_quality": {
+      "sdlc_stage": "verification",
+      "agile_context": "Review diffs, find regressions, check maintainability, identify missing tests, and validate acceptance criteria.",
+      "task_aliases": [
+        "review",
+        "code_review",
+        "pr_review",
+        "diff_review"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Antigravity CLI",
+          "model": "Claude Opus 4.6 (Thinking)",
+          "why": "Strong code review and mistake-catching on larger codebases."
+        },
+        {
+          "rank": 2,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Use for high-stakes review and cross-repo context."
+        },
+        {
+          "rank": 3,
+          "provider": "Codex",
+          "model": "gpt-5.6-sol",
+          "why": "Good independent frontier review."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Claude Sonnet 4.6 (Thinking)",
+          "why": "Good balanced review for normal PRs."
+        },
+        {
+          "rank": 5,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (High)",
+          "why": "Good provider-diverse review for hard diffs."
+        }
+      ]
+    },
+    "testing_qa": {
+      "sdlc_stage": "verification",
+      "agile_context": "Test strategy, unit/integration/e2e test generation, acceptance checks, QA scenarios, and regression verification.",
+      "task_aliases": [
+        "test",
+        "qa",
+        "verification",
+        "acceptance_test",
+        "regression"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Codex",
+          "model": "gpt-5.6-terra",
+          "why": "Strong for coding tests and verification logic."
+        },
+        {
+          "rank": 2,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Good default for writing focused tests."
+        },
+        {
+          "rank": 3,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (Medium)",
+          "why": "Good for iterative test generation and tool loops."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "GPT-OSS 120B (Medium)",
+          "why": "Useful private/offline high-reasoning test work."
+        },
+        {
+          "rank": 5,
+          "provider": "Codex",
+          "model": "gpt-5.6-luna",
+          "why": "Fast for simple unit tests and expected-output checks."
+        }
+      ]
+    },
+    "security_review": {
+      "sdlc_stage": "verification",
+      "agile_context": "Threat modeling, secure design review, vulnerability triage, auth/data boundary checks, and abuse-case review.",
+      "task_aliases": [
+        "security",
+        "threat_model",
+        "vulnerability",
+        "secure_review"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Antigravity CLI",
+          "model": "Claude Opus 4.6 (Thinking)",
+          "why": "Strong for cybersecurity-oriented review and deep reasoning."
+        },
+        {
+          "rank": 2,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Use for high-stakes security analysis."
+        },
+        {
+          "rank": 3,
+          "provider": "Codex",
+          "model": "gpt-5.6-sol",
+          "why": "Strong independent security reasoning."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.1 Pro (High)",
+          "why": "Good for broad system and document context."
+        },
+        {
+          "rank": 5,
+          "provider": "Antigravity CLI",
+          "model": "GPT-OSS 120B (Medium)",
+          "why": "Use when code or findings must stay local/private."
+        }
+      ]
+    },
+    "release_deployment": {
+      "sdlc_stage": "release",
+      "agile_context": "Release plan, deployment checklist, CI/CD notes, rollback plan, migration steps, and release notes.",
+      "task_aliases": [
+        "release",
+        "deploy",
+        "ci_cd",
+        "rollback",
+        "runbook"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Codex",
+          "model": "gpt-5.6-terra",
+          "why": "Good for practical deployment and automation tasks."
+        },
+        {
+          "rank": 2,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Good default for checklists and release engineering."
+        },
+        {
+          "rank": 3,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (Medium)",
+          "why": "Good for multi-step tool and deployment planning."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Claude Sonnet 4.6 (Thinking)",
+          "why": "Good for careful runbooks and release notes."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "haiku",
+          "why": "Fast for simple release-note drafting."
+        }
+      ]
+    },
+    "workspace_setup": {
+      "sdlc_stage": "planning",
+      "agile_context": "Set up or detect isolated workspaces, worktrees, repo baseline state, local environment, and pre-implementation verification.",
+      "task_aliases": [
+        "workspace",
+        "worktree",
+        "environment_setup",
+        "project_setup",
+        "repo_setup"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Codex",
+          "model": "gpt-5.6-luna",
+          "why": "Fast for bounded workspace and repository setup checks."
+        },
+        {
+          "rank": 2,
+          "provider": "Claude Code",
+          "model": "haiku",
+          "why": "Cheap option for simple setup and verification commands."
+        },
+        {
+          "rank": 3,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Default when setup needs platform judgment or recovery."
+        },
+        {
+          "rank": 4,
+          "provider": "Codex",
+          "model": "gpt-5.6-terra",
+          "why": "Use when setup touches several project conventions."
+        },
+        {
+          "rank": 5,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (Medium)",
+          "why": "Good for multi-step setup in agentic tool loops."
+        }
+      ]
+    },
+    "monitoring_incident_ops": {
+      "sdlc_stage": "operations",
+      "agile_context": "Monitoring design, incident triage, log synthesis, postmortems, service reliability, and operational follow-up.",
+      "task_aliases": [
+        "incident",
+        "ops",
+        "monitoring",
+        "postmortem",
+        "rca"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Claude Code",
+          "model": "opus",
+          "why": "Good for long-running operational investigation."
+        },
+        {
+          "rank": 2,
+          "provider": "Antigravity CLI",
+          "model": "Claude Opus 4.6 (Thinking)",
+          "why": "Strong at root-cause analysis and long-context reasoning."
+        },
+        {
+          "rank": 3,
+          "provider": "Codex",
+          "model": "gpt-5.6-sol",
+          "why": "Strong for incident synthesis and remediation plans."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (High)",
+          "why": "Good for hard multi-step ops reasoning."
+        },
+        {
+          "rank": 5,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.1 Pro (High)",
+          "why": "Good for large docs/log context and multimodal evidence."
+        }
+      ]
+    },
+    "documentation_knowledge_transfer": {
+      "sdlc_stage": "maintenance",
+      "agile_context": "Developer docs, ADRs, changelogs, onboarding docs, handoff notes, and knowledge-base cleanup.",
+      "task_aliases": [
+        "docs",
+        "documentation",
+        "adr",
+        "changelog",
+        "handoff"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Good default for clear engineering documentation."
+        },
+        {
+          "rank": 2,
+          "provider": "Antigravity CLI",
+          "model": "Claude Sonnet 4.6 (Thinking)",
+          "why": "Strong for polished knowledge work."
+        },
+        {
+          "rank": 3,
+          "provider": "Codex",
+          "model": "gpt-5.6-terra",
+          "why": "Good professional writing with code awareness."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.5 Flash (Low)",
+          "why": "Fast for straightforward docs and summaries."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "haiku",
+          "why": "Fast for low-risk formatting, summaries, and changelogs."
+        }
+      ]
+    },
+    "retrospective_process_improvement": {
+      "sdlc_stage": "continuous_improvement",
+      "agile_context": "Retrospective facilitation, process metrics, working-agreement updates, and improvement experiments.",
+      "task_aliases": [
+        "retro",
+        "retrospective",
+        "continuous_improvement",
+        "process"
+      ],
+      "recommended_models": [
+        {
+          "rank": 1,
+          "provider": "Codex",
+          "model": "gpt-5.6-sol",
+          "why": "Strong for cross-signal reasoning and improvement planning."
+        },
+        {
+          "rank": 2,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Good for long-horizon process and org reasoning."
+        },
+        {
+          "rank": 3,
+          "provider": "Antigravity CLI",
+          "model": "Gemini 3.1 Pro (High)",
+          "why": "Good for synthesizing broad qualitative and quantitative inputs."
+        },
+        {
+          "rank": 4,
+          "provider": "Antigravity CLI",
+          "model": "Claude Sonnet 4.6 (Thinking)",
+          "why": "Good for practical knowledge-work outputs."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Default for normal retrospective notes and action items."
+        }
+      ]
+    }
+  },
+  "quick_lookup": {
+    "research": "discovery_research",
+    "product_discovery": "discovery_research",
+    "domain_research": "discovery_research",
+    "feasibility": "discovery_research",
+    "user_story": "requirements_user_stories",
+    "acceptance_criteria": "requirements_user_stories",
+    "requirements": "requirements_user_stories",
+    "spec": "requirements_user_stories",
+    "backlog": "backlog_refinement_prioritization",
+    "refinement": "backlog_refinement_prioritization",
+    "grooming": "backlog_refinement_prioritization",
+    "prioritize": "backlog_refinement_prioritization",
+    "estimate": "backlog_refinement_prioritization",
+    "write_plan": "sprint_planning",
+    "plan": "sprint_planning",
+    "implementation_plan": "sprint_planning",
+    "sprint_plan": "sprint_planning",
+    "viet_plan": "sprint_planning",
+    "architecture": "architecture_design",
+    "design": "architecture_design",
+    "system_design": "architecture_design",
+    "api_design": "architecture_design",
+    "data_model": "architecture_design",
+    "ui": "ui_ux_prototyping",
+    "ux": "ui_ux_prototyping",
+    "prototype": "ui_ux_prototyping",
+    "frontend_design": "ui_ux_prototyping",
+    "mockup": "ui_ux_prototyping",
+    "code": "implementation_coding",
+    "implement": "implementation_coding",
+    "build": "implementation_coding",
+    "refactor": "implementation_coding",
+    "feature": "implementation_coding",
+    "debug": "debugging_root_cause",
+    "bugfix": "debugging_root_cause",
+    "root_cause": "debugging_root_cause",
+    "triage": "debugging_root_cause",
+    "investigate_failure": "debugging_root_cause",
+    "review": "code_review_quality",
+    "code_review": "code_review_quality",
+    "pr_review": "code_review_quality",
+    "diff_review": "code_review_quality",
+    "test": "testing_qa",
+    "qa": "testing_qa",
+    "verification": "testing_qa",
+    "acceptance_test": "testing_qa",
+    "regression": "testing_qa",
+    "security": "security_review",
+    "threat_model": "security_review",
+    "vulnerability": "security_review",
+    "secure_review": "security_review",
+    "release": "release_deployment",
+    "deploy": "release_deployment",
+    "ci_cd": "release_deployment",
+    "rollback": "release_deployment",
+    "runbook": "release_deployment",
+    "workspace": "workspace_setup",
+    "worktree": "workspace_setup",
+    "environment_setup": "workspace_setup",
+    "project_setup": "workspace_setup",
+    "repo_setup": "workspace_setup",
+    "incident": "monitoring_incident_ops",
+    "ops": "monitoring_incident_ops",
+    "monitoring": "monitoring_incident_ops",
+    "postmortem": "monitoring_incident_ops",
+    "rca": "monitoring_incident_ops",
+    "docs": "documentation_knowledge_transfer",
+    "documentation": "documentation_knowledge_transfer",
+    "adr": "documentation_knowledge_transfer",
+    "changelog": "documentation_knowledge_transfer",
+    "handoff": "documentation_knowledge_transfer",
+    "retro": "retrospective_process_improvement",
+    "retrospective": "retrospective_process_improvement",
+    "continuous_improvement": "retrospective_process_improvement",
+    "process": "retrospective_process_improvement"
+  },
+  "research_sources": [
+    {
+      "id": "agile_manifesto",
+      "title": "Manifesto for Agile Software Development",
+      "url": "https://agilemanifesto.org/",
+      "used_for": "Agile values: working software, customer collaboration, responding to change."
+    },
+    {
+      "id": "scrum_guide_2020",
+      "title": "The 2020 Scrum Guide",
+      "url": "https://scrumguides.org/scrum-guide.html",
+      "used_for": "Sprints, Sprint Planning, Daily Scrum, Sprint Review, Sprint Retrospective."
+    },
+    {
+      "id": "atlassian_sdlc",
+      "title": "What is Software Development Life Cycle (SDLC)?",
+      "url": "https://www.atlassian.com/agile/software-development/sdlc",
+      "used_for": "SDLC phases: planning, feasibility, design, implementation, testing, deployment, maintenance."
+    },
+    {
+      "id": "agile_alliance_backlog_refinement",
+      "title": "What is Backlog Refinement?",
+      "url": "https://agilealliance.org/glossary/backlog-refinement/",
+      "used_for": "Backlog refinement as dynamic requirements/detail/estimation work."
+    },
+    {
+      "id": "agile_alliance_user_stories",
+      "title": "What are User Stories?",
+      "url": "https://agilealliance.org/glossary/user-stories/",
+      "used_for": "User stories as functional increments of work."
+    },
+    {
+      "id": "openai_models",
+      "title": "OpenAI API Models",
+      "url": "https://developers.openai.com/api/docs/models",
+      "used_for": "gpt-5.5, gpt-5.4, and gpt-5.4-mini model-selection guidance."
+    },
+    {
+      "id": "openai_gpt_5_4",
+      "title": "Introducing GPT-5.4",
+      "url": "https://openai.com/index/introducing-gpt-5-4/",
+      "used_for": "GPT-5.4 coding, computer-use, and long-context positioning."
+    },
+    {
+      "id": "openai_gpt_oss",
+      "title": "Introducing gpt-oss",
+      "url": "https://openai.com/index/introducing-gpt-oss/",
+      "used_for": "GPT-OSS 120B open-weight reasoning, coding, tool-use, and local/private routing."
+    },
+    {
+      "id": "gemini_3_5_flash",
+      "title": "What's new in Gemini 3.5 Flash",
+      "url": "https://ai.google.dev/gemini-api/docs/whats-new-gemini-3.5",
+      "used_for": "Gemini 3.5 Flash effort levels and agentic/coding recommendations."
+    },
+    {
+      "id": "gemini_3_1_pro_card",
+      "title": "Gemini 3.1 Pro Model Card",
+      "url": "https://deepmind.google/models/model-cards/gemini-3-1-pro/",
+      "used_for": "Gemini 3.1 Pro broad-context, multimodal, advanced reasoning positioning."
+    },
+    {
+      "id": "anthropic_sonnet_4_6",
+      "title": "Introducing Claude Sonnet 4.6",
+      "url": "https://www.anthropic.com/news/claude-sonnet-4-6",
+      "used_for": "Sonnet 4.6 coding, computer use, long-context reasoning, planning, knowledge work, and design."
+    },
+    {
+      "id": "anthropic_opus_4_6",
+      "title": "Introducing Claude Opus 4.6",
+      "url": "https://www.anthropic.com/news/claude-opus-4-6",
+      "used_for": "Opus 4.6 careful planning, large-codebase work, debugging, review, and long-context routing."
+    },
+    {
+      "id": "anthropic_models_overview",
+      "title": "Claude models overview",
+      "url": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "used_for": "Claude Code alias-family mapping for fable, opus, sonnet, and haiku."
+    },
+    {
+      "id": "atlassian_agile_roles",
+      "title": "Agile Roles and Responsibilities",
+      "url": "https://www.atlassian.com/agile/teams",
+      "used_for": "Agile team structure: Product Owner, Scrum Master, Developers, and extended team roles."
+    },
+    {
+      "id": "safe_product_manager",
+      "title": "SAFe Product Manager",
+      "url": "https://scaledagile.com/product-management/",
+      "used_for": "SAFe Product Manager role: ART backlog, WSJF prioritization, product vision and strategy."
+    },
+    {
+      "id": "safe_rte",
+      "title": "SAFe Release Train Engineer",
+      "url": "https://scaledagile.com/release-train-engineer-and-solution-train-engineer/",
+      "used_for": "SAFe RTE role: PI Planning facilitation, ART process oversight, impediment escalation."
+    },
+    {
+      "id": "safe_system_architect",
+      "title": "SAFe System Architect/Engineer",
+      "url": "https://scaledagile.com/system-architect-engineer/",
+      "used_for": "SAFe System Architect role: architectural runway, technical alignment, cross-team design."
+    },
+    {
+      "id": "google_sre",
+      "title": "Google SRE Book — Introduction",
+      "url": "https://sre.google/sre-book/introduction/",
+      "used_for": "SRE role: SLOs, error budgets, incident response, reliability engineering practices."
+    },
+    {
+      "id": "devsecops_roles",
+      "title": "DevSecOps Roles and Responsibilities",
+      "url": "https://www.blackduck.com/blog/devsecops-roles-and-responsibilities.html",
+      "used_for": "DevSecOps roles: Security Engineer shift-left practices, SAST/DAST/SCA pipeline integration."
+    },
+    {
+      "id": "lean_ux",
+      "title": "Lean UX by Jeff Gothelf",
+      "url": "https://www.oreilly.com/library/view/lean-ux-3rd/9781098116293/",
+      "used_for": "UX/UI Designer role in Agile: iterative design, hypothesis-driven UX, cross-functional collaboration."
+    },
+    {
+      "id": "harness_agile_sdlc",
+      "title": "Agile SDLC: Phases, Roles, and Best Practices",
+      "url": "https://www.harness.io/blog/agile-sdlc",
+      "used_for": "Agile SDLC role-to-phase mapping: PO, SM, Dev team responsibilities across lifecycle phases."
+    }
+  ]
+}
