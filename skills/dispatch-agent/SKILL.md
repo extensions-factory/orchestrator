@@ -17,6 +17,17 @@ Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The or
    - **`effort`** rule: Antigravity encodes it in the model string (e.g. `"Gemini 3.5 Flash (Medium)"` → `medium`) — parse the parenthesized word; Codex takes an explicit `--effort`; Claude has none. When not otherwise determined, default `medium`, or apply the routing JSON's `selection_rules` (High/Thinking → `high`; Low/mini/haiku → `low`).
    - **Review tasks** (`code_review_quality`, `security_review`): read `author_agent` from `.superpowers/ledger.jsonl` and pick the first recommended model whose mapped `agent` differs (provider diversity). If no other provider is enabled, fall back to a different model on the same agent and note it in the ledger entry.
 3. **Build the request JSON** per `assets/message-protocol.json`. Set `dispatch.persona` to the **role name** (e.g. `software_engineer`) — a short string, never a prompt-file's contents. Any role prompt file (e.g. `implementer-prompt.md`) is pasted into the spawn prompt body, not into `dispatch.persona`. Record the diversity decision in `dispatch.provider_diversity`: for a review task set `{author_agent, author_model, rule: "reviewer_agent != author_agent"}`; otherwise set `provider_diversity: null`. Set `message_type: "request"`.
+
+### Provider-readiness preflight (before Send)
+
+Before sending, verify the target `agent` is actually reachable — a provider that is installed but not authenticated will hang the call:
+
+- `agent: codex` → run the Codex readiness check (`codex:setup`, i.e. `node <codex-plugin>/scripts/codex-companion.mjs setup --json`). Ready when `ready: true` OR at least one enabled profile in `profiles.json` shows `loggedIn: true`. If not ready, do NOT call `codex exec` — degrade.
+- `agent: antigravity` → run `/agy:setup`; if unavailable or not ready, degrade.
+- `agent: claude` → always ready (the Agent tool needs no external auth).
+
+If the chosen agent is **not ready**, apply the degradation ladder (retry on the next enabled provider, then a claude subagent) rather than emitting a call that blocks.
+
 4. **Send** via the bridge matching `agent`:
    - `claude` → the Agent tool, prompt = `"ROLE: subagent\n" + <request JSON>`.
    - `codex` → `/codex:rescue --model <model> --effort <effort> "<request JSON>"`.
