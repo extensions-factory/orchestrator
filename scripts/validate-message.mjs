@@ -17,11 +17,11 @@ export function validateMessage(msg) {
     for (const k of def.required) if (!(k in msg[obj])) errors.push(`missing ${obj}.${k}`);
   }
   const status = msg.output?.status;
-  if (status && !schema.enums.status.includes(status)) errors.push(`invalid output.status: ${status}`);
+  if (status !== undefined && !schema.enums.status.includes(status)) errors.push(`invalid output.status: ${status}`);
   const agent = msg.dispatch?.agent;
-  if (agent && !schema.enums.agent.includes(agent)) errors.push(`invalid dispatch.agent: ${agent}`);
+  if (agent !== undefined && !schema.enums.agent.includes(agent)) errors.push(`invalid dispatch.agent: ${agent}`);
   const effort = msg.dispatch?.effort;
-  if (effort && !schema.enums.effort.includes(effort)) errors.push(`invalid dispatch.effort: ${effort}`);
+  if (effort !== undefined && !schema.enums.effort.includes(effort)) errors.push(`invalid dispatch.effort: ${effort}`);
   return { ok: errors.length === 0, errors };
 }
 
