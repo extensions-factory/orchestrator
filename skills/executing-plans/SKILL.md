@@ -64,6 +64,10 @@ After all tasks complete and verified:
 
 ## Integration
 
+<!-- riso-tech:orchestrator-split START -->
+**Degraded mode.** `executing-plans` is the inline fallback used when no worker provider is available for `dispatch-agent`. With a provider, prefer subagent-driven-development (which routes each task through `dispatch-agent`); without one, run tasks inline here — today's behavior.
+<!-- riso-tech:orchestrator-split END -->
+
 **Required workflow skills:**
 - **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
 - **superpowers:writing-plans** - Creates the plan this skill executes

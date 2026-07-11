@@ -108,6 +108,10 @@ digraph brainstorming {
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
+<!-- riso-tech:orchestrator-split START -->
+**Optional routing:** when a worker provider is available, the documentation write-up may be delegated via `dispatch-agent` (`role: technical_writer`, `task_type: documentation_knowledge_transfer`) instead of written inline — the orchestrator routes, the worker writes. When no provider is available, write it inline as usual.
+<!-- riso-tech:orchestrator-split END -->
+
 **Spec Self-Review:**
 After writing the spec document, look at it with fresh eyes:
 
