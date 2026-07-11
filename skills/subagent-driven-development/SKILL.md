@@ -82,6 +82,10 @@ digraph process {
 }
 ```
 
+<!-- riso-tech:orchestrator-split START -->
+**Every dispatch node above routes through `dispatch-agent`.** Instead of spawning a subagent directly, invoke the `dispatch-agent` skill with `role: software_engineer` (implementer / fix) or `role: tech_lead` (task reviewer) and the task's `task_type` from the plan annotation. `dispatch.persona` is the **role name only**; the `implementer-prompt.md` / `task-reviewer-prompt.md` contents are pasted into the spawn prompt body (not into `dispatch.persona`). `dispatch-agent` resolves the model, spawns the worker, validates the response, and appends `author_agent`/`author_model` to `.superpowers/ledger.jsonl`.
+<!-- riso-tech:orchestrator-split END -->
+
 ## Pre-Flight Plan Review
 
 Before dispatching Task 1, scan the plan once for conflicts:
