@@ -1,11 +1,11 @@
 {
-  "name": "superpowers-dev",
+  "name": "superpowers-orchestrator",
   "interface": {
     "displayName": "Superpowers Dev"
   },
   "plugins": [
     {
-      "name": "superpowers",
+      "name": "superpowers-orchestrator",
       "source": {
         "source": "url",
         "url": "./"
