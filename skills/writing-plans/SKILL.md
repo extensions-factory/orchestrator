@@ -92,6 +92,10 @@ include this section.]
   and return types. A task's implementer sees only their own task; this
   block is how they learn the names and types neighboring tasks use.]
 
+<!-- riso-tech:orchestrator-split START -->
+**task_type:** [one of the 16 values in `sdlc-model-routing.json` — e.g. `implementation_coding`, `code_review_quality`, `testing_qa`, `debugging_root_cause`, `architecture_design`]. `dispatch-agent` reads this at runtime to resolve the model/provider. Every task MUST carry it.
+<!-- riso-tech:orchestrator-split END -->
+
 - [ ] **Step 1: Write the failing test**
 
 ```python
@@ -144,6 +148,10 @@ Every step must contain the actual content an engineer needs. These are **plan f
 ## Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+
+<!-- riso-tech:orchestrator-split START -->
+**task_type self-review check:** every task has a `task_type` whose value is one of the 16 in `sdlc-model-routing.json`. Flag any task missing a valid `task_type` and fix it.
+<!-- riso-tech:orchestrator-split END -->
 
 **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
