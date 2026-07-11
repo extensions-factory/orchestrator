@@ -1,6 +1,6 @@
 ---
 name: dispatch-agent
-description: Use when the orchestrator needs to hand a task to a worker - resolves the right model and provider for the task_type, builds the request envelope, spawns the worker, awaits and validates the response, and logs the request/response pair to the ledger. Invoked by subagent-driven-development, dispatching-parallel-agents, and requesting-code-review at every dispatch point.
+description: Use when the orchestrator is about to hand a task to a worker or reviewer - at any dispatch point in subagent-driven-development, dispatching-parallel-agents, or requesting-code-review, or whenever a task needs routing to a specific model or provider, or a review that must differ from the author's provider.
 ---
 
 <!-- riso-tech:orchestrator-split — new skill, no upstream counterpart -->
