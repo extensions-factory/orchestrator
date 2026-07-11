@@ -86,6 +86,10 @@ When agents return:
 
 ## Agent Prompt Structure
 
+<!-- riso-tech:orchestrator-split START -->
+**Each parallel agent is spawned via `dispatch-agent`** with its own per-domain `task_type`. Still one orchestration message, multiple `dispatch-agent` invocations — one per independent domain — so every parallel worker gets its own optimal model and its own ledger entry.
+<!-- riso-tech:orchestrator-split END -->
+
 Good agent prompts are:
 1. **Focused** - One clear problem domain
 2. **Self-contained** - All context needed to understand the problem

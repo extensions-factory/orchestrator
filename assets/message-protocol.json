@@ -1,0 +1,15 @@
+{
+  "_riso_tech": "orchestrator-split message envelope contract; consumed by validate-message.mjs and the dispatch-agent/intake-task/report-task skills",
+  "required": ["message_type", "from", "to", "task_type", "skill", "context", "dispatch", "output"],
+  "enums": {
+    "message_type": ["request", "deliver", "validate", "reject", "escalate"],
+    "status": ["done", "blocked", "needs_revision"],
+    "agent": ["claude", "codex", "antigravity"],
+    "effort": ["low", "medium", "high"]
+  },
+  "envelope": {
+    "context": { "required": ["input_artifacts", "acceptance_criteria", "constraints"] },
+    "dispatch": { "required": ["agent", "model", "effort", "persona", "provider_diversity"] },
+    "output": { "required": ["artifacts", "status", "notes"] }
+  }
+}

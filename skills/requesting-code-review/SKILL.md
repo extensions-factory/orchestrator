@@ -23,6 +23,10 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 ## How to Request
 
+<!-- riso-tech:orchestrator-split START -->
+**Dispatch the reviewer via `dispatch-agent`** with `task_type: code_review_quality` and the `author_agent` read from `.superpowers/ledger.jsonl`. `dispatch-agent` enforces provider diversity: the reviewer resolves to a different agent than the author whenever a second provider is enabled.
+<!-- riso-tech:orchestrator-split END -->
+
 **1. Get git SHAs:**
 ```bash
 BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
