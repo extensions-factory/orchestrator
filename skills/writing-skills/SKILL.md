@@ -15,6 +15,10 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
+<!-- riso-tech:orchestrator-split START -->
+**Orchestrator split:** Skill authoring and editing are production work. Always dispatch them to a worker subagent via `dispatch-agent` with `role: software_engineer` and `task_type: implementation_coding`; `dispatch-agent` resolves provider availability, and a claude subagent is always available. The orchestrator (Scrum Master) does not author skill content inline: it hands the worker the acceptance criteria, then as its VALIDATE step runs this skill's validation checklist on the returned file. Author inline only if the harness has no subagent capability at all.
+<!-- riso-tech:orchestrator-split END -->
+
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
 **Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
