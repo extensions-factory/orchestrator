@@ -24,5 +24,11 @@ check "$WP" "dispatch-agent"
 check "$WP" "tech_lead"
 fenced "$WP"
 
+# US-4: finishing-a-development-branch dispatches to devops_engineer
+FB="$ROOT/skills/finishing-a-development-branch/SKILL.md"
+check "$FB" "dispatch-agent"
+check "$FB" "devops_engineer"
+fenced "$FB"
+
 [ "$fail" -eq 0 ] && echo "PASS test-dispatch-completeness"
 exit $fail

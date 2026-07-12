@@ -92,6 +92,10 @@ Which option?
 
 **Don't add explanation** - keep options concise.
 
+<!-- riso-tech:orchestrator-split START -->
+**Dispatch:** when a worker provider is available, delegate the git mechanics below (Step 5's execute choice and Step 6's cleanup) to `dispatch-agent` (`role: devops_engineer`, `task_type: release_deployment`) instead of running them inline. When no worker provider is available, run the commands below inline exactly as documented (today's behavior).
+<!-- riso-tech:orchestrator-split END -->
+
 ### Step 5: Execute Choice
 
 #### Option 1: Merge Locally
