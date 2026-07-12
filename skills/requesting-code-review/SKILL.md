@@ -27,6 +27,10 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 **Dispatch the reviewer via `dispatch-agent`** with `task_type: code_review_quality` and the `author_agent` read from `.superpowers/ledger.jsonl`. `dispatch-agent` enforces provider diversity: the reviewer resolves to a different agent than the author whenever a second provider is enabled.
 <!-- riso-tech:orchestrator-split END -->
 
+<!-- riso-tech:orchestrator-split START -->
+When the diff touches security-sensitive surface - auth/authz, input parsing or validation, secrets or credentials, dependency changes, network boundaries - additionally dispatch role: security_engineer, task_type: security_review via dispatch-agent, with the same provider-diversity rule against the author_agent.
+<!-- riso-tech:orchestrator-split END -->
+
 **1. Get git SHAs:**
 ```bash
 BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main

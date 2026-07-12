@@ -2,10 +2,13 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 fail=0
-has(){ grep -Fq -- "dispatch-agent" "$ROOT/skills/$1/SKILL.md" || { echo "[FAIL] $1 does not route via dispatch-agent"; fail=1; }; }
-fenced(){ grep -Fq -- "riso-tech:orchestrator-split START" "$ROOT/skills/$1/SKILL.md" || { echo "[FAIL] $1 edit not fenced"; fail=1; }; }
+check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] missing: $2"; fail=1; }; }
+has(){ check "$ROOT/skills/$1/SKILL.md" "dispatch-agent"; }
+fenced(){ check "$ROOT/skills/$1/SKILL.md" "riso-tech:orchestrator-split START"; }
 for s in subagent-driven-development dispatching-parallel-agents requesting-code-review; do has "$s"; fenced "$s"; done
-# requesting-code-review must pass author_agent for provider diversity
-grep -Fq -- "author_agent" "$ROOT/skills/requesting-code-review/SKILL.md" || { echo "[FAIL] requesting-code-review missing author_agent"; fail=1; }
+RC="$ROOT/skills/requesting-code-review/SKILL.md"
+check "$RC" "author_agent"
+check "$RC" "security_review"
+check "$RC" "security_engineer"
 [ "$fail" -eq 0 ] && echo "PASS test-dispatch-routing"
 exit $fail
