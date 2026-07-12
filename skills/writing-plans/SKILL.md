@@ -18,6 +18,10 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
+<!-- riso-tech:orchestrator-split START -->
+**Dispatch:** when a worker provider is available, delegate authoring the plan document to `dispatch-agent` (`role: tech_lead`, `task_type: sprint_planning`) — the worker writes the plan file, the orchestrator still runs Self-Review below on the result. When no worker provider is available, write the plan inline as usual (today's behavior).
+<!-- riso-tech:orchestrator-split END -->
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
