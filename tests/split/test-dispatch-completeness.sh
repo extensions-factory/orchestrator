@@ -18,5 +18,11 @@ done
 persona_count=$(grep -cE '^- `[a-z_]+`' "$DA" || true)
 [ "$persona_count" -eq 16 ] || { echo "[FAIL] expected 16 persona lines, got $persona_count"; fail=1; }
 
+# US-3: writing-plans dispatches plan authorship
+WP="$ROOT/skills/writing-plans/SKILL.md"
+check "$WP" "dispatch-agent"
+check "$WP" "tech_lead"
+fenced "$WP"
+
 [ "$fail" -eq 0 ] && echo "PASS test-dispatch-completeness"
 exit $fail
