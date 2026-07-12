@@ -36,5 +36,12 @@ check "$GW" "dispatch-agent"
 check "$GW" "devops_engineer"
 fenced "$GW"
 
+# US-6: brainstorming write-up dispatch is phase-parameterized; live conversation stays inline
+BS="$ROOT/skills/brainstorming/SKILL.md"
+check "$BS" "business_analyst"
+check "$BS" "product_owner"
+check "$BS" "never talks to the human"
+fenced "$BS"
+
 [ "$fail" -eq 0 ] && echo "PASS test-dispatch-completeness"
 exit $fail

@@ -62,6 +62,10 @@ digraph brainstorming {
 
 ## The Process
 
+<!-- riso-tech:orchestrator-split START -->
+**Always inline:** the live conversation steps below (Understanding the idea, Exploring approaches, Presenting the design) never dispatch, regardless of provider availability — a dispatched worker never talks to the human.
+<!-- riso-tech:orchestrator-split END -->
+
 **Understanding the idea:**
 
 - Check out the current project state first (files, docs, recent commits)
@@ -109,7 +113,7 @@ digraph brainstorming {
 - Commit the design document to git
 
 <!-- riso-tech:orchestrator-split START -->
-**Optional routing:** when a worker provider is available, the documentation write-up may be delegated via `dispatch-agent` (`role: technical_writer`, `task_type: documentation_knowledge_transfer`) instead of written inline — the orchestrator routes, the worker writes. When no provider is available, write it inline as usual.
+**Optional routing:** when a worker provider is available, the write-up/deliverable step may be delegated via `dispatch-agent` with the role matching the SDLC phase this brainstorm serves — discovery → `role: business_analyst`, `task_type: discovery_research`; requirements → `role: product_owner`, `task_type: requirements_user_stories`; architecture review → `role: tech_lead`, `task_type: architecture_design`; documentation → `role: technical_writer`, `task_type: documentation_knowledge_transfer` (the default when no phase context is given) — instead of written inline; the orchestrator routes, the worker writes. When no worker provider is available, or brainstorming is invoked ad hoc with no SDLC phase context, write it inline as usual.
 <!-- riso-tech:orchestrator-split END -->
 
 **Spec Self-Review:**
