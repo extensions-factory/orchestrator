@@ -30,5 +30,11 @@ check "$FB" "dispatch-agent"
 check "$FB" "devops_engineer"
 fenced "$FB"
 
+# US-5: using-git-worktrees dispatches to devops_engineer
+GW="$ROOT/skills/using-git-worktrees/SKILL.md"
+check "$GW" "dispatch-agent"
+check "$GW" "devops_engineer"
+fenced "$GW"
+
 [ "$fail" -eq 0 ] && echo "PASS test-dispatch-completeness"
 exit $fail
