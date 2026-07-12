@@ -45,7 +45,7 @@ Has the user already indicated their worktree preference in your instructions? I
 Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** when a worker provider is available, delegate worktree creation (Step 1 below) to `dispatch-agent` (`role: devops_engineer`, `task_type: workspace_setup`); the response's `output.artifacts` carries the created worktree path, and the orchestrator performs exactly one `cd` to that path before continuing to Step 2. If the reported path does not exist, treat the response as `status: blocked` and do not `cd`. When no worker provider is available, create the worktree inline exactly as documented below (today's behavior).
+**Dispatch:** always dispatch worktree creation (Step 1 below) to `dispatch-agent` (`role: devops_engineer`, `task_type: workspace_setup`); the response's `output.artifacts` carries the created worktree path, and the orchestrator performs exactly one `cd` to that path before continuing to Step 2. If the reported path does not exist, treat the response as `status: blocked` and do not `cd`. `dispatch-agent` resolves provider availability, and a claude subagent is always available. Create the worktree inline exactly as documented below only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Step 1: Create Isolated Workspace

@@ -40,10 +40,13 @@ If the chosen agent is **not ready**, apply the degradation ladder (retry on the
 
 ## Graceful degradation
 
+**Default:** Dispatch to a worker subagent is the DEFAULT, not conditional; different role = different worker.
+
 1. Bridge/quota failure on codex → rely on codex-plugin-cc failover.
 2. If failover yields nothing → retry on agent: claude.
 3. No bridge for the chosen agent (e.g. antigravity) → dispatch to a claude subagent instead.
-4. No worker provider at all → skip dispatch-agent; the caller runs executing-plans inline (today's behavior).
+4. A claude subagent is the ALWAYS-AVAILABLE worker and needs no external auth.
+5. Only when the harness has no subagent capability at all → skip dispatch-agent; the caller runs executing-plans inline.
 
 ## Role personas (the `dispatch.persona` role name; canonical list — mirrored read-only in intake-task)
 

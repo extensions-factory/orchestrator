@@ -113,7 +113,7 @@ digraph brainstorming {
 - Commit the design document to git
 
 <!-- riso-tech:orchestrator-split START -->
-**Optional routing:** when a worker provider is available, the write-up/deliverable step may be delegated via `dispatch-agent` with the role matching the SDLC phase this brainstorm serves — discovery → `role: business_analyst`, `task_type: discovery_research`; requirements → `role: product_owner`, `task_type: requirements_user_stories`; architecture review → `role: tech_lead`, `task_type: architecture_design`; documentation → `role: technical_writer`, `task_type: documentation_knowledge_transfer` (the default when no phase context is given) — instead of written inline; the orchestrator routes, the worker writes. When no worker provider is available, or brainstorming is invoked ad hoc with no SDLC phase context, write it inline as usual.
+**Dispatch:** always dispatch the write-up/deliverable step via `dispatch-agent` with the role matching the SDLC phase this brainstorm serves — discovery → `role: business_analyst`, `task_type: discovery_research`; requirements → `role: product_owner`, `task_type: requirements_user_stories`; architecture review → `role: tech_lead`, `task_type: architecture_design`; documentation → `role: technical_writer`, `task_type: documentation_knowledge_transfer` (the default when no phase context is given). The orchestrator routes and the worker writes; `dispatch-agent` resolves provider availability, and a claude subagent is always available. Run the write-up/deliverable inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 **Spec Self-Review:**

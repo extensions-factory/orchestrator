@@ -19,7 +19,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - (User preferences for plan location override this default)
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** when a worker provider is available, delegate authoring the plan document to `dispatch-agent` (`role: tech_lead`, `task_type: sprint_planning`) — the worker writes the plan file, the orchestrator still runs Self-Review below on the result. When no worker provider is available, write the plan inline as usual (today's behavior).
+**Dispatch:** always dispatch plan authoring to `dispatch-agent` (`role: tech_lead`, `task_type: sprint_planning`) — the worker writes the plan file and the orchestrator still runs Self-Review below on the result. `dispatch-agent` resolves provider availability, and a claude subagent is always available. Write the plan inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Scope Check
