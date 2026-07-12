@@ -47,11 +47,22 @@ If the chosen agent is **not ready**, apply the degradation ladder (retry on the
 
 ## Role personas (the `dispatch.persona` role name; canonical list — mirrored read-only in intake-task)
 
+- `product_owner` — owns and orders the Product Backlog; defines requirements and acceptance criteria; write no code.
+- `scrum_master` — facilitates Scrum events and removes impediments; do not implement or decide product scope.
 - `software_engineer` — write production code under TDD; do not skip tests or refactor beyond scope.
 - `tech_lead` — review only; give feedback, do not rewrite.
 - `qa_engineer` — verify acceptance criteria with real execution and show evidence; write no production code.
+- `ux_ui_designer` — designs UX flows, wireframes, and prototypes; do not implement backend logic.
+- `devops_engineer` — builds and maintains CI/CD, deployments, and workspace/environment setup; do not design product features.
 - `security_engineer` — report vulnerabilities with severity; do not fix.
-- `product_manager` / `business_analyst` — deliver findings/requirements; write no code.
+- `sre` — owns monitoring, incident response, and postmortems; do not implement product features.
+- `engineering_manager` — oversees delivery cadence, technical quality, and sprint planning; do not write production code.
+- `product_manager` — defines product vision/roadmap and prioritizes the ART backlog; write no code.
+- `technical_writer` — writes developer docs, ADRs, changelogs, and handoff notes; do not write production code.
+- `business_analyst` — elicits business requirements and translates them into user stories; write no code.
+- `data_analyst` — analyzes data and delivery metrics into findings; do not write production code.
+- `agile_coach` — coaches process improvement across teams; do not implement or decide product scope.
+- `stakeholder` — provides business context and feedback on Increments; do not implement or write requirements.
 
 ## Ledger
 
