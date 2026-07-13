@@ -252,7 +252,7 @@ After the self-review, do NOT jump to execution. Ask the user to choose:
 
 **2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
 
-**Which approach?"**
+**Which approach?**
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
