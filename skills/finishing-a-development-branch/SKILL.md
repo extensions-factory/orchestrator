@@ -93,7 +93,7 @@ Which option?
 **Don't add explanation** - keep options concise.
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** always dispatch the git mechanics below (Step 5's execute choice and Step 6's cleanup) to `dispatch-agent` (`role: devops_engineer`, `task_type: release_deployment`). `dispatch-agent` resolves provider availability, and a claude subagent is always available. Run the commands below inline exactly as documented only if the harness has no subagent capability at all.
+**Dispatch:** always dispatch the git mechanics below (Step 5's execute choice, Step 5b's roadmap update, and Step 6's cleanup) to `dispatch-agent` (`role: devops_engineer`, `task_type: release_deployment`). For Option 2, the same worker writes a PR body that follows `skills/finishing-a-development-branch/pr-body-template.md`, fills every section from the spec, plan, and this session's actual test results with no placeholders, writes it to a temporary file, and passes it through `gh pr create --body-file`. `dispatch-agent` resolves provider availability, and a claude subagent is always available. Run the commands below inline exactly as documented only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ### Step 5: Execute Choice
@@ -129,6 +129,16 @@ git branch -d <feature-branch>
 git push -u origin <feature-branch>
 ```
 
+<!-- riso-tech:orchestrator-split START -->
+Then create the PR with a body following `skills/finishing-a-development-branch/pr-body-template.md` — read it before writing. Fill every section from the spec, plan, and this session's actual test results; write the body to a temp file and create the PR:
+
+```bash
+gh pr create --base <base-branch> --title "<type>: <feature title>" --body-file <path-to-body-file>
+```
+
+Show the user the PR URL when done.
+<!-- riso-tech:orchestrator-split END -->
+
 **Do NOT clean up worktree** — user needs it alive to iterate on PR feedback.
 
 #### Option 3: Keep As-Is
@@ -161,6 +171,17 @@ Then: Cleanup worktree (Step 6), then force-delete branch:
 ```bash
 git branch -D <feature-branch>
 ```
+
+<!-- riso-tech:orchestrator-split START -->
+### Step 5b: Update Product Roadmap
+
+**Runs for Options 1 (merge) and 2 (PR) only** — the work is being integrated, so the feature is done. Skip for Option 3 (keep as-is) and Option 4 (discard).
+
+- Identify the feature's `slug` from the spec/plan filename used for this work (`YYYY-MM-DD-<slug>-design.md`). If no spec/plan is in context and the slug is ambiguous, ask the user which feature this work corresponds to.
+- Set every User-Story entry belonging to that feature (match on `feature` or the `slug` prefix) to `status: released` and `completed` to today's date in `docs/superpowers/roadmap.json`, then regenerate `ROADMAP.html`. If no entries exist yet, create one for the feature as released.
+- See [../brainstorming/roadmap.md](../brainstorming/roadmap.md) for the schema, idempotent update rules, and the `ROADMAP.html` template.
+- For Option 1, commit the roadmap update with (or right after) the merge. For Option 2, commit it on the branch before pushing.
+<!-- riso-tech:orchestrator-split END -->
 
 ### Step 6: Cleanup Workspace
 
