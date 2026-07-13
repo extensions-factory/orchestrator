@@ -19,12 +19,45 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - (User preferences for plan location override this default)
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** always dispatch plan authoring to `dispatch-agent` (`role: tech_lead`, `task_type: sprint_planning`) — the worker writes the plan file and the orchestrator still runs Self-Review below on the result. `dispatch-agent` resolves provider availability, and a claude subagent is always available. Write the plan inline only if the harness has no subagent capability at all.
+**Dispatch:** always dispatch plan authoring to `dispatch-agent` (`role: tech_lead`, `task_type: sprint_planning`) — the worker writes the plan file following `skills/writing-plans/plan-template.md` and a self-contained HTML companion at the same path with a `.html` extension, rendering checkboxes as a readable checklist and regenerating it whenever the plan changes. The orchestrator still runs Self-Review below on the returned artifact set. `dispatch-agent` resolves provider availability, and a claude subagent is always available. Write the plan inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+
+## Organize Tasks Under User Stories
+
+Group the plan's Tasks under **User Story (US)** headings. Each US is one
+**complete vertical slice** — a single service/feature that works end-to-end
+(data + logic + UI it needs), not a technical layer.
+
+- One US = one feature. Don't mix several features into one US.
+- Never slice by layer: `US-1 data types`, `US-2 logic`, `US-3 UI` is wrong —
+  none is usable alone. Slice by feature instead.
+- A US contains its Tasks; the Tasks keep their bite-sized TDD steps.
+
+Use `## US-N: [feature name]` headings, with that US's `### Task N` entries
+nested beneath. An optional refine pass (`requesting-plan-refine`) can audit
+this slicing after the plan is written, so getting the US boundaries roughly
+right here saves a round trip.
+
+<!-- riso-tech:orchestrator-split START -->
+- US IDs MUST reuse the spec's User Story IDs — the plan's `US-1` implements
+  the spec's `US-1`; do not renumber. Every spec US gets a plan section.
+- Close every US section with a `**US-N Checkpoint:**` block: the exact
+  command or user action demonstrating that story end-to-end, with expected
+  observable output covering each GIVEN/WHEN/THEN acceptance criterion from
+  the spec (see `plan-template.md`).
+<!-- riso-tech:orchestrator-split END -->
+
+## Foundation Section (Optional)
+
+If some work blocks MORE THAN ONE user story (project scaffold, shared
+schema, shared data layer), put it in a `## Foundation` section before the
+first US, using the same task format. Setup needed by a single story stays
+folded into that story's tasks, per Task Right-Sizing. Omit the section
+entirely when nothing qualifies — it is not a setup dumping ground.
 
 ## File Structure
 
@@ -64,11 +97,33 @@ independently testable deliverable.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+<!-- riso-tech:orchestrator-split START -->
+**Spec:** `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+<!-- riso-tech:orchestrator-split END -->
+
 **Goal:** [One sentence describing what this builds]
 
 **Architecture:** [2-3 sentences about approach]
 
 **Tech Stack:** [Key technologies/libraries]
+
+<!-- riso-tech:orchestrator-split START -->
+## Expected Outcome
+
+After completing this plan, the developer will have:
+
+### Working behavior
+
+- [One bullet per User Story — what a user can concretely do once it ships. Prefix with the story ID: "US-1: users can …"]
+
+### Artifacts
+
+- [Key files/modules/APIs created or changed, and the role of each]
+
+### How to see it working
+
+- [Exact command or user flow + observable output demonstrating the whole feature end-to-end — distinct from the per-US checkpoints]
+<!-- riso-tech:orchestrator-split END -->
 
 ## Global Constraints
 
@@ -84,6 +139,8 @@ include this section.]
 
 ````markdown
 ### Task N: [Component Name]
+
+**Depends on:** [Task M | Foundation | none]
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -163,13 +220,33 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
+<!-- riso-tech:orchestrator-split START -->
+**4. Template check:** Does the plan follow `skills/writing-plans/plan-template.md`? `**Spec:**` line, Expected Outcome section, `**Depends on:**` on every task, a Checkpoint closing every US section.
+
+**5. Traceability check:** Every spec `US-n` has a matching plan `US-n` section; every US Checkpoint covers that story's GIVEN/WHEN/THEN acceptance criteria; every "Working behavior" bullet in Expected Outcome traces to a US.
+<!-- riso-tech:orchestrator-split END -->
+
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+<!-- riso-tech:orchestrator-split START -->
+**User Review Gate:**
+After the self-review, do NOT jump to execution. Ask the user to choose:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
+> "Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two options:
+>
+> 1. Refine — get an independent review pass (gaps, ambiguity, User Story slicing) before execution
+>
+> 2. Execute — go straight to execution
+>
+> Which would you like?"
+
+**If Refine chosen:**
+- **REQUIRED SUB-SKILL:** Use `superpowers:requesting-plan-refine`
+
+**If Execute chosen**, ask which execution mode:
+<!-- riso-tech:orchestrator-split END -->
 
 **1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
