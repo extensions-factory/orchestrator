@@ -1,6 +1,6 @@
 ---
 name: project-kickoff
-description: Use when starting a brand-new project with no existing repo or code — before brainstorming, when there’s nothing yet to explore. Validates the idea, sets up the toolchain, and hands a scaffold spec into the plan/execute pipeline.
+description: Use when starting a brand-new project with no existing repo or code — before brainstorming, when there's nothing yet to explore. Validates the idea, sets up the toolchain, and hands a scaffold spec into the plan/execute pipeline.
 ---
 
 <!-- riso-tech:orchestrator-split — new skill, no upstream counterpart -->
@@ -36,7 +36,9 @@ Discovery → Setup → Scaffold spec → Handoff. Each phase is defined below. 
 **Dispatch:** Use `superpowers:dispatching-parallel-agents` to send one investigation for each domain through `dispatch-agent` with `role: business_analyst` and `task_type: discovery_research`; give each worker only its domain-specific context (competing products, market size, risks, or differentiation). `dispatch-agent` resolves provider availability, and a claude subagent is always available.
 <!-- riso-tech:orchestrator-split END -->
 
+<!-- riso-tech:orchestrator-split START -->
 3. **Synthesize, present, commit** — dispatch a worker through `dispatch-agent` with `role: business_analyst` and `task_type: discovery_research` to write `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md` from the four results. Its acceptance criteria are: similar products + comparison, potential assessment, risks, and differentiation. The orchestrator validates that the returned file exists and meets those criteria before presenting it to your human partner, then commits it before moving on; it does not author the discovery doc inline.
+<!-- riso-tech:orchestrator-split END -->
 
 **This phase gates the rest.** Do not start Setup until the discovery doc is written and committed — even if the human "already knows the space." The research grounds the stack decision and the later `brainstorming` session.
 
@@ -51,7 +53,7 @@ Ask questions **one at a time**, multiple-choice where possible (same discipline
 ### Step 4 — Bootstrap the repo
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** Dispatch `git init` (if not already a repo) and an empty initial commit separately through `dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`. `dispatch-agent` resolves provider availability. Run this step inline only if the harness has no subagent capability at all.
+**Dispatch:** Dispatch `git init` (if not already a repo) and an empty initial commit separately through `dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`. `dispatch-agent` resolves provider availability, and a claude subagent is always available. Run this step inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 This is the one piece of bootstrapping nothing downstream can do for itself.
