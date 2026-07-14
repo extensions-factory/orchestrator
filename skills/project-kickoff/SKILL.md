@@ -26,18 +26,32 @@ Discovery → Setup → Scaffold spec → Handoff. Each phase is defined below. 
 
 1. **Idea capture** — ask exactly one question: "What are you building, in a sentence?" Use the answer to seed research and later stack questions. Do not persist it as a vision doc.
 
-2. **Research fan-out** — dispatch parallel research subagents with `superpowers:dispatching-parallel-agents` (use the `deep-research` skill where a deep multi-source pass fits). Four independent investigations, no shared state:
+2. **Pick the research track** from the idea-capture answer — the *track* adapts to the project, the fan-out itself never gets skipped:
+   - **Market-facing product** — the answer names end users or customers to win (app, SaaS, service, game).
+   - **Technical build** — the answer names infrastructure, IaC, internal tooling, a library, or a devtool: there is no market to win; the "competition" is prior art to adopt.
+
+   If the answer doesn't clearly place it, ask one multiple-choice question: "Is this a product for users/customers, or a technical/internal build?"
+
+3. **Research fan-out** — dispatch parallel research subagents with `superpowers:dispatching-parallel-agents` (use the `deep-research` skill where a deep multi-source pass fits). Four independent investigations for the chosen track, no shared state:
+
+   *Market-facing product:*
    - Similar/competing products
    - Market size & potential
    - Risks (technical, legal, adoption)
    - Differentiation opportunities
 
+   *Technical build:*
+   - Best practices & standards for the domain (e.g. module layout, state management, naming conventions)
+   - Existing reference designs/architectures to adopt or fork
+   - Risks (technical, operational, security)
+   - Tooling/ecosystem landscape (mature tools vs build-your-own)
+
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** Use `superpowers:dispatching-parallel-agents` to send one investigation for each domain through `dispatch-agent` with `role: business_analyst` and `task_type: discovery_research`; give each worker only its domain-specific context (competing products, market size, risks, or differentiation). `dispatch-agent` resolves provider availability, and a claude subagent is always available.
+**Dispatch:** Use `superpowers:dispatching-parallel-agents` to send one investigation for each of the chosen track's four domains through `dispatch-agent` with `role: business_analyst` and `task_type: discovery_research`; give each worker only its domain-specific context. `dispatch-agent` resolves provider availability, and a claude subagent is always available.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-3. **Synthesize, present, commit** — dispatch a worker through `dispatch-agent` with `role: business_analyst` and `task_type: discovery_research` to write `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md` from the four results. Its acceptance criteria are: similar products + comparison, potential assessment, risks, and differentiation. The orchestrator validates that the returned file exists and meets those criteria before presenting it to your human partner, then commits it before moving on; it does not author the discovery doc inline.
+4. **Synthesize, present, commit** — dispatch a worker through `dispatch-agent` with `role: business_analyst` and `task_type: discovery_research` to write `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md` from the four results. Its acceptance criteria mirror the chosen track: for a market-facing product — similar products + comparison, potential assessment, risks, and differentiation; for a technical build — best practices, reference designs to adopt, risks, and tooling landscape. The orchestrator validates that the returned file exists and meets those criteria before presenting it to your human partner, then commits it before moving on; it does not author the discovery doc inline.
 <!-- riso-tech:orchestrator-split END -->
 
 **This phase gates the rest.** Do not start Setup until the discovery doc is written and committed — even if the human "already knows the space." The research grounds the stack decision and the later `brainstorming` session.
@@ -88,6 +102,7 @@ Invoke `superpowers:writing-plans` on the scaffold spec. From there the existing
 | Directory isn't actually empty (unrelated files present) | Stop and ask before `git init` / init commands — don't silently treat a non-empty dir as greenfield. |
 | Idea-capture answer describes a feature for an *existing* project | Stop — not greenfield. Redirect to `superpowers:brainstorming`. |
 | "I already know the space, skip the research" | Discovery gates everything. Run the research fan-out anyway — it grounds the stack decision and later brainstorming. |
+| "Market research is irrelevant for this IaC/internal tool" | Wrong track, not wrong gate — switch to the technical-build track (best practices, reference designs), still run the fan-out. |
 | Stack init command fails (registry error, tool not installed) | Surface the failure; don't hand-write files faking what the tool would have produced. |
 | Unknown stack/tool combo with no known init command | Ask the user for the exact command rather than guessing. |
 | "It's a toy project, skip the CI stub / verification" | The scaffold spec still lists the CI stub and walking-skeleton verification. A green baseline is the point of kickoff. |
