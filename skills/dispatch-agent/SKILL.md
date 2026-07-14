@@ -23,29 +23,30 @@ Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The or
 Before sending, verify the target `agent` is actually reachable — a provider that is installed but not authenticated will hang the call:
 
 - `agent: codex` → run the Codex readiness check (`codex:setup`, i.e. `node <codex-plugin>/scripts/codex-companion.mjs setup --json`). Ready when `ready: true` OR at least one enabled profile in `profiles.json` shows `loggedIn: true`. If not ready, do NOT call `codex exec` — degrade.
-- `agent: antigravity` → run `/agy:setup`; if unavailable or not ready, degrade.
+- `agent: antigravity` → always ready: the bridge is a HUMAN relay (see Send below), no auth needed.
 - `agent: claude` → always ready (the Agent tool needs no external auth).
 
-If the chosen agent is **not ready**, apply the degradation ladder (retry on the next enabled provider, then a claude subagent) rather than emitting a call that blocks.
+If the chosen agent is **not ready**, apply the degradation ladder (walk down `recommended_models[]` to the next entry whose mapped agent is ready) rather than emitting a call that blocks.
 
 4. **Send** via the bridge matching `agent`:
    - `claude` → the Agent tool, prompt = `"ROLE: subagent\n" + <request JSON>`.
    - `codex` → `/codex:rescue --model <model> --effort <effort> "<request JSON>"`.
-   - `antigravity` → `/agy:task --model <model> "<request JSON>"` (bridge not yet available; if unreachable, degrade per graceful-degradation below).
+   - `antigravity` → HUMAN relay (no CLI bridge yet). Write the request JSON to `.superpowers/relay-request.json`, then tell the human: the exact model string to select (e.g. `Gemini 3.5 Flash (High)`), the file path, and "paste this request into Antigravity/Gemini on that model, then paste the worker's response JSON back here". The human's pasted response IS the worker's final message — validate and route it exactly like any other. When a real `/agy:task` bridge ships, replace this bullet with the CLI call.
 5. **Await** the worker's final message (the response JSON) and write it to `.superpowers/last-response.json`.
 6. **Validate** it: `node scripts/validate-message.mjs .superpowers/last-response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
 7. **Append** the pair to `.superpowers/ledger.jsonl` as one line:
    `{"ts":"<iso>","request":{...},"response":{...},"author_agent":"<agent>","author_model":"<model>"}`
+   For a human-relayed dispatch add `"via":"human_relay"`.
 8. **Route:** `status: done` → forward to the next step; `needs_revision` → re-request the same role with feedback; `blocked` → answer from context or escalate to the human, then re-request.
 
 ## Graceful degradation
 
 **Default:** Dispatch to a worker subagent is the DEFAULT, not conditional; different role = different worker.
 
-1. Bridge/quota failure on codex → rely on codex-plugin-cc failover.
-2. If failover yields nothing → retry on agent: claude.
-3. No bridge for the chosen agent (e.g. antigravity) → dispatch to a claude subagent instead.
-4. A claude subagent is the ALWAYS-AVAILABLE worker and needs no external auth.
+1. Chosen entry fails or its agent is not ready → walk down `recommended_models[]` in rank order and dispatch to the next entry whose mapped agent is ready. Never jump straight to claude.
+2. Bridge/quota failure on codex → rely on codex-plugin-cc failover first, then rule 1.
+3. antigravity is never "not ready" — the human relay is always available. It fails only if the human declines to relay; then apply rule 1.
+4. A claude subagent is the LAST-RESORT worker (always available, no external auth) — use it only when every non-claude entry in `recommended_models[]` is exhausted.
 5. Only when the harness has no subagent capability at all → skip dispatch-agent; the caller runs executing-plans inline.
 
 ## Role personas (the `dispatch.persona` role name; canonical list — mirrored read-only in intake-task)

@@ -4,6 +4,7 @@
   "model_name_policy": "Every recommended_models[].model value must not be normalized before passing to --model.",
   "selection_rules": [
     "Use the first recommended model unless cost, latency, privacy, or provider availability pushes you to another listed model.",
+    "Claude Code models are last-resort fallbacks: dispatch to them only when every non-Claude entry is exhausted — except architecture_design and security_review, where fable is rank 1.",
     "Use High, Thinking, fable, opus, or gpt-5.6-sol for ambiguous, high-risk, multi-file, long-context, security, or architecture work.",
     "Use Low, mini, haiku, gpt-5.6-luna, or GPT-OSS 120B (Medium) for bounded, repetitive, low-risk, or private/offline work.",
     "Use provider diversity for review: ask a different provider than the one that produced the first draft."
@@ -616,33 +617,33 @@
       "recommended_models": [
         {
           "rank": 1,
-          "provider": "Claude Code",
-          "model": "fable",
-          "why": "Best when the research may turn into long-running agentic planning."
-        },
-        {
-          "rank": 2,
           "provider": "Codex",
           "model": "gpt-5.6-sol",
           "why": "Strong for complex synthesis and professional reasoning."
         },
         {
-          "rank": 3,
+          "rank": 2,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.1 Pro (High)",
           "why": "Good for broad-context, multimodal, and dataset-heavy research."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Claude Opus 4.6 (Thinking)",
           "why": "Careful long-context research and expert-grade synthesis."
         },
         {
-          "rank": 5,
+          "rank": 4,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (Medium)",
           "why": "Balanced research when latency matters."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Best when the research may turn into long-running agentic planning."
         }
       ]
     },
@@ -658,27 +659,27 @@
       "recommended_models": [
         {
           "rank": 1,
-          "provider": "Claude Code",
-          "model": "sonnet",
-          "why": "Best default for clear, practical story/spec writing."
-        },
-        {
-          "rank": 2,
           "provider": "Antigravity CLI",
           "model": "Claude Sonnet 4.6 (Thinking)",
           "why": "Strong instruction following, knowledge work, and design detail."
         },
         {
-          "rank": 3,
+          "rank": 2,
           "provider": "Codex",
           "model": "gpt-5.6-terra",
           "why": "Solid professional writing plus coding awareness."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (Low)",
           "why": "Fast for straightforward story cleanup."
+        },
+        {
+          "rank": 4,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Best default for clear, practical story/spec writing."
         },
         {
           "rank": 5,
@@ -701,33 +702,33 @@
       "recommended_models": [
         {
           "rank": 1,
-          "provider": "Claude Code",
-          "model": "sonnet",
-          "why": "Default for practical backlog cleanup and task splitting."
-        },
-        {
-          "rank": 2,
           "provider": "Antigravity CLI",
           "model": "Claude Sonnet 4.6 (Thinking)",
           "why": "Good for product, design, and implementation tradeoffs."
         },
         {
-          "rank": 3,
+          "rank": 2,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (Medium)",
           "why": "Good agentic planner for iterative backlog work."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Codex",
           "model": "gpt-5.6-terra",
           "why": "Good cost/performance for everyday engineering planning."
         },
         {
-          "rank": 5,
+          "rank": 4,
           "provider": "Codex",
           "model": "gpt-5.6-luna",
           "why": "Fast option for small, obvious refinement."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Default for practical backlog cleanup and task splitting."
         }
       ]
     },
@@ -756,15 +757,15 @@
         },
         {
           "rank": 3,
-          "provider": "Claude Code",
-          "model": "fable",
-          "why": "Use when the plan may need long-running agentic execution."
-        },
-        {
-          "rank": 4,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (High)",
           "why": "High-effort Gemini path for hard code and agent plans."
+        },
+        {
+          "rank": 4,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Use when the plan may need long-running agentic execution."
         },
         {
           "rank": 5,
@@ -873,33 +874,33 @@
       "recommended_models": [
         {
           "rank": 1,
-          "provider": "Claude Code",
-          "model": "sonnet",
-          "why": "Best default for everyday implementation."
-        },
-        {
-          "rank": 2,
           "provider": "Codex",
           "model": "gpt-5.6-terra",
           "why": "Strong coding model with good cost/performance."
         },
         {
-          "rank": 3,
+          "rank": 2,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (Medium)",
           "why": "Good for iterative coding loops and agentic execution."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Claude Sonnet 4.6 (Thinking)",
           "why": "Use for higher-quality implementation and design-sensitive code."
         },
         {
-          "rank": 5,
+          "rank": 4,
           "provider": "Codex",
           "model": "gpt-5.6-luna",
           "why": "Fast for small, bounded changes."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Best default for everyday implementation."
         }
       ]
     },
@@ -922,21 +923,21 @@
         },
         {
           "rank": 2,
-          "provider": "Claude Code",
-          "model": "opus",
-          "why": "Good Claude Code path for root-cause work."
-        },
-        {
-          "rank": 3,
           "provider": "Codex",
           "model": "gpt-5.6-sol",
           "why": "Strong for hard reasoning and coding fixes."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (High)",
           "why": "Good for hard coding/debugging with tools."
+        },
+        {
+          "rank": 4,
+          "provider": "Claude Code",
+          "model": "opus",
+          "why": "Good Claude Code path for root-cause work."
         },
         {
           "rank": 5,
@@ -964,27 +965,27 @@
         },
         {
           "rank": 2,
-          "provider": "Claude Code",
-          "model": "fable",
-          "why": "Use for high-stakes review and cross-repo context."
-        },
-        {
-          "rank": 3,
           "provider": "Codex",
           "model": "gpt-5.6-sol",
           "why": "Good independent frontier review."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Claude Sonnet 4.6 (Thinking)",
           "why": "Good balanced review for normal PRs."
         },
         {
-          "rank": 5,
+          "rank": 4,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (High)",
           "why": "Good provider-diverse review for hard diffs."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Use for high-stakes review and cross-repo context."
         }
       ]
     },
@@ -1007,27 +1008,27 @@
         },
         {
           "rank": 2,
-          "provider": "Claude Code",
-          "model": "sonnet",
-          "why": "Good default for writing focused tests."
-        },
-        {
-          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (Medium)",
           "why": "Good for iterative test generation and tool loops."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "GPT-OSS 120B (Medium)",
           "why": "Useful private/offline high-reasoning test work."
         },
         {
-          "rank": 5,
+          "rank": 4,
           "provider": "Codex",
           "model": "gpt-5.6-luna",
           "why": "Fast for simple unit tests and expected-output checks."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Good default for writing focused tests."
         }
       ]
     },
@@ -1043,15 +1044,15 @@
       "recommended_models": [
         {
           "rank": 1,
-          "provider": "Antigravity CLI",
-          "model": "Claude Opus 4.6 (Thinking)",
-          "why": "Strong for cybersecurity-oriented review and deep reasoning."
-        },
-        {
-          "rank": 2,
           "provider": "Claude Code",
           "model": "fable",
           "why": "Use for high-stakes security analysis."
+        },
+        {
+          "rank": 2,
+          "provider": "Antigravity CLI",
+          "model": "Claude Opus 4.6 (Thinking)",
+          "why": "Strong for cybersecurity-oriented review and deep reasoning."
         },
         {
           "rank": 3,
@@ -1092,21 +1093,21 @@
         },
         {
           "rank": 2,
-          "provider": "Claude Code",
-          "model": "sonnet",
-          "why": "Good default for checklists and release engineering."
-        },
-        {
-          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (Medium)",
           "why": "Good for multi-step tool and deployment planning."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Claude Sonnet 4.6 (Thinking)",
           "why": "Good for careful runbooks and release notes."
+        },
+        {
+          "rank": 4,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Good default for checklists and release engineering."
         },
         {
           "rank": 5,
@@ -1135,27 +1136,27 @@
         },
         {
           "rank": 2,
-          "provider": "Claude Code",
-          "model": "haiku",
-          "why": "Cheap option for simple setup and verification commands."
-        },
-        {
-          "rank": 3,
-          "provider": "Claude Code",
-          "model": "sonnet",
-          "why": "Default when setup needs platform judgment or recovery."
-        },
-        {
-          "rank": 4,
           "provider": "Codex",
           "model": "gpt-5.6-terra",
           "why": "Use when setup touches several project conventions."
         },
         {
-          "rank": 5,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (Medium)",
           "why": "Good for multi-step setup in agentic tool loops."
+        },
+        {
+          "rank": 4,
+          "provider": "Claude Code",
+          "model": "haiku",
+          "why": "Cheap option for simple setup and verification commands."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Default when setup needs platform judgment or recovery."
         }
       ]
     },
@@ -1172,33 +1173,33 @@
       "recommended_models": [
         {
           "rank": 1,
-          "provider": "Claude Code",
-          "model": "opus",
-          "why": "Good for long-running operational investigation."
-        },
-        {
-          "rank": 2,
           "provider": "Antigravity CLI",
           "model": "Claude Opus 4.6 (Thinking)",
           "why": "Strong at root-cause analysis and long-context reasoning."
         },
         {
-          "rank": 3,
+          "rank": 2,
           "provider": "Codex",
           "model": "gpt-5.6-sol",
           "why": "Strong for incident synthesis and remediation plans."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (High)",
           "why": "Good for hard multi-step ops reasoning."
         },
         {
-          "rank": 5,
+          "rank": 4,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.1 Pro (High)",
           "why": "Good for large docs/log context and multimodal evidence."
+        },
+        {
+          "rank": 5,
+          "provider": "Claude Code",
+          "model": "opus",
+          "why": "Good for long-running operational investigation."
         }
       ]
     },
@@ -1215,27 +1216,27 @@
       "recommended_models": [
         {
           "rank": 1,
-          "provider": "Claude Code",
-          "model": "sonnet",
-          "why": "Good default for clear engineering documentation."
-        },
-        {
-          "rank": 2,
           "provider": "Antigravity CLI",
           "model": "Claude Sonnet 4.6 (Thinking)",
           "why": "Strong for polished knowledge work."
         },
         {
-          "rank": 3,
+          "rank": 2,
           "provider": "Codex",
           "model": "gpt-5.6-terra",
           "why": "Good professional writing with code awareness."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (Low)",
           "why": "Fast for straightforward docs and summaries."
+        },
+        {
+          "rank": 4,
+          "provider": "Claude Code",
+          "model": "sonnet",
+          "why": "Good default for clear engineering documentation."
         },
         {
           "rank": 5,
@@ -1263,21 +1264,21 @@
         },
         {
           "rank": 2,
-          "provider": "Claude Code",
-          "model": "fable",
-          "why": "Good for long-horizon process and org reasoning."
-        },
-        {
-          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.1 Pro (High)",
           "why": "Good for synthesizing broad qualitative and quantitative inputs."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Claude Sonnet 4.6 (Thinking)",
           "why": "Good for practical knowledge-work outputs."
+        },
+        {
+          "rank": 4,
+          "provider": "Claude Code",
+          "model": "fable",
+          "why": "Good for long-horizon process and org reasoning."
         },
         {
           "rank": 5,
