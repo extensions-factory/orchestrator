@@ -16,7 +16,12 @@ Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The or
    - **`agent`** from `provider` via this map: `"Claude Code" → claude`, `"Codex" → codex`, `"Antigravity CLI" → antigravity`.
    - **`effort`** rule: Antigravity encodes it in the model string (e.g. `"Gemini 3.5 Flash (Medium)"` → `medium`) — parse the parenthesized word; Codex takes an explicit `--effort`; Claude has none. When not otherwise determined, default `medium`, or apply the routing JSON's `selection_rules` (High/Thinking → `high`; Low/mini/haiku → `low`).
    - **Review tasks** (`code_review_quality`, `security_review`): read `author_agent` from `.superpowers/ledger.jsonl` and pick the first recommended model whose mapped `agent` differs (provider diversity). If no other provider is enabled, fall back to a different model on the same agent and note it in the ledger entry.
-3. **Build the request JSON** per `${CLAUDE_PLUGIN_ROOT}/assets/message-protocol.json`. Set `dispatch.persona` to the **role name** (e.g. `software_engineer`) — a short string, never a prompt-file's contents. Any role prompt file (e.g. `implementer-prompt.md`) is pasted into the spawn prompt body, not into `dispatch.persona`. Record the diversity decision in `dispatch.provider_diversity`: for a review task set `{author_agent, author_model, rule: "reviewer_agent != author_agent"}`; otherwise set `provider_diversity: null`. Set `message_type: "request"`.
+3. **Build the request JSON** per `${CLAUDE_PLUGIN_ROOT}/assets/message-protocol.json`. Set `task` and `turn` first — they name the file-based exchange folder `.superpowers/<task>/`:
+   - `task`: kebab slug, assigned at the FIRST dispatch for a piece of work and reused unchanged by every related dispatch (review, revision, QA). Plan tasks → `task-<N>-<short-slug>` (e.g. `task-3-add-auth`); unplanned work → a short slug of the request.
+   - `turn`: 1 + the highest existing turn number in `.superpowers/<task>/` (1 if the folder is empty or absent) — derived from the folder so it survives a crashed or resumed session.
+   - Write the request to `.superpowers/<task>/turn-<turn>-request.json` (create the folder if needed).
+
+   Set `dispatch.persona` to the **role name** (e.g. `software_engineer`) — a short string, never a prompt-file's contents. Any role prompt file (e.g. `implementer-prompt.md`) is pasted into the spawn prompt body, not into `dispatch.persona`. Record the diversity decision in `dispatch.provider_diversity`: for a review task set `{author_agent, author_model, rule: "reviewer_agent != author_agent"}`; otherwise set `provider_diversity: null`. Set `message_type: "request"`.
 
    **Standard worker-scope constraint** — always append to `context.constraints`, verbatim:
    > "Write files and run tests only. Never run git commit/push or other privileged operations. If any operation is denied, do not retry or work around it — finish what you can and report the denied operation in output.blocked_ops."
@@ -36,13 +41,13 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 4. **Send** via the bridge matching `agent`:
    - `claude` → the Agent tool, prompt = `"ROLE: subagent\n" + <request JSON>`.
    - `codex` → `/codex:rescue --model <model> --effort <effort> "<prompt>"`, where `<prompt>` is the inline protocol block from `references/codex-worker-protocol.md` (filled with persona boundary + matching discipline bullet) prepended to the request JSON — Codex has no native skill discovery, so `intake-task`/`report-task`/the discipline skill must travel inline instead of by reference. Full bridge reference (flags, background jobs, resume, review commands): `references/codex-workers.md`.
-   - `antigravity` → HUMAN relay (no CLI bridge yet). Write the request JSON to `.superpowers/relay-request.json`, then tell the human: the exact model string to select (e.g. `Gemini 3.5 Flash (High)`), the file path, and "paste this request into Antigravity/Gemini on that model, then paste the worker's response JSON back here". The human's pasted response IS the worker's final message — validate and route it exactly like any other. When a real `/agy:task` bridge ships, replace this bullet with the CLI call.
-5. **Await** the worker's final message (the response JSON) and write it to `.superpowers/last-response.json`.
-6. **Validate** it: `node scripts/validate-message.mjs .superpowers/last-response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
+   - `antigravity` → HUMAN relay (no CLI bridge yet). The request already sits at `.superpowers/<task>/turn-<turn>-request.json` (Step 3) — tell the human: the exact model string to select (e.g. `Gemini 3.5 Flash (High)`), that file path, and "paste this request into Antigravity/Gemini on that model, then paste the worker's response JSON back here". The human's pasted response IS the worker's final message — validate and route it exactly like any other. When a real `/agy:task` bridge ships, replace this bullet with the CLI call.
+5. **Await** the worker's final message (the response JSON). Ensure it exists at `.superpowers/<task>/turn-<turn>-response.json` — a claude worker writes it there itself via `report-task`; for codex/antigravity (message-only) workers, write it there yourself.
+6. **Validate** it: `node scripts/validate-message.mjs .superpowers/<task>/turn-<turn>-response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
 7. **Append** the pair to `.superpowers/ledger.jsonl` as one line:
-   `{"ts":"<iso>","request":{...},"response":{...},"author_agent":"<agent>","author_model":"<model>"}`
+   `{"ts":"<iso>","task":"<task>","turn":<turn>,"request":{...},"response":{...},"author_agent":"<agent>","author_model":"<model>"}`
    For a human-relayed dispatch add `"via":"human_relay"`.
-8. **Route:** `status: done` → forward to the next step; `needs_revision` → re-request the same role with feedback; `blocked` → answer from context or escalate to the human, then re-request.
+8. **Route:** `status: done` → forward to the next step; `needs_revision` → re-request the same role with feedback (same `task`, `turn + 1`); `blocked` → answer from context or escalate to the human, then re-request (same `task`, `turn + 1`).
 
    **Residual ops** — if the response carries `output.blocked_ops` (or `done` work needs committing):
    - Git bookkeeping (commit/push of validated worker output) → the orchestrator runs it inline. This is routing/bookkeeping, not implementation — it does not violate the never-implement rule.
@@ -91,3 +96,21 @@ The ladder always terminates in a dispatch. Because a claude subagent is always 
 ## Ledger
 
 `.superpowers/ledger.jsonl` is append-only, one pair per line. Create it on first dispatch if absent. It is the source of truth for `author_agent` in provider-diversity lookups.
+
+## File layout
+
+All per-dispatch exchange files live under one folder per task — never flat in `.superpowers/` (flat fixed names collide under parallel dispatch):
+
+```
+.superpowers/
+├─ ledger.jsonl                    # global, append-only, cross-task
+└─ <task>/                         # e.g. task-3-add-auth
+   ├─ turn-1-request.json          # implement
+   ├─ turn-1-response.json
+   ├─ turn-2-request.json          # review
+   ├─ turn-2-response.json
+   ├─ turn-3-request.json          # revision
+   └─ turn-3-response.json
+```
+
+One monotonic turn counter per task; every dispatch (implement, review, revision, QA) takes the next turn. What kind of dispatch a turn was is read from `task_type`/`dispatch.persona` inside the envelope, not from the filename. Subsystem folders (`sdd/`, `plan-refine/`, `brainstorm/`) are unaffected.

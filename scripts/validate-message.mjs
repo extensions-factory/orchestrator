@@ -22,6 +22,10 @@ export function validateMessage(msg) {
   if (agent !== undefined && !schema.enums.agent.includes(agent)) errors.push(`invalid dispatch.agent: ${agent}`);
   const effort = msg.dispatch?.effort;
   if (effort !== undefined && !schema.enums.effort.includes(effort)) errors.push(`invalid dispatch.effort: ${effort}`);
+  if (msg.task !== undefined && !/^[a-z0-9][a-z0-9-]*$/.test(msg.task))
+    errors.push(`invalid task slug: ${msg.task}`);
+  if (msg.turn !== undefined && (!Number.isInteger(msg.turn) || msg.turn < 1))
+    errors.push(`invalid turn (positive integer required): ${msg.turn}`);
   const blockedOps = msg.output?.blocked_ops;
   if (blockedOps !== undefined) {
     if (!Array.isArray(blockedOps)) errors.push("output.blocked_ops must be an array");

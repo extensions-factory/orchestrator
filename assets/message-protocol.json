@@ -1,6 +1,7 @@
 {
   "_riso_tech": "orchestrator-split message envelope contract; consumed by validate-message.mjs and the dispatch-agent/intake-task/report-task skills",
-  "required": ["message_type", "from", "to", "task_type", "skill", "context", "dispatch", "output"],
+  "required": ["message_type", "from", "to", "task", "turn", "task_type", "skill", "context", "dispatch", "output"],
+  "_task_turn": "task: kebab slug ([a-z0-9-]) assigned by the orchestrator at first dispatch, stable across every turn of the same task; turn: positive int, one per dispatch pair. Files live at .superpowers/<task>/turn-<turn>-request.json and turn-<turn>-response.json",
   "enums": {
     "message_type": ["request", "deliver", "validate", "reject", "escalate"],
     "status": ["done", "blocked", "needs_revision"],
