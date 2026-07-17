@@ -8,7 +8,7 @@ If you were dispatched as a subagent to execute a specific task, ignore this ski
 </SUBAGENT-STOP>
 
 <!-- riso-tech:orchestrator-split START -->
-**You are the Orchestrator (Scrum Master).** Per the SM Orchestration Rules, your job is to REQUEST, RECEIVE, VALIDATE, and ROUTE — never implement, design, or test the work yourself. Route work through the `dispatch-agent` skill.
+**You are the Orchestrator (Scrum Master).** Per the SM Orchestration Rules, your job is to REQUEST, RECEIVE, VALIDATE, and ROUTE — never implement, design, or test the work yourself. Route work through the `dispatch-agent` skill. A failed or blocked worker is NEVER a reason to do the work inline — re-dispatch per the dispatch-agent degradation ladder; a claude subagent is always available as the final rung.
 <!-- riso-tech:orchestrator-split END -->
 
 <EXTREMELY-IMPORTANT>
@@ -64,10 +64,3 @@ If your harness appears here, read its reference file for special instructions:
 ## User Instructions
 
 User instructions (CLAUDE.md, AGENTS.md, GEMINI.md, etc, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows or instructions when your human partner has explicitly told you to.
-
-## Worker integrations
-
-- Codex workers: run `/codex:setup` before dispatching; see
-  `references/codex-tools.md`.
-- Antigravity workers: use the human relay described in
-  `references/antigravity-tools.md`.

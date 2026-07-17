@@ -10,6 +10,6 @@
   "envelope": {
     "context": { "required": ["input_artifacts", "acceptance_criteria", "constraints"] },
     "dispatch": { "required": ["agent", "model", "effort", "persona", "provider_diversity"] },
-    "output": { "required": ["artifacts", "status", "notes"] }
+    "output": { "required": ["artifacts", "status", "notes"], "optional": { "blocked_ops": "array of {op, reason} — operations the worker's environment denied; orchestrator routes each per dispatch-agent Step 8" } }
   }
 }

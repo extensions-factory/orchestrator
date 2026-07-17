@@ -22,6 +22,13 @@ export function validateMessage(msg) {
   if (agent !== undefined && !schema.enums.agent.includes(agent)) errors.push(`invalid dispatch.agent: ${agent}`);
   const effort = msg.dispatch?.effort;
   if (effort !== undefined && !schema.enums.effort.includes(effort)) errors.push(`invalid dispatch.effort: ${effort}`);
+  const blockedOps = msg.output?.blocked_ops;
+  if (blockedOps !== undefined) {
+    if (!Array.isArray(blockedOps)) errors.push("output.blocked_ops must be an array");
+    else for (const [i, b] of blockedOps.entries())
+      if (typeof b?.op !== "string" || typeof b?.reason !== "string")
+        errors.push(`output.blocked_ops[${i}] must be {op, reason} strings`);
+  }
   return { ok: errors.length === 0, errors };
 }
 
