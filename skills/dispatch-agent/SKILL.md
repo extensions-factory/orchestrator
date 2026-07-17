@@ -34,7 +34,7 @@ Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The or
 
 Before sending, verify the target `agent` is actually reachable — a provider that is installed but not authenticated will hang the call:
 
-- `agent: codex` → run the Codex readiness check (`codex:setup`, i.e. `node <codex-plugin>/scripts/codex-companion.mjs setup --json`). Ready when `ready: true` OR at least one enabled profile in `profiles.json` shows `loggedIn: true`. If not ready, do NOT call `codex exec` — degrade.
+- `agent: codex` → run the Codex readiness check (`codex:setup`, i.e. `node <codex-plugin>/scripts/codex-companion.mjs setup --json`). Ready when `ready: true` OR at least one enabled profile in `profiles.json` shows `loggedIn: true`. If not ready, do NOT call `codex exec` — degrade. **Readiness is about auth, NOT sandbox mode:** a logged-in Codex worker that reports a write rejection ("sandbox rejected the write", "approval escalation disabled") is READY — the run was launched read-only because `--write` was missing (see Send). Fix the flag and re-send; do NOT treat a write-denial as a readiness failure and degrade to claude.
 - `agent: antigravity` → always ready: the bridge is a HUMAN relay (see Send below), no auth needed.
 - `agent: claude` → always ready (the Agent tool needs no external auth).
 
@@ -42,7 +42,8 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 
 4. **Send** via the bridge matching `agent`:
    - `claude` → the Agent tool, prompt = `"ROLE: subagent\n" + <request JSON>`.
-   - `codex` → `/codex:rescue --model <model> --effort <effort> "<prompt>"`, where `<prompt>` is the inline protocol block from `references/codex-worker-protocol.md` (filled with persona boundary + matching discipline bullet) prepended to the request JSON — Codex has no native skill discovery, so `intake-task`/`report-task`/the discipline skill must travel inline instead of by reference. Full bridge reference (flags, background jobs, resume, review commands): `references/codex-workers.md`.
+   - `codex` → `/codex:rescue --model <model> --effort <effort> [--write] "<prompt>"`, where `<prompt>` is the inline protocol block from `references/codex-worker-protocol.md` (filled with persona boundary + matching discipline bullet) prepended to the request JSON — Codex has no native skill discovery, so `intake-task`/`report-task`/the discipline skill must travel inline instead of by reference.
+     **`--write` is mandatory for any task that writes files** (everything except the three pure-review task_types `code_review_quality`, `security_review`, `retrospective_process_improvement`). Codex launches read-only by default; without `--write` an implementer, fix, workspace-setup, plan, spec, or docs worker CANNOT write a single file — not even its own response JSON — and the run fails looking like a readiness problem. Include `--write` unless the task_type is one of the three review types (those stay read-only so the reviewer cannot edit what it reviews). Full bridge reference (flags, background jobs, resume, review commands): `references/codex-workers.md`.
    - `antigravity` → HUMAN relay (no CLI bridge yet). The request already sits at `.superpowers/<task>/turn-<turn>-request.json` (Step 3) — tell the human: the exact model string to select (e.g. `Gemini 3.5 Flash (High)`), that file path, and "paste this request into Antigravity/Gemini on that model, then paste the worker's response JSON back here". The human's pasted response IS the worker's final message — validate and route it exactly like any other. When a real `/agy:task` bridge ships, replace this bullet with the CLI call.
 5. **Await** the worker's final message (the response JSON). Ensure it exists at `.superpowers/<task>/turn-<turn>-response.json` — a claude worker writes it there itself via `report-task`; for codex/antigravity (message-only) workers, write it there yourself.
 6. **Validate** it: `node scripts/validate-message.mjs .superpowers/<task>/turn-<turn>-response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
@@ -60,7 +61,7 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 **Default:** Dispatch to a worker subagent is the DEFAULT, not conditional; different role = different worker.
 
 1. Chosen entry fails or its agent is not ready → walk down `recommended_models[]` in rank order and dispatch to the next entry whose mapped agent is ready. Never jump straight to claude.
-2. Bridge/quota failure on codex → rely on codex-plugin-cc failover first, then rule 1.
+2. Bridge/quota failure on codex → rely on codex-plugin-cc failover first, then rule 1. A codex **write rejection is not a failure** — it means `--write` was omitted on a write task (Send step); add the flag and re-send the same worker before considering any degradation.
 3. antigravity is never "not ready" — the human relay is always available. It fails only if the human declines to relay; then apply rule 1.
 4. A claude subagent is the LAST-RESORT worker (always available, no external auth) — use it only when every non-claude entry in `recommended_models[]` is exhausted.
 5. Only when the harness has no subagent capability at all → skip dispatch-agent; the caller runs executing-plans inline. This is a harness property, NOT a fallback for failed workers.
@@ -80,6 +81,7 @@ The ladder is pre-authorized: never stop mid-ladder to ask the human's permissio
 | "The Agent tool is one call away, skip the lookup" | Routing IS the job. Steps 1–2 before any spawn, claude included. |
 | "This task is obviously claude-shaped" | The routing table decides, not intuition. Rank-1 may be another provider, ready. |
 | "Better ask the human which fallback to use" | The ladder already decided. Walk it; ask only when it's exhausted. |
+| "Codex couldn't even write its response, it's not ready — use claude" | Missing `--write`, not a readiness failure. A logged-in Codex is READY; add `--write` and re-send. Degrading here silently routes every implementer to claude. |
 
 ## Role personas (the `dispatch.persona` role name; canonical list — mirrored read-only in intake-task)
 

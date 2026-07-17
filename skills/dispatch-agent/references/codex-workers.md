@@ -25,6 +25,15 @@ Use `/codex:rescue` for a worker task. Put flags before the task text:
 /codex:rescue --model gpt-5.4-mini --effort medium <request JSON>
 ```
 
+**Pass `--write` for any worker that must edit the repo** — implementers,
+fixers, workspace setup, and anyone writing a plan/spec/doc file. Codex
+launches in a read-only sandbox by default (`codex-companion.mjs`:
+`sandbox: request.write ? "workspace-write" : "read-only"`); without `--write`
+the worker cannot create or modify a single file, including its own response
+JSON, and the run fails with a sandbox write rejection that is easy to
+misread as a readiness problem. Omit `--write` only for review, diagnosis,
+or research tasks that should not touch the tree.
+
 The `--model` and `--effort` flags are optional; omit them to use Codex's
 configured defaults. `spark` selects `gpt-5.3-codex-spark`. With multiple
 accounts, add `--profile <name>` to pin a run; otherwise a fresh run may use
