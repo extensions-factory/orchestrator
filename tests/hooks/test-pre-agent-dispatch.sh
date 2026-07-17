@@ -56,6 +56,10 @@ if (!context.includes("model-lookup.sh")) {
   console.error("additionalContext did not mention model-lookup.sh");
   process.exit(1);
 }
+if (!context.includes("agent=codex") || !context.includes("/codex:rescue --write")) {
+  console.error("additionalContext did not force the Codex dispatch command");
+  process.exit(1);
+}
 '; then
         pass "$description"
     else
@@ -75,8 +79,22 @@ assert_valid_reminder \
     "run-hook.cmd wrapper dispatches to the named pre-agent-dispatch script" \
     bash "$WRAPPER_UNDER_TEST" pre-agent-dispatch
 
+codex_review_output="$(echo '{"tool_name":"Skill","tool_input":{"skill":"codex:review"}}' | bash "$HOOK_UNDER_TEST")"
+if [[ "$codex_review_output" == *"/codex:rescue --write"* ]]; then
+    pass "hook redirects alternate Codex dispatch commands"
+else
+    fail "hook redirects alternate Codex dispatch commands"
+fi
+
+unrelated_output="$(echo '{"tool_name":"Skill","tool_input":{"skill":"brainstorming"}}' | bash "$HOOK_UNDER_TEST")"
+if [[ -z "$unrelated_output" ]]; then
+    pass "hook stays silent for non-Codex skills"
+else
+    fail "hook stays silent for non-Codex skills"
+fi
+
 echo "---jq schema check---"
-if jq -e '.hooks.PreToolUse[] | select(.matcher == "Agent") | .hooks[] | select(.type == "command") | .command' \
+if jq -e '.hooks.PreToolUse[] | select(.matcher | contains("Agent")) | .hooks[] | select(.type == "command") | .command' \
     "$REPO_ROOT/hooks/hooks.json" >/dev/null; then
     pass "hooks.json registers PreToolUse matcher Agent -> pre-agent-dispatch"
 else

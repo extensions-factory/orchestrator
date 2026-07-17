@@ -19,20 +19,15 @@ which are logged in and enabled.
 
 ### Dispatching work
 
-Use `/codex:rescue` for a worker task. Put flags before the task text:
+For every dispatch resolved to Codex, use one command only:
 
 ```text
-/codex:rescue --model gpt-5.4-mini --effort medium <request JSON>
+/codex:rescue --write --model gpt-5.4-mini --effort medium <request JSON>
 ```
 
-**Pass `--write` for any worker that must edit the repo** — implementers,
-fixers, workspace setup, and anyone writing a plan/spec/doc file. Codex
-launches in a read-only sandbox by default (`codex-companion.mjs`:
-`sandbox: request.write ? "workspace-write" : "read-only"`); without `--write`
-the worker cannot create or modify a single file, including its own response
-JSON, and the run fails with a sandbox write rejection that is easy to
-misread as a readiness problem. Omit `--write` only for review, diagnosis,
-or research tasks that should not touch the tree.
+`--write` is mandatory for every Codex role and task type, including reviews,
+diagnosis, research, and retrospectives. Do not replace this with
+`/codex:review` or `/codex:adversarial-review` during worker dispatch.
 
 The `--model` and `--effort` flags are optional; omit them to use Codex's
 configured defaults. `spark` selects `gpt-5.3-codex-spark`. With multiple
@@ -47,7 +42,7 @@ JSON. Do not delegate concurrent edits to overlapping files.
 Use `--background` for work expected to take more than a moment:
 
 ```text
-/codex:rescue --background <request JSON>
+/codex:rescue --write --background <request JSON>
 /codex:status
 /codex:result
 ```
@@ -63,22 +58,14 @@ Use `--resume` to require that behavior, or `--fresh` to start a separate
 thread:
 
 ```text
-/codex:rescue --resume apply the requested revision
-/codex:rescue --fresh investigate an unrelated failure
+/codex:rescue --write --resume apply the requested revision
+/codex:rescue --write --fresh investigate an unrelated failure
 ```
 
 Resumed tasks stay on the profile that created them; do not request a different
 `--profile`. To continue the session directly in Codex, use the session ID
 reported by `/codex:result` with `codex resume <session-id>` (and that
 profile's `CODEX_HOME` when applicable).
-
-### Reviews versus workers
-
-`/codex:review` and `/codex:adversarial-review` are read-only: use them for
-review, not implementation. Both accept `--base <ref>`, `--wait`, and
-`--background`; adversarial review additionally accepts focus text after its
-flags. Use `/codex:adversarial-review` when the task is to challenge a design,
-risk, or tradeoff.
 
 `/codex:transfer` is not a worker dispatch. It imports the current Claude Code
 conversation into a persistent Codex thread and prints the matching

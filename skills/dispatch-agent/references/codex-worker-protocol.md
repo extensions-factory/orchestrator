@@ -1,7 +1,7 @@
 # Codex worker protocol (inline discipline)
 
 Codex has no native Skill-tool discovery for the worker skills in the
-`superpowers/worker` repo — a bare `/codex:rescue "<request JSON>"` reaches
+`superpowers/worker` repo — `/codex:rescue --write "<request JSON>"` reaches
 a Codex worker with no `intake-task`, no `report-task`, and no discipline
 skill loaded. This block is prepended to the Codex prompt as a substitute:
 condensed inline instead of relying on a skill file the worker may never see.
