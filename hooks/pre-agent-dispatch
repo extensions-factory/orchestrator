@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# PreToolUse hook for superpowers plugin (matcher: Agent).
+# Reminds the orchestrator to look up the routed model/provider before
+# dispatching a subagent, instead of defaulting to Claude.
+set -euo pipefail
+
+reminder="Before dispatching this subagent: resolve task_type and look up the routed model/provider via ${CLAUDE_PLUGIN_ROOT:-<plugin-root>}/scripts/model-lookup.sh <task_type> (see the dispatch-agent skill) instead of defaulting to Claude."
+
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
+}
+
+escaped="$(escape_for_json "$reminder")"
+
+printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "PreToolUse",\n    "additionalContext": "%s"\n  }\n}\n' "$escaped"
+
+exit 0
