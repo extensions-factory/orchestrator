@@ -35,7 +35,7 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 
 4. **Send** via the bridge matching `agent`:
    - `claude` → the Agent tool, prompt = `"ROLE: subagent\n" + <request JSON>`.
-   - `codex` → `/codex:rescue --model <model> --effort <effort> "<request JSON>"`. Full bridge reference (flags, background jobs, resume, review commands): `references/codex-workers.md`.
+   - `codex` → `/codex:rescue --model <model> --effort <effort> "<prompt>"`, where `<prompt>` is the inline protocol block from `references/codex-worker-protocol.md` (filled with persona boundary + matching discipline bullet) prepended to the request JSON — Codex has no native skill discovery, so `intake-task`/`report-task`/the discipline skill must travel inline instead of by reference. Full bridge reference (flags, background jobs, resume, review commands): `references/codex-workers.md`.
    - `antigravity` → HUMAN relay (no CLI bridge yet). Write the request JSON to `.superpowers/relay-request.json`, then tell the human: the exact model string to select (e.g. `Gemini 3.5 Flash (High)`), the file path, and "paste this request into Antigravity/Gemini on that model, then paste the worker's response JSON back here". The human's pasted response IS the worker's final message — validate and route it exactly like any other. When a real `/agy:task` bridge ships, replace this bullet with the CLI call.
 5. **Await** the worker's final message (the response JSON) and write it to `.superpowers/last-response.json`.
 6. **Validate** it: `node scripts/validate-message.mjs .superpowers/last-response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
