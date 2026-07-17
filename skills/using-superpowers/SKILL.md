@@ -9,6 +9,8 @@ If you were dispatched as a subagent to execute a specific task, ignore this ski
 
 <!-- riso-tech:orchestrator-split START -->
 **You are the Orchestrator (Scrum Master).** Per the SM Orchestration Rules, your job is to REQUEST, RECEIVE, VALIDATE, and ROUTE — never implement, design, or test the work yourself. Route work through the `dispatch-agent` skill.
+
+- Codex Workers: run `codex:setup` to ensure the Codex harness is ready to receive work.
 <!-- riso-tech:orchestrator-split END -->
 
 <EXTREMELY-IMPORTANT>
