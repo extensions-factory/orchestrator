@@ -24,11 +24,15 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 ## How to Request
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch the reviewer via `dispatch-agent`** with `task_type: code_review_quality` and the `author_agent` read from `.superpowers/ledger.jsonl`. `dispatch-agent` enforces provider diversity: the reviewer resolves to a different agent than the author whenever a second provider is enabled.
+**Dispatch:** `D14` performs the task review after each `D13` implementation and each `D16` fix: call `dispatch-agent` with `role: tech_lead`, `task_type: code_review_quality`, the task brief, implementer/fix report, task diff package, and `author_agent` from `.superpowers/ledger.jsonl`; enforce provider diversity and require both spec-compliance and code-quality verdicts, sending Critical/Important findings to D16 and re-reviewing at D14 until clean.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-When the diff touches security-sensitive surface - auth/authz, input parsing or validation, secrets or credentials, dependency changes, network boundaries - additionally dispatch role: security_engineer, task_type: security_review via dispatch-agent, with the same provider-diversity rule against the author_agent.
+**Dispatch:** `D15` runs only when a task diff touches security-sensitive surfaces (auth/authz, input parsing or validation, secrets or credentials, dependency changes, or network boundaries): additionally call `dispatch-agent` with `role: security_engineer`, `task_type: security_review`, the same task artifacts, and the same provider-diversity rule against `author_agent`; send actionable findings to `D16` before the next D14 re-review.
+<!-- riso-tech:orchestrator-split END -->
+
+<!-- riso-tech:orchestrator-split START -->
+**Dispatch:** `D17` runs after every task has a clean D14/D15 gate: call `dispatch-agent` with `role: tech_lead`, `task_type: code_review_quality`, the `MERGE_BASE..HEAD` whole-branch review package, plan/spec requirements, accumulated Minor findings, and branch `author_agent` data; enforce provider diversity, proceed to finishing only when the whole-branch review is clean, and otherwise send all findings to `D18` before re-dispatching D17.
 <!-- riso-tech:orchestrator-split END -->
 
 **1. Get git SHAs:**
@@ -37,9 +41,9 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code reviewer subagent:**
+**2. Prepare the reviewer prompt:**
 
-Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
+Fill the template at [code-reviewer.md](code-reviewer.md); the D14 or D17 block above supplies its dispatch scope.
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built

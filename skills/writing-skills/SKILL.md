@@ -16,7 +16,7 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
 <!-- riso-tech:orchestrator-split START -->
-**Orchestrator split:** Skill authoring and editing are production work. Always dispatch them to a worker subagent via `dispatch-agent` with `role: software_engineer` and `task_type: implementation_coding`; `dispatch-agent` resolves provider availability, and a claude subagent is always available — resolving to claude is a dispatch, not an inline exception. The orchestrator (Scrum Master) does not author skill content inline: it hands the worker the acceptance criteria, then as its VALIDATE step runs this skill's validation checklist on the returned file. Author inline only if the harness has no subagent capability at all.
+**Dispatch:** `D21` runs only for a human-approved skill improvement handed off from the retrospective: through `writing-skills`, call `dispatch-agent` with `role: software_engineer` and `task_type: implementation_coding`, the approved acceptance criteria, failing pressure test, and target skill paths; the worker edits the skill and reruns its focused validation, while the orchestrator does not author skill content inline and runs this skill's validation checklist on the returned files before accepting the improvement; author inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 **REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.

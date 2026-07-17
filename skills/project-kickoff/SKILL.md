@@ -47,11 +47,13 @@ Discovery → Setup → Scaffold spec → Handoff. Each phase is defined below. 
    - Tooling/ecosystem landscape (mature tools vs build-your-own)
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** Use `superpowers:dispatching-parallel-agents` to send one investigation for each of the chosen track's four domains through `dispatch-agent` with `role: business_analyst` and `task_type: discovery_research`; give each worker only its domain-specific context. `dispatch-agent` resolves provider availability, and a claude subagent is always available — resolving to claude is a dispatch, not an inline exception.
+**Dispatch:** `D1`, `D2`, `D3`, and `D4` are four distinct dispatches: use `superpowers:dispatching-parallel-agents` to send one independent worker for each of the chosen track's four research domains in the order listed above (D1 first domain, D2 second, D3 third, D4 fourth), each through `dispatch-agent` with `role: business_analyst`, `task_type: discovery_research`, and only that domain's context; issue all four in one fan-out, then wait for all four results before `D5`.
 <!-- riso-tech:orchestrator-split END -->
 
+4. **Synthesize, present, commit.**
+
 <!-- riso-tech:orchestrator-split START -->
-4. **Synthesize, present, commit** — dispatch a worker through `dispatch-agent` with `role: business_analyst` and `task_type: discovery_research` to write `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md` from the four results. Its acceptance criteria mirror the chosen track: for a market-facing product — similar products + comparison, potential assessment, risks, and differentiation; for a technical build — best practices, reference designs to adopt, risks, and tooling landscape. The orchestrator validates that the returned file exists and meets those criteria before presenting it to your human partner, then commits it before moving on; it does not author the discovery doc inline.
+**Dispatch:** `D5` runs only after `D1`–`D4` return: dispatch `role: business_analyst`, `task_type: discovery_research` through `dispatch-agent` to synthesize their results into the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, covering the selected track's four acceptance areas; validate the returned file, present it to the human, and commit it before Setup.
 <!-- riso-tech:orchestrator-split END -->
 
 **This phase gates the rest.** Do not start Setup until the discovery doc is written and committed — even if the human "already knows the space." The research grounds the stack decision and the later `brainstorming` session.
@@ -67,7 +69,11 @@ Ask questions **one at a time**, multiple-choice where possible (same discipline
 ### Step 4 — Bootstrap the repo
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** Dispatch `git init` (if not already a repo) and an empty initial commit separately through `dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`. `dispatch-agent` resolves provider availability, and a claude subagent is always available — resolving to claude is a dispatch, not an inline exception. Run this step inline only if the harness has no subagent capability at all.
+**Dispatch:** `D6` initializes the Git repository: if `git rev-parse --git-dir` fails, dispatch `git init` alone through `dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; if a repository already exists, skip D6, and do not continue to `D7` until repository initialization is confirmed; run it inline only if the harness has no subagent capability at all.
+<!-- riso-tech:orchestrator-split END -->
+
+<!-- riso-tech:orchestrator-split START -->
+**Dispatch:** `D7` creates the empty initial commit as a separate dispatch after `D6` succeeds (or an existing repository is confirmed): use `dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`, require the worker to return the commit SHA before continuing to the scaffold spec, and run it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 This is the one piece of bootstrapping nothing downstream can do for itself.
@@ -75,7 +81,7 @@ This is the one piece of bootstrapping nothing downstream can do for itself.
 ## Phase 3 — Scaffold spec
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** Dispatch the scaffold spec to `dispatch-agent` with `role: tech_lead` and `task_type: architecture_design`. The worker writes `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` using the requirements below. `dispatch-agent` resolves provider availability, and a claude subagent is always available — resolving to claude is a dispatch, not an inline exception. Run this work inline only if the harness has no subagent capability at all. The orchestrator presents the returned result and gets user approval before Phase 4.
+**Dispatch:** `D8` dispatches the scaffold spec through `dispatch-agent` with `role: tech_lead` and `task_type: architecture_design`; the worker writes `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` from the discovery and approved stack/tooling choices, and the orchestrator validates and presents it for user approval before handing it to `writing-plans`; write it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 Write `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` using the standard `brainstorming` spec format and self-review, scoped to tooling not features. Express all concrete scaffolding as **tasks for the plan** (do NOT run them here):

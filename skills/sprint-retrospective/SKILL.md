@@ -13,10 +13,11 @@ Run this workflow after `finishing-a-development-branch` completes. The retrospe
 
 1. **Measure the sprint.** Read `.superpowers/ledger.jsonl` and compute total dispatches, blocked count, needs_revision loops, and degradation events. Select a concise ledger excerpt that supports those metrics.
 <!-- riso-tech:orchestrator-split START -->
-2. **Dispatch the process review.** Always dispatch via `dispatch-agent` with `role: agile_coach` and `task_type: retrospective_process_improvement`; include the computed metrics and selected ledger excerpt in `context.input_artifacts`. The agile coach recommends process improvements and does not implement them. When there is no worker provider selected or ready, `dispatch-agent` resolves provider availability to the always-available claude subagent; that is not an inline exception.
+**Dispatch:** `D20` sends the process review through `dispatch-agent` with `role: agile_coach` and `task_type: retrospective_process_improvement`, placing the computed metrics and supporting ledger excerpt in `context.input_artifacts`; the worker recommends evidence-backed process improvements without implementing them, and when there is no worker provider selected or ready, `dispatch-agent` degrades to the always-available claude subagent.
+<!-- riso-tech:orchestrator-split END -->
+
 3. **Validate with the human.** The Scrum Master presents the recommendations and their evidence to the human, then records only the process improvements the human approves.
 4. **Route approved improvements.** Send each approved skill or workflow improvement into `writing-skills`; never edit skills directly from this retrospective.
-<!-- riso-tech:orchestrator-split END -->
 
 ## Degraded Mode
 

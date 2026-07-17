@@ -83,7 +83,15 @@ digraph process {
 ```
 
 <!-- riso-tech:orchestrator-split START -->
-**Every dispatch node above routes through `dispatch-agent`.** Instead of spawning a subagent directly, invoke the `dispatch-agent` skill with `role: software_engineer` (implementer / fix) or `role: tech_lead` (task reviewer) and the task's `task_type` from the plan annotation. `dispatch.persona` is the **role name only**; the `implementer-prompt.md` / `task-reviewer-prompt.md` contents are pasted into the spawn prompt body (not into `dispatch.persona`). `dispatch-agent` resolves the model, spawns the worker, validates the response, and appends `author_agent`/`author_model` to `.superpowers/ledger.jsonl`.
+**Dispatch:** `D13` runs for every plan task in sequence: call `dispatch-agent` with `role: software_engineer` and the plan task's task_type, paste `implementer-prompt.md` into the prompt body, and provide the task brief, global constraints, required prior-task interfaces, and report path so the worker can implement and test that task; after a successful response, the orchestrator performs Git bookkeeping inline and sends the task to `D14`, repeating D13–D16 for every plan task before `D17`.
+<!-- riso-tech:orchestrator-split END -->
+
+<!-- riso-tech:orchestrator-split START -->
+**Dispatch:** `D16` runs when `D14` or conditional `D15` reports Critical/Important findings: call `dispatch-agent` once with `role: software_engineer`, the plan task's task_type, the original task brief/report, the complete actionable findings, and the covering test commands; the worker fixes the task, reruns and records those tests, then the orchestrator re-dispatches `D14` for re-review, repeating D16→D14 until clean.
+<!-- riso-tech:orchestrator-split END -->
+
+<!-- riso-tech:orchestrator-split START -->
+**Dispatch:** `D18` runs only when final review `D17` returns findings: send the complete findings list in one fix wave through `dispatch-agent` with `role: software_engineer` and `task_type: implementation_coding`, require the worker to fix the whole-branch issues and report covering/full test results, then re-dispatch `D17`; repeat one wave at a time until the final whole-branch review is clean.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Pre-Flight Plan Review
