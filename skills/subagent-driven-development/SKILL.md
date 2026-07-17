@@ -102,6 +102,10 @@ conflicts that only emerge from implementation.
 
 ## Model Selection
 
+<!-- riso-tech:orchestrator-split START -->
+**Under the orchestrator split, this section is rationale, not procedure.** Model choice is made by `dispatch-agent` Steps 1–2 (`task_type` → `sdlc-model-routing.json` lookup → readiness preflight). Never hand-pick a model or call the Agent tool directly at any dispatch node — including Task 1 and workspace setup. A dispatch that skips the lookup is a protocol violation even when the worker would be a claude subagent. If the table's pick conflicts with this section's principles, the table wins.
+<!-- riso-tech:orchestrator-split END -->
+
 Use the least powerful model that can handle each role to conserve cost and increase speed.
 
 **Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.

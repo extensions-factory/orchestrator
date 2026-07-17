@@ -9,10 +9,12 @@ description: Use when the orchestrator is about to hand a task to a worker or re
 
 Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The orchestrator never does the work; it routes the work. This skill is the single codified path for every dispatch.
 
+**Every worker spawn goes through Steps 1–8.** Calling the Agent tool, `/codex:rescue`, or the relay directly — skipping the routing lookup (Steps 1–2) and readiness preflight — is a protocol violation even when the intended worker is a claude subagent. Claude is the last rung of the degradation ladder, not the default; the routing table decides, including for Task 1 / workspace setup.
+
 ## The Process
 
 1. **Resolve `task_type`** from the plan annotation (`writing-plans` writes it) or from the role for unplanned work.
-2. **Look up the model** in `${CLAUDE_PLUGIN_ROOT}/assets/sdlc-model-routing.json` by `task_type`. Each `recommended_models[]` entry is `{rank, provider, model, why}`. Take the rank-1 entry, then derive the two protocol fields the JSON does not store directly:
+2. **Look up the model**: run `${CLAUDE_PLUGIN_ROOT}/scripts/model-lookup.sh <task_type>` (falls back to reading `assets/sdlc-model-routing.json` directly if jq is unavailable). Each `recommended_models[]` entry is `{rank, provider, model, why}`. Take the rank-1 entry, then derive the two protocol fields the JSON does not store directly:
    - **`agent`** from `provider` via this map: `"Claude Code" → claude`, `"Codex" → codex`, `"Antigravity CLI" → antigravity`.
    - **`effort`** rule: Antigravity encodes it in the model string (e.g. `"Gemini 3.5 Flash (Medium)"` → `medium`) — parse the parenthesized word; Codex takes an explicit `--effort`; Claude has none. When not otherwise determined, default `medium`, or apply the routing JSON's `selection_rules` (High/Thinking → `high`; Low/mini/haiku → `low`).
    - **Review tasks** (`code_review_quality`, `security_review`): read `author_agent` from `.superpowers/ledger.jsonl` and pick the first recommended model whose mapped `agent` differs (provider diversity). If no other provider is enabled, fall back to a different model on the same agent and note it in the ledger entry.
@@ -65,6 +67,8 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 
 <HARD-GATE>
 The ladder always terminates in a dispatch. Because a claude subagent is always available, "no worker could do it" is impossible — the orchestrator NEVER writes code, edits files, or runs tests itself, no matter how many workers failed.
+
+The ladder is pre-authorized: never stop mid-ladder to ask the human's permission. The human appears in the flow only as the antigravity relay mechanism itself, or when the entire ladder is exhausted. "Which fallback should I use?" is a question the ladder already answered.
 </HARD-GATE>
 
 | Rationalization | Reality |
@@ -73,6 +77,9 @@ The ladder always terminates in a dispatch. Because a claude subagent is always 
 | "It's just a one-line change" | Small change = small dispatch. Scope doesn't waive the rule. |
 | "Dispatching costs a round trip" | An orchestrator that implements loses its validation role. |
 | "The worker was blocked on permissions" | Route the blocked op per Step 8, don't absorb the whole task. |
+| "The Agent tool is one call away, skip the lookup" | Routing IS the job. Steps 1–2 before any spawn, claude included. |
+| "This task is obviously claude-shaped" | The routing table decides, not intuition. Rank-1 may be another provider, ready. |
+| "Better ask the human which fallback to use" | The ladder already decided. Walk it; ask only when it's exhausted. |
 
 ## Role personas (the `dispatch.persona` role name; canonical list — mirrored read-only in intake-task)
 

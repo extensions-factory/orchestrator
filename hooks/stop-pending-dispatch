@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Stop hook for superpowers plugin.
+# Warns the user (systemMessage, non-blocking) when a dispatch request has no
+# matching response - a worker was spawned but its result was never received,
+# validated, or routed. Non-blocking on purpose: an unmatched pair can be a
+# legitimate wait (antigravity human relay, codex --background job).
+set -euo pipefail
+
+root="${CLAUDE_PROJECT_DIR:-$PWD}"
+sp="$root/.superpowers"
+[ -d "$sp" ] || exit 0
+
+pending=""
+for req in "$sp"/*/turn-*-request.json; do
+    [ -e "$req" ] || continue
+    resp="${req%-request.json}-response.json"
+    if [ ! -e "$resp" ]; then
+        rel="${req#"$sp"/}"
+        pending="${pending:+$pending, }$rel"
+    fi
+done
+
+[ -n "$pending" ] || exit 0
+
+printf '{\n  "systemMessage": "superpowers: pending dispatch without response: %s"\n}\n' "$pending"
+
+exit 0

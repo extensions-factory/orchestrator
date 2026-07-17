@@ -19,7 +19,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - (User preferences for plan location override this default)
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** always dispatch plan authoring to `dispatch-agent` (`role: tech_lead`, `task_type: sprint_planning`) — the worker writes the plan file following `skills/writing-plans/plan-template.md` and a self-contained HTML companion at the same path with a `.html` extension, rendering checkboxes as a readable checklist and regenerating it whenever the plan changes. The orchestrator still runs Self-Review below on the returned artifact set. `dispatch-agent` resolves provider availability, and a claude subagent is always available. Write the plan inline only if the harness has no subagent capability at all.
+**Dispatch:** always dispatch plan authoring to `dispatch-agent` (`role: tech_lead`, `task_type: sprint_planning`) — the worker writes the plan file following `skills/writing-plans/plan-template.md` and a self-contained HTML companion at the same path with a `.html` extension, rendering checkboxes as a readable checklist and regenerating it whenever the plan changes. The orchestrator still runs Self-Review below on the returned artifact set. `dispatch-agent` resolves provider availability, and a claude subagent is always available — resolving to claude is a dispatch, not an inline exception. Write the plan inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Scope Check

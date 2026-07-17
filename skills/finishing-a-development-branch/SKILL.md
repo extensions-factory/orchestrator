@@ -93,7 +93,7 @@ Which option?
 **Don't add explanation** - keep options concise.
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** always dispatch the git mechanics below (Step 5's execute choice, Step 5b's roadmap update, and Step 6's cleanup) to `dispatch-agent` (`role: devops_engineer`, `task_type: release_deployment`). For Option 2, the same worker writes a PR body that follows `skills/finishing-a-development-branch/pr-body-template.md`, fills every section from the spec, plan, and this session's actual test results with no placeholders, writes it to a temporary file, and passes it through `gh pr create --body-file`. `dispatch-agent` resolves provider availability, and a claude subagent is always available. Run the commands below inline exactly as documented only if the harness has no subagent capability at all.
+**Dispatch:** always dispatch the git mechanics below (Step 5's execute choice, Step 5b's roadmap update, and Step 6's cleanup) to `dispatch-agent` (`role: devops_engineer`, `task_type: release_deployment`). For Option 2, the same worker writes a PR body that follows `skills/finishing-a-development-branch/pr-body-template.md`, fills every section from the spec, plan, and this session's actual test results with no placeholders, writes it to a temporary file, and passes it through `gh pr create --body-file`. `dispatch-agent` resolves provider availability, and a claude subagent is always available — resolving to claude is a dispatch, not an inline exception. Run the commands below inline exactly as documented only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ### Step 5: Execute Choice

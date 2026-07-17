@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# UserPromptSubmit hook for superpowers plugin.
+# One-line orchestrator role reminder on every prompt - survives long
+# sessions and compaction where the SessionStart injection has decayed.
+set -euo pipefail
+
+reminder="SM ORCHESTRATOR: route, never implement. Every worker spawn goes through dispatch-agent Steps 1-8 (lookup, readiness, task/turn files, validate, ledger, route). Worker fail = re-dispatch down the ladder, never inline."
+
+printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "UserPromptSubmit",\n    "additionalContext": "%s"\n  }\n}\n' "$reminder"
+
+exit 0

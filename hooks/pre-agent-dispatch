@@ -1,10 +1,23 @@
 #!/usr/bin/env bash
-# PreToolUse hook for superpowers plugin (matcher: Agent).
-# Reminds the orchestrator to look up the routed model/provider before
-# dispatching a subagent, instead of defaulting to Claude.
+# PreToolUse hook for superpowers plugin (matcher: Agent|Skill).
+# Re-injects the dispatch-agent checklist at the moment of dispatch, where
+# skill text read many turns ago has decayed. For Skill calls, only fires
+# on codex:rescue (a codex worker dispatch); other skills stay silent.
 set -euo pipefail
 
-reminder="Before dispatching this subagent: resolve task_type and look up the routed model/provider via ${CLAUDE_PLUGIN_ROOT:-<plugin-root>}/scripts/model-lookup.sh <task_type> (see the dispatch-agent skill) instead of defaulting to Claude."
+input="$(cat 2>/dev/null || true)"
+
+# Skill tool: only codex:rescue is a worker dispatch; anything else exits quietly.
+if printf '%s' "$input" | grep -q '"tool_name"[[:space:]]*:[[:space:]]*"Skill"'; then
+    printf '%s' "$input" | grep -q 'rescue' || exit 0
+fi
+
+reminder="DISPATCH CHECKLIST (dispatch-agent Steps 1-4 - required before this spawn, claude included):
+1. task_type resolved from the plan annotation or role.
+2. Model looked up via ${CLAUDE_PLUGIN_ROOT:-<plugin-root>}/scripts/model-lookup.sh <task_type> - rank-1 wins; never default to claude by intuition.
+3. Target agent readiness checked (codex: setup --json; antigravity: always ready via human relay; claude: always ready). Not ready = walk the ladder, do NOT stop to ask permission mid-ladder.
+4. task (kebab slug) + turn assigned; request JSON written to .superpowers/<task>/turn-<turn>-request.json; dispatch.persona = role name only; standard worker-scope constraint appended (no git commit/push, report blocked_ops).
+Skipping the lookup because 'the Agent tool is right here' is a protocol violation."
 
 escape_for_json() {
     local s="$1"
