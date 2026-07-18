@@ -1,6 +1,6 @@
 ---
 name: project-kickoff
-description: Use when starting a brand-new project with no existing repo or code — before brainstorming, when there's nothing yet to explore. Validates the idea, sets up the toolchain, and hands a scaffold spec into the plan/execute pipeline.
+description: Use when starting a greenfield project without an existing repository or meaningful code
 ---
 
 <!-- riso-tech:orchestrator-split — new skill, no upstream counterpart -->
@@ -50,13 +50,13 @@ Discovery → Setup → Scaffold spec → Handoff. Each phase is defined below. 
 **Dispatch:** `D1`, `D2`, `D3`, and `D4` are four distinct dispatches: use `superpowers-orchestrator:dispatching-parallel-agents` to send one independent worker for each of the chosen track's four research domains in the order listed above (D1 first domain, D2 second, D3 third, D4 fourth), each through `superpowers-orchestrator:dispatch-agent` with `role: business_analyst`, `task_type: discovery_research`, and only that domain's context; issue all four in one fan-out, then wait for all four results before `D5`.
 <!-- riso-tech:orchestrator-split END -->
 
-4. **Synthesize, present, commit.**
+4. **Synthesize, validate, present.**
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D5` runs only after `D1`–`D4` return: dispatch `role: business_analyst`, `task_type: discovery_research` through `superpowers-orchestrator:dispatch-agent` to synthesize their results into the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, covering the selected track's four acceptance areas; validate the returned file, present it to the human, and commit it before Setup.
+**Dispatch:** `D5` runs only after `D1`–`D4` return: dispatch `role: business_analyst`, `task_type: discovery_research` through `superpowers-orchestrator:dispatch-agent` to synthesize their results into the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, covering the selected track's four acceptance areas; validate the returned file and present it to the human before Setup.
 <!-- riso-tech:orchestrator-split END -->
 
-**This phase gates the rest.** Do not start Setup until the discovery doc is written and committed — even if the human "already knows the space." The research grounds the stack decision and the later `superpowers-orchestrator:brainstorming` session.
+**This phase gates the rest.** Do not start Setup until the discovery doc is written, validated, and presented — even if the human "already knows the space." Once Setup begins, do not proceed beyond repository initialization until `D7` commits the discovery document. The research grounds the stack decision and the later `superpowers-orchestrator:brainstorming` session.
 
 ## Phase 2 — Setup
 
@@ -73,7 +73,7 @@ Ask questions **one at a time**, multiple-choice where possible (same discipline
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D7` creates the empty initial commit as a separate dispatch after `D6` succeeds (or an existing repository is confirmed): use `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`, require the worker to return the commit SHA before continuing to the scaffold spec, and run it inline only if the harness has no subagent capability at all.
+**Dispatch:** `D7` commits the discovery document as a separate dispatch after `D6` succeeds or an existing repository is confirmed. Determine commit type from repository state: if `git rev-parse --verify HEAD` fails, this is the initial commit; otherwise it is a normal commit, regardless of which process initialized the repository. Use `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; stage only the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, then run `git diff --cached --name-only` and require exactly that path with no `.superpowers/` entry or other file before committing. On any mismatch, stop without committing; otherwise require the worker to return the commit SHA before continuing to the scaffold spec. Run it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 This is the one piece of bootstrapping nothing downstream can do for itself.

@@ -6,6 +6,7 @@ Skills speak in actions ("dispatch a subagent", "create a todo", "read a file").
 | --- | --- |
 | Dispatch a subagent (`Subagent (general-purpose):` template) | Use an installed subagent tool such as `subagent` from `pi-subagents` if available |
 | Task tracking ("create a todo", "mark complete") | Use an installed todo/task tool if available, otherwise track tasks in the plan or `TODO.md` |
+| Read, write, or edit files; run shell commands | Use Pi's core `read`, `write`, `edit`, and `bash` tools |
 
 ## Subagents
 

@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: Use when executing a written implementation plan in a separate session whose harness has no subagent capability
 ---
 
 # Executing Plans
@@ -65,7 +65,7 @@ After all tasks complete and verified:
 ## Integration
 
 <!-- riso-tech:orchestrator-split START -->
-**Degraded mode.** `superpowers-orchestrator:executing-plans` is the inline fallback used when no worker provider is available for `superpowers-orchestrator:dispatch-agent`. With a provider, prefer `superpowers-orchestrator:subagent-driven-development` (which routes each task through `superpowers-orchestrator:dispatch-agent`); without one, run tasks inline here — today's behavior.
+**Inline-only degraded mode.** Only when the harness has no subagent capability at all may a separate session run tasks inline with `superpowers-orchestrator:executing-plans`. A separate session does not bypass dispatch: when the harness supports subagents, provider unavailable/not-ready/failure stays inside `superpowers-orchestrator:dispatch-agent`, which walks `recommended_models[]` in rank order and ends with the always-available Claude subagent; then use `superpowers-orchestrator:subagent-driven-development`.
 <!-- riso-tech:orchestrator-split END -->
 
 **Required workflow skills:**

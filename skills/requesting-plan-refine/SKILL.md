@@ -1,6 +1,6 @@
 ---
 name: requesting-plan-refine
-description: Use after writing-plans, when the user chooses to get an independent review pass on the plan before execution
+description: Use when a written implementation plan is ready for an optional independent review before execution
 ---
 
 <!-- riso-tech:orchestrator-split — new skill, no upstream counterpart -->

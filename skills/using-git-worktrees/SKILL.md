@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback
+description: Use when feature work or implementation-plan execution requires an isolated workspace
 ---
 
 # Using Git Worktrees
@@ -68,26 +68,28 @@ Only proceed to Step 1b if you have no native worktree tool available.
 
 Follow this priority order. Explicit user preference always beats observed filesystem state.
 
-1. **Check your instructions for a declared worktree directory preference.** If the user has already specified one, use it without asking.
+1. **Check your instructions for a declared worktree directory preference.** If the user has already specified one, set `LOCATION` to it without asking. An explicit custom location inside the project root is project-local and must pass the safety verification below; if it is absolute, normalize `LOCATION` to a repository-relative path before continuing so both `git check-ignore` and `.gitignore` use the same path. A global location outside the project root remains absolute and does not use the repository ignore check.
 
 2. **Check for an existing project-local worktree directory:**
    ```bash
    ls -d .worktrees 2>/dev/null     # Preferred (hidden)
    ls -d worktrees 2>/dev/null      # Alternative
    ```
-   If found, use it. If both exist, `.worktrees` wins.
+   If found, set `LOCATION` to it. If both exist, `.worktrees` wins.
 
-3. **If there is no other guidance available**, default to `.worktrees/` at the project root.
+3. **If there is no other guidance available**, default to `.worktrees/` at the project root by setting `LOCATION=.worktrees`.
 
 #### Safety Verification (project-local directories only)
 
-**MUST verify directory is ignored before creating worktree:**
+**MUST verify the selected project-local directory is ignored before creating the worktree.** This includes explicit custom project-local preferences. Native tools already exited at Step 1a, and a global `LOCATION` outside the project root skips this repository ignore check.
 
 ```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+git check-ignore -q -- "$LOCATION/"
 ```
 
-**If NOT ignored:** Add to .gitignore, commit the change, then proceed.
+Validate only `$LOCATION/`; never OR-check candidate directories that were not selected.
+
+**If NOT ignored:** Add `$LOCATION/` to `.gitignore`, commit the change, then proceed.
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
@@ -149,13 +151,15 @@ Ready to implement <feature-name>
 |-----------|--------|
 | Already in linked worktree | Skip creation (Step 0) |
 | In a submodule | Treat as normal repo (Step 0 guard) |
-| Native worktree tool available | Use it (Step 1a) |
+| Native worktree tool available | Use it; skip manual ignore validation (Step 1a) |
 | No native tool | Git worktree fallback (Step 1b) |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
 | Neither exists | Check instruction file, then default `.worktrees/` |
-| Directory not ignored | Add to .gitignore + commit |
+| Custom project-local preference | Use it; validate exactly `$LOCATION/` |
+| Global location outside project root | Use it; skip repository ignore validation |
+| Selected directory not ignored | Add `$LOCATION/` to `.gitignore` + commit |
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -175,7 +179,7 @@ Ready to implement <feature-name>
 ### Skipping ignore verification
 
 - **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Always use `git check-ignore` before creating project-local worktree
+- **Fix:** Run `git check-ignore -q -- "$LOCATION/"` for the selected project-local location, including custom preferences
 
 ### Assuming directory location
 
@@ -193,7 +197,7 @@ Ready to implement <feature-name>
 - Create a worktree when Step 0 detects existing isolation
 - Use `git worktree add` when you have a native worktree tool (e.g., `EnterWorktree`). This is the #1 mistake — if you have it, use it.
 - Skip Step 1a by jumping straight to Step 1b's git commands
-- Create worktree without verifying it's ignored (project-local)
+- Create worktree without verifying the selected `$LOCATION/` is ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
 
@@ -201,6 +205,6 @@ Ready to implement <feature-name>
 - Run Step 0 detection first
 - Prefer native tools over git fallback
 - Follow directory priority: explicit instructions > existing project-local directory > default
-- Verify directory is ignored for project-local
+- Verify exactly the selected `$LOCATION/` is ignored for project-local locations
 - Auto-detect and run project setup
 - Verify clean test baseline

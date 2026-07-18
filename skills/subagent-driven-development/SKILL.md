@@ -11,6 +11,8 @@ Execute plan by dispatching a fresh implementer subagent per task, a task review
 
 **Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration
 
+**Git ownership:** Implementation workers never commit or push; they edit files, run tests, and report. The orchestrator owns Git bookkeeping after every successful implementation or fix response.
+
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
 
@@ -22,22 +24,22 @@ ledger and the tool results carry the record.
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
-    "Stay in this session?" [shape=diamond];
+    "Harness has subagent capability?" [shape=diamond];
     "subagent-driven-development" [shape=box];
     "executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
+    "Tasks mostly independent?" -> "Harness has subagent capability?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "Harness has subagent capability?" -> "subagent-driven-development" [label="yes"];
+    "Harness has subagent capability?" -> "executing-plans" [label="no"];
 }
 ```
 
-**vs. Executing Plans (parallel session):**
-- Same session (no context switch)
+**vs. Executing Plans (no-subagent harness):**
+- When subagents are available, use this skill in whichever session executes the plan
 - Fresh subagent per task (no context pollution)
 - Review after each task (spec compliance + code quality), broad review at the end
 - Faster iteration (no human-in-loop between tasks)
@@ -53,8 +55,9 @@ digraph process {
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [shape=box];
+        "Implementer subagent implements, tests, self-reviews, reports" [shape=box];
+        "Orchestrator commits successful worker changes" [shape=box];
+        "Generate review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [shape=box];
         "Task reviewer reports spec ✅ and quality approved?" [shape=diamond];
         "Dispatch fix subagent for Critical/Important findings" [shape=box];
         "Mark task complete in todo list and progress ledger" [shape=box];
@@ -63,35 +66,43 @@ digraph process {
     "Read plan, note context and global constraints, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [shape=box];
+    "Final reviewer reports clean?" [shape=diamond];
+    "Dispatch one final fix subagent" [shape=box];
+    "Orchestrator commits successful final-fix changes" [shape=box];
     "Use superpowers-orchestrator:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)";
-    "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅ and quality approved?";
+    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, self-reviews, reports" [label="no"];
+    "Implementer subagent implements, tests, self-reviews, reports" -> "Orchestrator commits successful worker changes";
+    "Orchestrator commits successful worker changes" -> "Generate review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)";
+    "Generate review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅ and quality approved?";
     "Task reviewer reports spec ✅ and quality approved?" -> "Dispatch fix subagent for Critical/Important findings" [label="no"];
-    "Dispatch fix subagent for Critical/Important findings" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [label="re-review"];
+    "Dispatch fix subagent for Critical/Important findings" -> "Orchestrator commits successful worker changes" [label="successful fix"];
     "Task reviewer reports spec ✅ and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="no"];
-    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Use superpowers-orchestrator:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Final reviewer reports clean?";
+    "Final reviewer reports clean?" -> "Use superpowers-orchestrator:finishing-a-development-branch" [label="yes"];
+    "Final reviewer reports clean?" -> "Dispatch one final fix subagent" [label="no"];
+    "Dispatch one final fix subagent" -> "Orchestrator commits successful final-fix changes";
+    "Orchestrator commits successful final-fix changes" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="regenerate package"];
 }
 ```
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D13` runs for every plan task in sequence: call `superpowers-orchestrator:dispatch-agent` with `role: software_engineer` and the plan task's task_type, paste `implementer-prompt.md` into the prompt body, and provide the task brief, global constraints, required prior-task interfaces, and report path so the worker can implement and test that task; after a successful response, the orchestrator performs Git bookkeeping inline and sends the task to `D14`, repeating D13–D16 for every plan task before `D17`.
+**Dispatch:** `D13` runs for every plan task in sequence: call `superpowers-orchestrator:dispatch-agent` with `role: software_engineer` and the plan task's task_type, paste `implementer-prompt.md` into the prompt body, and provide the task brief, global constraints, required prior-task interfaces, and report path so the worker can implement and test that task; after a successful response, the orchestrator performs Git bookkeeping inline, generates the task review package from the recorded pre-task SHA through the new commit, and sends the task to `D14`, repeating D13–D16 for every plan task before `D17`.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D16` runs when `D14` or conditional `D15` reports Critical/Important findings: call `superpowers-orchestrator:dispatch-agent` once with `role: software_engineer`, the plan task's task_type, `skill: superpowers-worker:receiving-code-review`, the original task brief/report, the complete actionable findings, and the covering test commands; the worker fixes the task, reruns and records those tests, then the orchestrator re-dispatches `D14` for re-review, repeating D16→D14 until clean.
+**Dispatch:** `D16` runs when `D14` or conditional `D15` reports Critical/Important findings: call `superpowers-orchestrator:dispatch-agent` once with `role: software_engineer`, the plan task's task_type, `skill: superpowers-worker:receiving-code-review`, the original task brief/report, the complete actionable findings, and the covering test commands; the worker fixes the task and reruns and records those tests, then after a successful response the orchestrator performs Git bookkeeping inline, regenerates the task review package, and re-dispatches `D14` for re-review, repeating D16→D14 until clean.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D18` runs only when final review `D17` returns findings: send the complete findings list in one fix wave through `superpowers-orchestrator:dispatch-agent` with `role: software_engineer`, `task_type: implementation_coding`, and `skill: superpowers-worker:receiving-code-review`; require the worker to fix the whole-branch issues and report covering/full test results, then re-dispatch `D17`; repeat one wave at a time until the final whole-branch review is clean.
+**Dispatch:** `D18` runs only when final review `D17` returns findings: send the complete findings list in one fix wave through `superpowers-orchestrator:dispatch-agent` with `role: software_engineer`, `task_type: implementation_coding`, and `skill: superpowers-worker:receiving-code-review`; require the worker to fix the whole-branch issues and report covering/full test results, then after a successful response the orchestrator performs Git bookkeeping inline, regenerates the whole-branch review package, and re-dispatches `D17`; repeat one wave at a time until the final whole-branch review is clean.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Pre-Flight Plan Review
@@ -149,9 +160,9 @@ that implementer. Single-file mechanical fixes also take the cheapest tier.
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE:** Validate the report and diff, perform the task's orchestrator-only Git bookkeeping, then generate the review package (`scripts/review-package BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task) and dispatch the task reviewer with the printed path.
 
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
+**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them, then follow the DONE bookkeeping-and-review sequence.
 
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
 
@@ -252,7 +263,7 @@ and is re-read on every later turn. Hand artifacts over as files:
 - **Report file:** name the implementer's report file after the brief
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
-  returns only status, commits, a one-line test summary, and concerns.
+  returns only status, files changed, a one-line test summary, and concerns.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
   file, the report file, and the review package — plus the global
   constraints that bind the task.
@@ -306,8 +317,8 @@ Implementer: "Got it. Implementing now..."
   - Implemented install-hook command
   - Added tests, 5/5 passing
   - Self-review: Found I missed --force flag, added it
-  - Committed
 
+[Orchestrator stages the validated Task 1 files and commits them]
 [Run review-package, dispatch task reviewer with the printed path]
 Task reviewer: Spec ✅ - all requirements met, nothing extra.
   Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
@@ -323,8 +334,8 @@ Implementer:
   - Added verify/repair modes
   - 8/8 tests passing
   - Self-review: All good
-  - Committed
 
+[Orchestrator stages the validated Task 2 files and commits them]
 [Run review-package, dispatch task reviewer with the printed path]
 Task reviewer: Spec ❌:
   - Missing: Progress reporting (spec says "report every 100 items")
@@ -334,6 +345,8 @@ Task reviewer: Spec ❌:
 [Dispatch fix subagent with all findings]
 Fixer: Removed --json flag, added progress reporting, extracted PROGRESS_INTERVAL constant
 
+[Orchestrator stages and commits the validated fix]
+[Regenerate review-package]
 [Task reviewer reviews again]
 Task reviewer: Spec ✅. Task quality: Approved.
 
@@ -384,6 +397,8 @@ Done!
 
 **Never:**
 - Start implementation on main/master branch without explicit user consent
+- Let an implementation or fix worker commit or push; the orchestrator performs their Git bookkeeping
+- Generate or regenerate a review package before committing successful D13/D16/D18 changes
 - Skip task review, or accept a report missing either verdict (spec compliance AND task quality are both required)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
@@ -431,4 +446,4 @@ Done!
 - **superpowers-worker:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **superpowers-orchestrator:executing-plans** - Use for parallel session instead of same-session execution
+- **superpowers-orchestrator:executing-plans** - Use only when the executing harness has no subagent capability

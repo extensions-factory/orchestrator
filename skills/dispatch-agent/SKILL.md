@@ -5,11 +5,15 @@ description: Use when the orchestrator is about to hand a task to a worker or re
 
 <!-- riso-tech:orchestrator-split — new skill, no upstream counterpart -->
 
+# Dispatch Agent
+
 ## Purpose
 
 Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The orchestrator never does the work; it routes the work. This skill is the single codified path for every dispatch.
 
 **Every worker spawn goes through Steps 1–8.** Calling any provider bridge directly without routing lookup and readiness preflight is a protocol violation. Claude remains the final degradation rung; the routing table decides every task and the task type decides the one permitted Codex command.
+
+**Git ownership:** Implementation workers never commit or push; they edit files, run tests, and report. The orchestrator owns Git bookkeeping for `implementation_coding` and other ordinary file/test work after validating successful worker output. The explicit `workspace_setup` and `release_deployment` scopes below retain their requested Git-operation exceptions.
 
 ## The Process
 

@@ -6,7 +6,7 @@ fail=0
 check(){ grep -Fq -- "$1" "$SKILL" || { echo "[FAIL] missing: $1"; fail=1; }; }
 check "Provider-readiness preflight"
 check "codex:setup"          # codex readiness command
-check "/agy:setup"           # antigravity readiness command
+check "always ready: the bridge is a HUMAN relay"
 check "not ready"            # degrade-on-not-ready language
 [ "$fail" -eq 0 ] && echo "PASS test-preflight"
 exit $fail

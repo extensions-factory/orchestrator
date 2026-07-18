@@ -32,7 +32,7 @@ SUPERPOWERS ORCHESTRATOR
 │       │      task_type: discovery_research
 │       ├── ◇ select stack, standards, and AI tools
 │       ├── ◆ D6 initialize Git repository
-│       ├── ◆ D7 create initial commit
+│       ├── ◆ D7 commit discovery (initial commit when HEAD is absent; normal commit otherwise)
 │       │      role: devops_engineer
 │       │      task_type: workspace_setup
 │       ├── ◆ D8 write scaffold spec
@@ -94,7 +94,7 @@ SUPERPOWERS ORCHESTRATOR
 │       │   │      role: security_engineer
 │       │   │      task_type: security_review
 │       │   └── findings?
-│       │       ├── yes → ◆ D16 fix → ◆ D14 re-review ↻
+│       │       ├── yes → ◆ D16 fix → ○ commit fix and regenerate task review package → ◆ D14 re-review ↻
 │       │       └── no  → mark task complete
 │       ├── Task 2..N
 │       │   └── repeat D13–D16
@@ -102,7 +102,7 @@ SUPERPOWERS ORCHESTRATOR
 │       │      role: tech_lead
 │       │      task_type: code_review_quality
 │       └── findings?
-│           ├── yes → ◆ D18 one fix wave → ◆ D17 re-review ↻
+│           ├── yes → ◆ D18 one fix wave → ○ commit fix wave and regenerate whole-branch review package → ◆ D17 re-review ↻
 │           └── no  → Finish Branch
 │
 ├── E. Finish Branch

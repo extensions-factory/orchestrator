@@ -26,7 +26,7 @@ check "$RELEASE" "task_type: release_deployment"
 check "$RELEASE" "pr-body-template.md"
 check "$RELEASE" "gh pr create --body-file"
 check "$RELEASE" "### Step 5b: Update Product Roadmap"
-check "$RELEASE" "Runs for Options 1 (merge) and 2 (PR) only"
+check "$RELEASE" 'Runs for the `merge` and `pr` actions only'
 check "$RELEASE" "status: released"
 check "$RELEASE" "../brainstorming/roadmap.md"
 [ "$fail" -eq 0 ] && echo "PASS test-roadmap-pipeline"

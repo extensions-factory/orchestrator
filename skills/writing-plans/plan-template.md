@@ -8,7 +8,9 @@ Every plan written by the writing-plans skill follows this structure. The struct
 ````markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-orchestrator:subagent-driven-development (recommended) or superpowers-orchestrator:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+<!-- riso-tech:orchestrator-split START -->
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-orchestrator:subagent-driven-development when the harness supports subagents; use superpowers-orchestrator:executing-plans only when the harness has no subagent capability. Steps use checkbox (`- [ ]`) syntax for tracking.
+<!-- riso-tech:orchestrator-split END -->
 
 **Spec:** `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
 
@@ -103,12 +105,18 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+<!-- riso-tech:orchestrator-split START -->
+**Orchestrator Git Bookkeeping (not a worker step):**
+
+After a successful worker response or successful inline task execution with passing tests, the orchestrator runs this before generating the task review package:
 
 ```bash
 git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
+
+The worker never runs these commands.
+<!-- riso-tech:orchestrator-split END -->
 
 **US-1 Checkpoint:**
 

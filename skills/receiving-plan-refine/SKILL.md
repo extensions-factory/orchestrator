@@ -1,6 +1,6 @@
 ---
 name: receiving-plan-refine
-description: Use after requesting-plan-refine, when a plan-refine findings file is ready to evaluate and address
+description: Use when independent plan-review findings are ready to evaluate before execution
 ---
 
 <!-- riso-tech:orchestrator-split — new skill, no upstream counterpart -->
@@ -43,16 +43,12 @@ evaluate the refine findings."
 
 - **Refine again** → invoke `superpowers-orchestrator:requesting-plan-refine` for another
   pass.
-- **Execute** → present the execution-mode choice:
+- **Execute** → select the execution skill from harness capability:
 
-> "Two execution options: **1. Subagent-Driven (recommended)** - I dispatch a
-> fresh subagent per task, review between tasks, fast iteration. **2. Inline
-> Execution** - Execute tasks in this session using executing-plans, batch
-> execution with checkpoints. Which approach?"
-
-- If Subagent-Driven: **REQUIRED SUB-SKILL:** Use
+- When the harness supports subagents: **REQUIRED SUB-SKILL:** Use
   superpowers-orchestrator:subagent-driven-development
-- If Inline Execution: **REQUIRED SUB-SKILL:** Use superpowers-orchestrator:executing-plans
+- Only when the harness has no subagent capability: **REQUIRED SUB-SKILL:** Use
+  superpowers-orchestrator:executing-plans
 
 ## Forbidden Responses
 

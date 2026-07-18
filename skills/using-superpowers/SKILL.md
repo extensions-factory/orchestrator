@@ -1,7 +1,9 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions
+description: Use when starting any orchestrator conversation, before responding or taking action
 ---
+
+# Using Superpowers
 
 <SUBAGENT-STOP>
 If you were dispatched as a subagent to execute a specific task, ignore this skill.

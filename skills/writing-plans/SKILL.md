@@ -1,19 +1,21 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Use when a specification or requirements define a multi-step implementation before code changes begin
 ---
 
 # Writing Plans
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Orchestrator-owned task commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
 **Context:** If working in an isolated worktree, it should have been created via the `superpowers-orchestrator:using-git-worktrees` skill at execution time.
+
+**Git ownership:** Implementation workers never commit or push; they edit files, run tests, and report. The orchestrator owns Git bookkeeping after each successful worker response or successful inline task execution with passing tests.
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -86,7 +88,8 @@ independently testable deliverable.
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
 - "Run the tests and make sure they pass" - step
-- "Commit" - step
+
+Each task ends with a labeled orchestrator-only Git bookkeeping block. It preserves the exact paths and commit message without making commit work part of the worker's steps.
 
 ## Plan Document Header
 
@@ -95,7 +98,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-orchestrator:subagent-driven-development (recommended) or superpowers-orchestrator:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-orchestrator:subagent-driven-development when the harness supports subagents; use superpowers-orchestrator:executing-plans only when the harness has no subagent capability. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 <!-- riso-tech:orchestrator-split START -->
 **Spec:** `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
@@ -182,12 +185,16 @@ def function(input):
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+**Orchestrator Git Bookkeeping (not a worker step):**
+
+After a successful worker response or successful inline task execution with passing tests, the orchestrator runs this before generating the task review package:
 
 ```bash
 git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
+
+The worker never runs these commands.
 ````
 
 ## No Placeholders
@@ -204,7 +211,7 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Exact file paths always
 - Complete code in every step — if a step changes code, show the code
 - Exact commands with expected output
-- DRY, YAGNI, TDD, frequent commits
+- DRY, YAGNI, TDD, orchestrator-owned task commits
 
 ## Self-Review
 
@@ -245,19 +252,13 @@ After the self-review, do NOT jump to execution. Ask the user to choose:
 **If Refine chosen:**
 - **REQUIRED SUB-SKILL:** Use `superpowers-orchestrator:requesting-plan-refine`
 
-**If Execute chosen**, ask which execution mode:
+**If Execute chosen**, select by harness capability, not user preference:
 <!-- riso-tech:orchestrator-split END -->
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
-
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
-
-**Which approach?**
-
-**If Subagent-Driven chosen:**
+**When the harness supports subagents:**
 - **REQUIRED SUB-SKILL:** Use superpowers-orchestrator:subagent-driven-development
 - Fresh subagent per task + two-stage review
 
-**If Inline Execution chosen:**
+**Only when the harness has no subagent capability:**
 - **REQUIRED SUB-SKILL:** Use superpowers-orchestrator:executing-plans
 - Batch execution with checkpoints for review

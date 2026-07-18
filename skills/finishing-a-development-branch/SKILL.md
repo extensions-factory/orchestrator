@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation is complete, all tests pass, and an integration decision is required
 ---
 
 # Finishing a Development Branch
@@ -93,7 +93,7 @@ Which option?
 **Don't add explanation** - keep options concise.
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D19` executes the selected finish path only after tests pass and the human chooses an option: call `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: release_deployment` for that chosen option's Git mechanics, conditional PR body and `gh pr create --body-file`, conditional roadmap release update, and conditional worktree cleanup; require the worker to preserve Options 2/3 worktrees and clean up only for Options 1/4. For destructive Option 4, after the human's exact discard confirmation and before dispatch, append `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` to `context.constraints`, replacing `<operation>` with the exact confirmed destructive operation; never infer confirmation. Run the documented commands inline only if the harness has no subagent capability at all.
+**Dispatch:** `D19` executes the selected finish path only after tests pass and the human chooses an option. Resolve the chosen option's menu selection to a named action before dispatch: attached branch: 1 = `merge`, 2 = `pr`, 3 = `keep`, 4 = `discard`; detached: 1 = `pr`, 2 = `keep`, 3 = `discard`. Then call `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: release_deployment` for that action's Git mechanics in the documented order. The `merge` action merges first, runs the shared roadmap recipe and commits it on the base branch, then tests the merged result. The `pr` action creates a branch at detached `HEAD` when needed, runs and commits the roadmap recipe on the feature branch, tests, pushes, then creates the PR body and calls `gh pr create --body-file`. The `keep` and `discard` actions skip the roadmap recipe. Preserve worktrees for `pr` and `keep`; clean up only for `merge` and confirmed `discard`, except detached externally managed workspaces are never cleaned up. For detached `discard`, do not delete a branch or worktree; after confirmation, report the abandoned `HEAD` SHA and leave disposal to the external workspace manager. For any `discard`, after the human's exact discard confirmation and before dispatch, append `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` to `context.constraints`, replacing `<operation>` with the exact confirmed destructive operation; never infer confirmation. Run the documented commands inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ### Step 5: Execute Choice
@@ -109,11 +109,13 @@ cd "$MAIN_ROOT"
 git checkout <base-branch>
 git pull
 git merge <feature-branch>
+```
 
-# Verify tests on merged result
+Run the shared Step 5b recipe on `<base-branch>` now, including its roadmap commit, before running the merged-result tests.
+
+```bash
+# Verify tests on merged result after the roadmap commit
 <test command>
-
-# Only after merge succeeds: cleanup worktree (Step 6), then delete branch
 ```
 
 Then: Cleanup worktree (Step 6), then delete branch:
@@ -124,8 +126,13 @@ git branch -d <feature-branch>
 
 #### Option 2: Push and Create PR
 
+Run the shared Step 5b recipe on the feature branch now, including its roadmap commit, then verify the branch before pushing.
+
 ```bash
-# Push branch
+# Verify tests on feature branch after the roadmap commit
+<test command>
+
+# Push only after the roadmap update, commit, and tests succeed
 git push -u origin <feature-branch>
 ```
 
@@ -143,13 +150,13 @@ Show the user the PR URL when done.
 
 #### Option 3: Keep As-Is
 
-Report: "Keeping branch <name>. Worktree preserved at <path>."
+Report the preserved branch, or the preserved `HEAD` SHA when detached, and its workspace path.
 
 **Don't cleanup worktree.**
 
 #### Option 4: Discard
 
-**Confirm first:**
+**Named-branch discard confirmation:**
 ```
 This will permanently delete:
 - Branch <name>
@@ -159,9 +166,18 @@ This will permanently delete:
 Type 'discard' to confirm.
 ```
 
+**Detached discard confirmation:**
+```
+This abandons detached HEAD <sha>. No branch or worktree will be deleted; the external workspace manager controls disposal.
+
+Type 'discard' to confirm.
+```
+
 Wait for exact confirmation.
 
-If confirmed:
+If detached, do not delete a branch or clean up the externally managed worktree. Report the abandoned `HEAD` SHA and stop; the external workspace manager owns disposal.
+
+If confirmed on a named branch:
 ```bash
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
@@ -175,17 +191,17 @@ git branch -D <feature-branch>
 <!-- riso-tech:orchestrator-split START -->
 ### Step 5b: Update Product Roadmap
 
-**Runs for Options 1 (merge) and 2 (PR) only** — the work is being integrated, so the feature is done. Skip for Option 3 (keep as-is) and Option 4 (discard).
+**Runs for the `merge` and `pr` actions only** — the work is being integrated, so the feature is done. Skip for `keep` and `discard`.
 
 - Identify the feature's `slug` from the spec/plan filename used for this work (`YYYY-MM-DD-<slug>-design.md`). If no spec/plan is in context and the slug is ambiguous, ask the user which feature this work corresponds to.
 - Set every User-Story entry belonging to that feature (match on `feature` or the `slug` prefix) to `status: released` and `completed` to today's date in `docs/superpowers/roadmap.json`, then regenerate `ROADMAP.html`. If no entries exist yet, create one for the feature as released.
 - See [../brainstorming/roadmap.md](../brainstorming/roadmap.md) for the schema, idempotent update rules, and the `ROADMAP.html` template.
-- For Option 1, commit the roadmap update with (or right after) the merge. For Option 2, commit it on the branch before pushing.
+- At the option-specific invocation point above, stage `docs/superpowers/roadmap.json` and `docs/superpowers/ROADMAP.html`, then commit them with `git commit -m "docs: release <feature>"`.
 <!-- riso-tech:orchestrator-split END -->
 
 ### Step 6: Cleanup Workspace
 
-**Only runs for Options 1 and 4.** Options 2 and 3 always preserve the worktree.
+**Only runs for `merge` and confirmed `discard`.** The `pr` and `keep` actions always preserve the worktree; detached externally managed workspaces are never cleaned up.
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
@@ -208,12 +224,13 @@ git worktree prune  # Self-healing: clean up any stale registrations
 
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | yes | - | - | yes |
-| 2. Create PR | - | yes | yes | - |
-| 3. Keep as-is | - | - | yes | - |
-| 4. Discard | - | - | - | yes (force) |
+| Action | Merge | Push | Keep Worktree | Delete Branch |
+|--------|-------|------|---------------|---------------|
+| `merge` | yes | - | no | yes |
+| `pr` | - | yes | yes | no |
+| `keep` | - | - | yes | no |
+| attached `discard` | - | - | no | yes (force) |
+| detached `discard` | - | - | yes (external owner) | no |
 
 ## Common Mistakes
 
@@ -225,9 +242,9 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - **Problem:** "What should I do next?" is ambiguous
 - **Fix:** Present exactly 4 structured options (or 3 for detached HEAD)
 
-**Cleaning up worktree for Option 2**
+**Cleaning up worktree for the PR action**
 - **Problem:** Remove worktree user needs for PR iteration
-- **Fix:** Only cleanup for Options 1 and 4
+- **Fix:** Only clean up for `merge` and confirmed `discard`, never detached externally managed workspaces
 
 **Deleting branch before removing worktree**
 - **Problem:** `git branch -d` fails because worktree still references the branch
@@ -260,7 +277,7 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - Verify tests before offering options
 - Detect environment before presenting menu
 - Present exactly 4 options (or 3 for detached HEAD)
-- Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Get typed confirmation for the `discard` action
+- Clean up worktrees only for `merge` and confirmed `discard`, never detached externally managed workspaces
 - `cd` to main repo root before worktree removal
 - Run `git worktree prune` after removal
