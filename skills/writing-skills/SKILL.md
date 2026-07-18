@@ -16,10 +16,10 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D21` runs only for a human-approved skill improvement handed off from the retrospective: through `writing-skills`, call `dispatch-agent` with `role: software_engineer` and `task_type: implementation_coding`, the approved acceptance criteria, failing pressure test, and target skill paths; the worker edits the skill and reruns its focused validation, while the orchestrator does not author skill content inline and runs this skill's validation checklist on the returned files before accepting the improvement; author inline only if the harness has no subagent capability at all.
+**Dispatch:** `D21` runs only for a human-approved skill improvement handed off from the retrospective: through `superpowers-orchestrator:writing-skills`, call `superpowers-orchestrator:dispatch-agent` with `role: software_engineer` and `task_type: implementation_coding`, the approved acceptance criteria, failing pressure test, and target skill paths; the worker edits the skill and reruns its focused validation, while the orchestrator does not author skill content inline and runs this skill's validation checklist on the returned files before accepting the improvement; author inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
-**REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
+**REQUIRED BACKGROUND:** You MUST understand superpowers-worker:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
 **Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
 
@@ -283,9 +283,9 @@ wc -w skills/path/SKILL.md
 
 **When writing documentation that references other skills:**
 
-Use skill name only, with explicit requirement markers:
-- ✅ Good: `**REQUIRED SUB-SKILL:** Use superpowers:test-driven-development`
-- ✅ Good: `**REQUIRED BACKGROUND:** You MUST understand superpowers:systematic-debugging`
+Use the fully qualified `<plugin>:<skill>` name with explicit requirement markers. In this split, orchestrator workflows use `superpowers-orchestrator:*` and worker disciplines use `superpowers-worker:*`; never use legacy `superpowers:*` or a bare skill name at an invocation point.
+- ✅ Good: `**REQUIRED SUB-SKILL:** Use superpowers-worker:test-driven-development`
+- ✅ Good: `**REQUIRED BACKGROUND:** You MUST understand superpowers-worker:systematic-debugging`
 - ❌ Bad: `See skills/testing/test-driven-development` (unclear if required)
 - ❌ Bad: `@skills/testing/test-driven-development/SKILL.md` (force-loads, burns context)
 
@@ -394,7 +394,7 @@ Edit skill without testing? Same violation.
 - Don't "adapt" while running tests
 - Delete means delete
 
-**REQUIRED BACKGROUND:** The superpowers:test-driven-development skill explains why this matters. Same principles apply to documentation.
+**REQUIRED BACKGROUND:** The superpowers-worker:test-driven-development skill explains why this matters. Same principles apply to documentation.
 
 ## Testing All Skill Types
 

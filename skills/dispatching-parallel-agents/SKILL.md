@@ -87,7 +87,7 @@ When agents return:
 ## Agent Prompt Structure
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** invoke `dispatch-agent` once per independent domain in the same orchestration message, preserving the caller-supplied role, task_type, domain-specific artifacts, and acceptance criteria for each distinct worker; never collapse the fan-out into one generic request, and give every dispatch its own ledger entry.
+**Dispatch:** invoke `superpowers-orchestrator:dispatch-agent` once per independent domain in the same orchestration message, preserving the caller-supplied role, task_type, domain-specific artifacts, and acceptance criteria for each distinct worker; never collapse the fan-out into one generic request, and give every dispatch its own ledger entry.
 <!-- riso-tech:orchestrator-split END -->
 
 Good agent prompts are:

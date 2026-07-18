@@ -13,7 +13,7 @@ test -f "$REQUEST" || { echo "[FAIL] no requesting-plan-refine/SKILL.md"; exit 1
 test -f "$RECEIVE" || { echo "[FAIL] no receiving-plan-refine/SKILL.md"; exit 1; }
 cmp -s "$REF" "$TEMPLATE" || { echo "[FAIL] plan-reviewer.md differs from active"; fail=1; }
 check "$REQUEST" "riso-tech:orchestrator-split — new skill, no upstream counterpart"
-check "$REQUEST" "Dispatch the plan reviewer via \`dispatch-agent\`"
+check "$REQUEST" "Dispatch the plan reviewer via \`superpowers-orchestrator:dispatch-agent\`"
 check "$REQUEST" "role: tech_lead"
 check "$REQUEST" "task_type: code_review_quality"
 check "$REQUEST" ".superpowers/ledger.jsonl"

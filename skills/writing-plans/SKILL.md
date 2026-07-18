@@ -13,13 +13,13 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**Context:** If working in an isolated worktree, it should have been created via the `superpowers-orchestrator:using-git-worktrees` skill at execution time.
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D10` dispatches plan authoring through `dispatch-agent` with `role: tech_lead` and `task_type: sprint_planning`; from the approved spec, the worker writes the plan and HTML companion using `skills/writing-plans/plan-template.md`, rendering checkboxes as a readable checklist and regenerating the companion whenever the plan changes, then returns both for the orchestrator's Self-Review before the Execute-or-Refine choice; write them inline only if the harness has no subagent capability at all.
+**Dispatch:** `D10` dispatches plan authoring through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: sprint_planning`; from the approved spec, the worker writes the plan and HTML companion using `skills/writing-plans/plan-template.md`, rendering checkboxes as a readable checklist and regenerating the companion whenever the plan changes, then returns both for the orchestrator's Self-Review before the Execute-or-Refine choice; write them inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Scope Check
@@ -38,7 +38,7 @@ Group the plan's Tasks under **User Story (US)** headings. Each US is one
 - A US contains its Tasks; the Tasks keep their bite-sized TDD steps.
 
 Use `## US-N: [feature name]` headings, with that US's `### Task N` entries
-nested beneath. An optional refine pass (`requesting-plan-refine`) can audit
+nested beneath. An optional refine pass (`superpowers-orchestrator:requesting-plan-refine`) can audit
 this slicing after the plan is written, so getting the US boundaries roughly
 right here saves a round trip.
 
@@ -95,7 +95,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-orchestrator:subagent-driven-development (recommended) or superpowers-orchestrator:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 <!-- riso-tech:orchestrator-split START -->
 **Spec:** `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
@@ -154,7 +154,7 @@ include this section.]
   block is how they learn the names and types neighboring tasks use.]
 
 <!-- riso-tech:orchestrator-split START -->
-**task_type:** [one of the 16 values in `sdlc-model-routing.json` — e.g. `implementation_coding`, `code_review_quality`, `testing_qa`, `debugging_root_cause`, `architecture_design`]. `dispatch-agent` reads this at runtime to resolve the model/provider. Every task MUST carry it.
+**task_type:** [one of the 16 values in `sdlc-model-routing.json` — e.g. `implementation_coding`, `code_review_quality`, `testing_qa`, `debugging_root_cause`, `architecture_design`]. `superpowers-orchestrator:dispatch-agent` reads this at runtime to resolve the model/provider. Every task MUST carry it.
 <!-- riso-tech:orchestrator-split END -->
 
 - [ ] **Step 1: Write the failing test**
@@ -243,7 +243,7 @@ After the self-review, do NOT jump to execution. Ask the user to choose:
 > Which would you like?"
 
 **If Refine chosen:**
-- **REQUIRED SUB-SKILL:** Use `superpowers:requesting-plan-refine`
+- **REQUIRED SUB-SKILL:** Use `superpowers-orchestrator:requesting-plan-refine`
 
 **If Execute chosen**, ask which execution mode:
 <!-- riso-tech:orchestrator-split END -->
@@ -255,9 +255,9 @@ After the self-review, do NOT jump to execution. Ask the user to choose:
 **Which approach?**
 
 **If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+- **REQUIRED SUB-SKILL:** Use superpowers-orchestrator:subagent-driven-development
 - Fresh subagent per task + two-stage review
 
 **If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
+- **REQUIRED SUB-SKILL:** Use superpowers-orchestrator:executing-plans
 - Batch execution with checkpoints for review

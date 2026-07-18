@@ -11,7 +11,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (Claude Code, Codex CLI, Codex App, and Copilot CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+**Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (Claude Code, Codex CLI, Codex App, and Copilot CLI all qualify; see the per-platform tool refs in `../using-superpowers/references/`). If subagents are available, use superpowers-orchestrator:subagent-driven-development instead of this skill.
 
 ## The Process
 
@@ -33,7 +33,7 @@ For each task:
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+- **REQUIRED SUB-SKILL:** Use superpowers-orchestrator:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help
@@ -65,10 +65,10 @@ After all tasks complete and verified:
 ## Integration
 
 <!-- riso-tech:orchestrator-split START -->
-**Degraded mode.** `executing-plans` is the inline fallback used when no worker provider is available for `dispatch-agent`. With a provider, prefer subagent-driven-development (which routes each task through `dispatch-agent`); without one, run tasks inline here — today's behavior.
+**Degraded mode.** `superpowers-orchestrator:executing-plans` is the inline fallback used when no worker provider is available for `superpowers-orchestrator:dispatch-agent`. With a provider, prefer `superpowers-orchestrator:subagent-driven-development` (which routes each task through `superpowers-orchestrator:dispatch-agent`); without one, run tasks inline here — today's behavior.
 <!-- riso-tech:orchestrator-split END -->
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers-orchestrator:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
+- **superpowers-orchestrator:writing-plans** - Creates the plan this skill executes
+- **superpowers-orchestrator:finishing-a-development-branch** - Complete development after all tasks

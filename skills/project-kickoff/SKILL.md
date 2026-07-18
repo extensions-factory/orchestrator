@@ -16,7 +16,7 @@ Use this skill when **either** holds:
 1. **No repo/meaningful code exists** — the directory is empty, `git rev-parse --git-dir` fails, or only stray non-code files exist (a lone `.gitignore`, `LICENSE`); **or**
 2. **Explicit greenfield language** — "new project", "from scratch", "start a new app/tool/service".
 
-**Redirect guard:** If the directory holds a real existing project, STOP and use `superpowers:brainstorming` instead. Never scaffold a new repo on top of one that already exists.
+**Redirect guard:** If the directory holds a real existing project, STOP and use `superpowers-orchestrator:brainstorming` instead. Never scaffold a new repo on top of one that already exists.
 
 ## Flow
 
@@ -32,7 +32,7 @@ Discovery → Setup → Scaffold spec → Handoff. Each phase is defined below. 
 
    If the answer doesn't clearly place it, ask one multiple-choice question: "Is this a product for users/customers, or a technical/internal build?"
 
-3. **Research fan-out** — dispatch parallel research subagents with `superpowers:dispatching-parallel-agents` (use the `deep-research` skill where a deep multi-source pass fits). Four independent investigations for the chosen track, no shared state:
+3. **Research fan-out** — dispatch parallel research subagents with `superpowers-orchestrator:dispatching-parallel-agents` (use the `deep-research` skill where a deep multi-source pass fits). Four independent investigations for the chosen track, no shared state:
 
    *Market-facing product:*
    - Similar/competing products
@@ -47,20 +47,20 @@ Discovery → Setup → Scaffold spec → Handoff. Each phase is defined below. 
    - Tooling/ecosystem landscape (mature tools vs build-your-own)
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D1`, `D2`, `D3`, and `D4` are four distinct dispatches: use `superpowers:dispatching-parallel-agents` to send one independent worker for each of the chosen track's four research domains in the order listed above (D1 first domain, D2 second, D3 third, D4 fourth), each through `dispatch-agent` with `role: business_analyst`, `task_type: discovery_research`, and only that domain's context; issue all four in one fan-out, then wait for all four results before `D5`.
+**Dispatch:** `D1`, `D2`, `D3`, and `D4` are four distinct dispatches: use `superpowers-orchestrator:dispatching-parallel-agents` to send one independent worker for each of the chosen track's four research domains in the order listed above (D1 first domain, D2 second, D3 third, D4 fourth), each through `superpowers-orchestrator:dispatch-agent` with `role: business_analyst`, `task_type: discovery_research`, and only that domain's context; issue all four in one fan-out, then wait for all four results before `D5`.
 <!-- riso-tech:orchestrator-split END -->
 
 4. **Synthesize, present, commit.**
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D5` runs only after `D1`–`D4` return: dispatch `role: business_analyst`, `task_type: discovery_research` through `dispatch-agent` to synthesize their results into the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, covering the selected track's four acceptance areas; validate the returned file, present it to the human, and commit it before Setup.
+**Dispatch:** `D5` runs only after `D1`–`D4` return: dispatch `role: business_analyst`, `task_type: discovery_research` through `superpowers-orchestrator:dispatch-agent` to synthesize their results into the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, covering the selected track's four acceptance areas; validate the returned file, present it to the human, and commit it before Setup.
 <!-- riso-tech:orchestrator-split END -->
 
-**This phase gates the rest.** Do not start Setup until the discovery doc is written and committed — even if the human "already knows the space." The research grounds the stack decision and the later `brainstorming` session.
+**This phase gates the rest.** Do not start Setup until the discovery doc is written and committed — even if the human "already knows the space." The research grounds the stack decision and the later `superpowers-orchestrator:brainstorming` session.
 
 ## Phase 2 — Setup
 
-Ask questions **one at a time**, multiple-choice where possible (same discipline as `brainstorming`), informed by the discovery doc.
+Ask questions **one at a time**, multiple-choice where possible (same discipline as `superpowers-orchestrator:brainstorming`), informed by the discovery doc.
 
 1. **Stack** — language, framework/library, package manager, test runner.
 2. **Standards** — formatter/linter, naming conventions, commit convention, test-file convention.
@@ -69,11 +69,11 @@ Ask questions **one at a time**, multiple-choice where possible (same discipline
 ### Step 4 — Bootstrap the repo
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D6` initializes the Git repository: if `git rev-parse --git-dir` fails, dispatch `git init` alone through `dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; if a repository already exists, skip D6, and do not continue to `D7` until repository initialization is confirmed; run it inline only if the harness has no subagent capability at all.
+**Dispatch:** `D6` initializes the Git repository: if `git rev-parse --git-dir` fails, dispatch `git init` alone through `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; if a repository already exists, skip D6, and do not continue to `D7` until repository initialization is confirmed; run it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D7` creates the empty initial commit as a separate dispatch after `D6` succeeds (or an existing repository is confirmed): use `dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`, require the worker to return the commit SHA before continuing to the scaffold spec, and run it inline only if the harness has no subagent capability at all.
+**Dispatch:** `D7` creates the empty initial commit as a separate dispatch after `D6` succeeds (or an existing repository is confirmed): use `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`, require the worker to return the commit SHA before continuing to the scaffold spec, and run it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 This is the one piece of bootstrapping nothing downstream can do for itself.
@@ -81,10 +81,10 @@ This is the one piece of bootstrapping nothing downstream can do for itself.
 ## Phase 3 — Scaffold spec
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D8` dispatches the scaffold spec through `dispatch-agent` with `role: tech_lead` and `task_type: architecture_design`; the worker writes `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` from the discovery and approved stack/tooling choices, and the orchestrator validates and presents it for user approval before handing it to `writing-plans`; write it inline only if the harness has no subagent capability at all.
+**Dispatch:** `D8` dispatches the scaffold spec through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: architecture_design`; the worker writes `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` from the discovery and approved stack/tooling choices, and the orchestrator validates and presents it for user approval before handing it to `superpowers-orchestrator:writing-plans`; write it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
-Write `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` using the standard `brainstorming` spec format and self-review, scoped to tooling not features. Express all concrete scaffolding as **tasks for the plan** (do NOT run them here):
+Write `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` using the standard `superpowers-orchestrator:brainstorming` spec format and self-review, scoped to tooling not features. Express all concrete scaffolding as **tasks for the plan** (do NOT run them here):
 
 - Run the stack's **official init command** (ecosystem-native: `npm create …`, `cargo new`, `uv init`, `go mod init`, …) and install the chosen lint/format/test tooling. See `references/stack-init-commands.md`.
 - Write `CONSTITUTION.md` — the single canonical source of truth for the Phase 2 standards answers.
@@ -97,20 +97,20 @@ For projects that use a product roadmap, add roadmap entries for the discovery a
 
 ## Phase 4 — Handoff
 
-Invoke `superpowers:writing-plans` on the scaffold spec. From there the existing pipeline runs unmodified. After the scaffold branch is finished, `superpowers:brainstorming` designs the first real feature — now against a tested repo with market context in hand.
+Invoke `superpowers-orchestrator:writing-plans` on the scaffold spec. From there the existing pipeline runs unmodified. After the scaffold branch is finished, `superpowers-orchestrator:brainstorming` designs the first real feature — now against a tested repo with market context in hand.
 
-**This is the terminal state.** Do NOT invoke any other implementation skill; `writing-plans` is the next step.
+**This is the terminal state.** Do NOT invoke any other implementation skill; `superpowers-orchestrator:writing-plans` is the next step.
 
 ## Red Flags
 
 | Situation | Rule |
 |---|---|
 | Directory isn't actually empty (unrelated files present) | Stop and ask before `git init` / init commands — don't silently treat a non-empty dir as greenfield. |
-| Idea-capture answer describes a feature for an *existing* project | Stop — not greenfield. Redirect to `superpowers:brainstorming`. |
+| Idea-capture answer describes a feature for an *existing* project | Stop — not greenfield. Redirect to `superpowers-orchestrator:brainstorming`. |
 | "I already know the space, skip the research" | Discovery gates everything. Run the research fan-out anyway — it grounds the stack decision and later brainstorming. |
 | "Market research is irrelevant for this IaC/internal tool" | Wrong track, not wrong gate — switch to the technical-build track (best practices, reference designs), still run the fan-out. |
 | Stack init command fails (registry error, tool not installed) | Surface the failure; don't hand-write files faking what the tool would have produced. |
 | Unknown stack/tool combo with no known init command | Ask the user for the exact command rather than guessing. |
 | "It's a toy project, skip the CI stub / verification" | The scaffold spec still lists the CI stub and walking-skeleton verification. A green baseline is the point of kickoff. |
-| Walking-skeleton verification fails | Do not finish the branch or hand off to `brainstorming` with a broken baseline. |
+| Walking-skeleton verification fails | Do not finish the branch or hand off to `superpowers-orchestrator:brainstorming` with a broken baseline. |
 | Tempted to run init/lint/CI commands here | Don't. Concrete scaffolding is plan tasks (Phase 3), executed by the pipeline — not by this skill. |

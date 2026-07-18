@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PreToolUse hook for superpowers plugin (matcher: Agent|Skill).
-# Re-injects the dispatch-agent checklist at the moment of dispatch, where
+# Re-injects the superpowers-orchestrator:dispatch-agent checklist at the moment of dispatch, where
 # skill text read many turns ago has decayed. For Skill calls, fires on Codex
 # worker commands so each task type is pinned to its exact Codex command.
 set -euo pipefail
@@ -12,11 +12,11 @@ if printf '%s' "$input" | grep -q '"tool_name"[[:space:]]*:[[:space:]]*"Skill"';
     printf '%s' "$input" | grep -Eiq 'codex:(rescue|review|adversarial-review)|rescue' || exit 0
 fi
 
-reminder="DISPATCH CHECKLIST (dispatch-agent Steps 1-4 - required before this spawn):
+reminder="DISPATCH CHECKLIST (superpowers-orchestrator:dispatch-agent Steps 1-4 - required before this spawn):
 1. task_type resolved from the plan annotation or role.
 2. Model/provider selected via ${CLAUDE_PLUGIN_ROOT:-<plugin-root>}/scripts/model-lookup.sh <task_type>, then exact command read from --command <task_type> <rank>.
 3. Target agent readiness checked (codex: setup --json; antigravity: always ready via human relay; claude: always ready). Not ready = walk the ladder, do NOT stop to ask permission mid-ladder.
-4. task (kebab slug) + turn assigned; request JSON written to .superpowers/<task>/turn-<turn>-request.json; Codex persona/skill/work contract read from codex-worker-protocol.md; review context includes mandatory base_sha (plus security_focus for security).
+4. task (kebab slug) + turn assigned; request JSON written to .superpowers/<task>/turn-<turn>-request.json; namespaced worker skill read from codex-worker-protocol.md for every agent, plus Codex persona/work contract; review context includes mandatory base_sha (plus security_focus for security).
 If agent=codex, use only the task_type command: code_review_quality = /codex:review --wait --model <model> --base <base_sha>; security_review = /codex:adversarial-review --wait --model <model> --base <base_sha> \"<security focus>\"; rescue set [discovery_research, requirements_user_stories, backlog_refinement_prioritization, sprint_planning, architecture_design, ui_ux_prototyping, implementation_coding, debugging_root_cause, testing_qa, release_deployment, workspace_setup, monitoring_incident_ops, documentation_knowledge_transfer, retrospective_process_improvement] = /codex:rescue --wait --fresh --write --model <model> --effort <effort> \"<prompt>\". No background, resume, profile pin, status/result/cancel/transfer, or cross-command fallback."
 
 escape_for_json() {

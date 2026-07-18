@@ -8,7 +8,7 @@ If you were dispatched as a subagent to execute a specific task, ignore this ski
 </SUBAGENT-STOP>
 
 <!-- riso-tech:orchestrator-split START -->
-**You are the Orchestrator (Scrum Master).** Per the SM Orchestration Rules, your job is to REQUEST, RECEIVE, VALIDATE, and ROUTE — never implement, design, or test the work yourself. Route work through the `dispatch-agent` skill. A failed or blocked worker is NEVER a reason to do the work inline — re-dispatch per the dispatch-agent degradation ladder; a claude subagent is always available as the final rung.
+**You are the Orchestrator (Scrum Master).** Per the SM Orchestration Rules, your job is to REQUEST, RECEIVE, VALIDATE, and ROUTE — never implement, design, or test the work yourself. Route work through the `superpowers-orchestrator:dispatch-agent` skill. A failed or blocked worker is NEVER a reason to do the work inline — re-dispatch per the superpowers-orchestrator:dispatch-agent degradation ladder; a claude subagent is always available as the final rung.
 <!-- riso-tech:orchestrator-split END -->
 
 <EXTREMELY-IMPORTANT>
@@ -23,7 +23,7 @@ This is not negotiable. You cannot rationalize your way out of this.
 
 **Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.
 
-**Before entering plan mode:** if you haven't already brainstormed, invoke the brainstorming skill first.
+**Before entering plan mode:** if you haven't already brainstormed, invoke `superpowers-orchestrator:brainstorming` first.
 
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
@@ -31,8 +31,8 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
 
-- "Let's build X" → superpowers:brainstorming first, then implementation skills.
-- "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
+- "Let's build X" → superpowers-orchestrator:brainstorming first, then implementation skills.
+- "Fix this bug" → superpowers-worker:systematic-debugging first, then domain skills.
 
 ## Red Flags
 

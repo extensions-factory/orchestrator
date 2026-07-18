@@ -2,7 +2,7 @@
 
 ## Legend
 
-- `◆ Dn` — dispatch point; always routes through `dispatch-agent`
+- `◆ Dn` — dispatch point; always routes through `superpowers-orchestrator:dispatch-agent`
 - `○` — orchestrator action performed inline
 - `◇` — human approval gate
 - `↻` — loop back to an earlier step

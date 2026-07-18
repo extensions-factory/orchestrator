@@ -5,7 +5,7 @@ SKILL="$ROOT/skills/writing-skills/SKILL.md"
 fail=0
 check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] missing: $2"; fail=1; }; }
 
-check "$SKILL" "dispatch-agent"
+check "$SKILL" "superpowers-orchestrator:dispatch-agent"
 check "$SKILL" "software_engineer"
 check "$SKILL" "validation checklist"
 check "$SKILL" "does not author skill content inline"

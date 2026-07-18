@@ -13,7 +13,7 @@ Run this workflow when reordering the roadmap, adding newly discovered work from
 
 1. **Read the current backlog.** Read `docs/superpowers/roadmap.json`. Every item carries `slug, epic, feature, title, description, status, spec, plan, created, completed`.
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D22` sends the current roadmap and only work the human explicitly adds through `dispatch-agent` with `role: product_owner` and `task_type: backlog_refinement_prioritization` to propose ordering and grooming; the Scrum Master presents the proposal, applies it to `roadmap.json`/`ROADMAP.html` only after the human approves, and when there is no worker provider selected or ready, `dispatch-agent` degrades to the always-available claude subagent.
+**Dispatch:** `D22` sends the current roadmap and only work the human explicitly adds through `superpowers-orchestrator:dispatch-agent` with `role: product_owner` and `task_type: backlog_refinement_prioritization` to propose ordering and grooming; the Scrum Master presents the proposal, applies it to `roadmap.json`/`ROADMAP.html` only after the human approves, and when there is no worker provider selected or ready, `superpowers-orchestrator:dispatch-agent` degrades to the always-available claude subagent.
 <!-- riso-tech:orchestrator-split END -->
 
 3. **Validate with the human.** The Scrum Master presents the proposed ordering and grooming to the human and accepts only the ordering and scope the human approves.

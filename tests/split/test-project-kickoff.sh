@@ -6,7 +6,7 @@ fail=0
 check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] missing: $2"; fail=1; }; }
 test -f "$SKILL" || { echo "[FAIL] no project-kickoff/SKILL.md"; exit 1; }
 check "$SKILL" "name: project-kickoff"
-check "$SKILL" "dispatch-agent"
+check "$SKILL" "superpowers-orchestrator:dispatch-agent"
 check "$SKILL" "business_analyst"
 check "$SKILL" "discovery_research"
 check "$SKILL" "devops_engineer"

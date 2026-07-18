@@ -3,8 +3,8 @@
 
 A per-project roadmap that gives humans a comprehensive view of the product and
 its progress, organized in three levels: **Epic → Feature → User Story (US)**.
-`brainstorming` adds the User Stories for a feature when its spec is written;
-`finishing-a-development-branch` marks them released when the work is integrated.
+`superpowers-orchestrator:brainstorming` adds the User Stories for a feature when its spec is written;
+`superpowers-orchestrator:finishing-a-development-branch` marks them released when the work is integrated.
 Humans move stories through the intermediate statuses as work progresses.
 
 Both skills read/write the same two files in the working project:
@@ -43,7 +43,7 @@ grouping fields on each entry — the hierarchy is derived from them, not nested
 - `title` — the User Story title (the linked item text in its section).
 - `description` — one-line US summary shown under the title.
 - `status` — one of `open`, `dev`, `test`, `ready`, `released` (the five filter
-  chips). Set to `open` when the spec is written; `finishing-a-development-branch`
+  chips). Set to `open` when the spec is written; `superpowers-orchestrator:finishing-a-development-branch`
   sets it to `released` on integration. Move through `dev` → `test` → `ready` manually.
 - `spec` / `plan` — paths relative to `docs/superpowers/` (or `null` if none yet).
 - `created` / `completed` — `YYYY-MM-DD`. `completed` stays `null` until `released`.

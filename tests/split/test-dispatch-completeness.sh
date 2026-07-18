@@ -50,19 +50,19 @@ persona_count=$(grep -cE '^- `[a-z_]+`' "$DA" || true)
 
 # US-3: writing-plans dispatches plan authorship
 WP="$ROOT/skills/writing-plans/SKILL.md"
-check "$WP" "dispatch-agent"
+check "$WP" "superpowers-orchestrator:dispatch-agent"
 check "$WP" "tech_lead"
 fenced "$WP"
 
 # US-4: finishing-a-development-branch dispatches to devops_engineer
 FB="$ROOT/skills/finishing-a-development-branch/SKILL.md"
-check "$FB" "dispatch-agent"
+check "$FB" "superpowers-orchestrator:dispatch-agent"
 check "$FB" "devops_engineer"
 fenced "$FB"
 
 # US-5: using-git-worktrees dispatches to devops_engineer
 GW="$ROOT/skills/using-git-worktrees/SKILL.md"
-check "$GW" "dispatch-agent"
+check "$GW" "superpowers-orchestrator:dispatch-agent"
 check "$GW" "devops_engineer"
 fenced "$GW"
 
@@ -95,9 +95,9 @@ RC="$ROOT/skills/requesting-code-review/SKILL.md"
 check_dispatch "$SDD" D13 "role: software_engineer" "plan task's task_type" "implement and test" "every plan task"
 check_dispatch "$RC" D14 "role: tech_lead" "task_type: code_review_quality" "base_sha" "task review" "re-review"
 check_dispatch "$RC" D15 "role: security_engineer" "task_type: security_review" "base_sha" "security_focus" "only when" "security-sensitive"
-check_dispatch "$SDD" D16 "role: software_engineer" "plan task's task_type" "skill: receiving-code-review" "Critical/Important findings" "D14"
+check_dispatch "$SDD" D16 "role: software_engineer" "plan task's task_type" "skill: superpowers-worker:receiving-code-review" "Critical/Important findings" "D14"
 check_dispatch "$RC" D17 "role: tech_lead" "task_type: code_review_quality" "base_sha" "whole-branch review" "D18"
-check_dispatch "$SDD" D18 "role: software_engineer" "task_type: implementation_coding" "skill: receiving-code-review" "one fix wave" "D17"
+check_dispatch "$SDD" D18 "role: software_engineer" "task_type: implementation_coding" "skill: superpowers-worker:receiving-code-review" "one fix wave" "D17"
 
 check_dispatch "$FB" D19 "role: devops_engineer" "task_type: release_deployment" "selected finish path" "context.constraints" "HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>" "exact discard confirmation" "chosen option"
 SR="$ROOT/skills/sprint-retrospective/SKILL.md"

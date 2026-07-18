@@ -25,7 +25,7 @@ evaluate the refine findings."
 
 ## The Process
 
-1. **Read** the findings file (path handed off from `requesting-plan-refine`).
+1. **Read** the findings file (path handed off from `superpowers-orchestrator:requesting-plan-refine`).
 2. **For each finding:**
    - Restate what it's claiming, in your own words
    - Verify against the plan, the spec (if any), and the codebase — a
@@ -34,14 +34,14 @@ evaluate the refine findings."
      if the US is genuinely one feature
    - If it holds up: fix it directly in the plan file
    - If it doesn't: note why in your summary, don't apply it
-3. **Regenerate the plan's HTML companion** (per `writing-plans`) since the
+3. **Regenerate the plan's HTML companion** (per `superpowers-orchestrator:writing-plans`) since the
    plan changed.
 4. **Report and ask:**
 
 > "Findings addressed in `<plan path>`: [N] fixed, [M] declined (with
 > reasons). Continue refining, or move to executing?"
 
-- **Refine again** → invoke `superpowers:requesting-plan-refine` for another
+- **Refine again** → invoke `superpowers-orchestrator:requesting-plan-refine` for another
   pass.
 - **Execute** → present the execution-mode choice:
 
@@ -51,8 +51,8 @@ evaluate the refine findings."
 > execution with checkpoints. Which approach?"
 
 - If Subagent-Driven: **REQUIRED SUB-SKILL:** Use
-  superpowers:subagent-driven-development
-- If Inline Execution: **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
+  superpowers-orchestrator:subagent-driven-development
+- If Inline Execution: **REQUIRED SUB-SKILL:** Use superpowers-orchestrator:executing-plans
 
 ## Forbidden Responses
 
@@ -73,7 +73,7 @@ without verifying it first.
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:requesting-plan-refine** - Produces the findings file this
+- **superpowers-orchestrator:requesting-plan-refine** - Produces the findings file this
   skill consumes
-- **superpowers:subagent-driven-development** / **superpowers:executing-plans**
+- **superpowers-orchestrator:subagent-driven-development** / **superpowers-orchestrator:executing-plans**
   - Terminal execution skills this hands off to

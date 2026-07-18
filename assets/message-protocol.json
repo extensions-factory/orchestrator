@@ -1,5 +1,5 @@
 {
-  "_riso_tech": "orchestrator-split message envelope contract; consumed by validate-message.mjs and the dispatch-agent/intake-task/report-task skills",
+  "_riso_tech": "orchestrator-split message envelope contract; consumed by validate-message.mjs, superpowers-orchestrator:dispatch-agent, superpowers-worker:intake-task, and superpowers-worker:report-task",
   "required": ["message_type", "from", "to", "task", "turn", "task_type", "skill", "context", "dispatch", "output"],
   "_task_turn": "task: kebab slug ([a-z0-9-]) assigned by the orchestrator at first dispatch, stable across every turn of the same task; turn: positive int, one per dispatch pair. Files live at .superpowers/<task>/turn-<turn>-request.json and turn-<turn>-response.json",
   "enums": {
@@ -11,6 +11,6 @@
   "envelope": {
     "context": { "required": ["input_artifacts", "acceptance_criteria", "constraints"] },
     "dispatch": { "required": ["agent", "model", "effort", "persona", "provider_diversity"] },
-    "output": { "required": ["artifacts", "status", "notes"], "optional": { "blocked_ops": "array of {op, reason} — operations the worker's environment denied; orchestrator routes each per dispatch-agent Step 8" } }
+    "output": { "required": ["artifacts", "status", "notes"], "optional": { "blocked_ops": "array of {op, reason} — operations the worker's environment denied; orchestrator routes each per superpowers-orchestrator:dispatch-agent Step 8" } }
   }
 }

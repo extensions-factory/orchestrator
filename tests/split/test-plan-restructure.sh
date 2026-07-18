@@ -20,6 +20,6 @@ check "$SKILL" "**Depends on:** [Task M | Foundation | none]"
 check "$SKILL" "**4. Template check:**"
 check "$SKILL" "**5. Traceability check:**"
 check "$SKILL" "1. Refine — get an independent review pass"
-check "$SKILL" "superpowers:requesting-plan-refine"
+check "$SKILL" "superpowers-orchestrator:requesting-plan-refine"
 [ "$fail" -eq 0 ] && echo "PASS test-plan-restructure"
 exit $fail

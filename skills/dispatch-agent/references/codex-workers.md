@@ -7,7 +7,7 @@ bridge. Resolve the task type first; it selects exactly one command family.
 
 Run `/codex:setup` before the first Codex dispatch in a session. Codex is ready
 only when setup reports `ready: true`, or at least one configured profile is
-enabled and `loggedIn: true`. Otherwise, continue the dispatch-agent degradation
+enabled and `loggedIn: true`. Otherwise, continue the superpowers-orchestrator:dispatch-agent degradation
 ladder. Do not attempt a worker call while authentication is unavailable.
 
 ## 2. Runtime
@@ -50,6 +50,6 @@ verbatim as `.superpowers/<task>/turn-<turn>-review.md`, then construct the one
 response envelope defined by `codex-worker-protocol.md`, validate it, and ledger
 the pair. Do not alter or summarize the review artifact.
 
-Any command failure continues the dispatch-agent degradation ladder. Never
+Any command failure continues the superpowers-orchestrator:dispatch-agent degradation ladder. Never
 fabricate output, poll for another result, resume a thread, or substitute rescue
 for a failed review command.

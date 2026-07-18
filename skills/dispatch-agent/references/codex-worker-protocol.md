@@ -5,11 +5,11 @@ review output. Command selection itself is fixed in `codex-workers.md`.
 
 ## Deterministic contract selection
 
-`receiving-code-review` has precedence over the task-type table for D16 and D18. When the request skill has that exact value, use this row regardless of task type:
+`superpowers-worker:receiving-code-review` has precedence over the task-type table for D16 and D18. When the request skill has that exact value, use this row regardless of task type:
 
 | Case | Persona | Discipline | Work contract |
 |---|---|---|---|
-| D16/D18 review remediation | `software_engineer` | `receiving-code-review` | Review remediation: verify each finding, apply only technically valid requested corrections, and run the original acceptance checks. |
+| D16/D18 review remediation | `software_engineer` | `superpowers-worker:receiving-code-review` | Review remediation: verify each finding, apply only technically valid requested corrections, and run the original acceptance checks. |
 
 For every other request, use the single row matching `task_type`. Set both
 `dispatch.persona` and `skill` to that row; a mismatch is a malformed request,
@@ -17,22 +17,22 @@ not a reason to choose another row.
 
 | Task type | Persona | Discipline | Work contract |
 |---|---|---|---|
-| `discovery_research` | `business_analyst` | `verification-before-completion` | Produce only the requested evidence-backed findings and requested research artifacts; never edit product files. |
-| `requirements_user_stories` | `product_owner` | `verification-before-completion` | Produce only requested stories, acceptance criteria, constraints, and edge cases; never edit product files. |
-| `backlog_refinement_prioritization` | `product_owner` | `verification-before-completion` | Return only a backlog proposal; never edit `roadmap.json`, `ROADMAP.html`, or product files. The orchestrator applies approved changes after human approval. |
-| `sprint_planning` | `tech_lead` | `verification-before-completion` | Produce only the requested goal, task breakdown, dependencies, and risks; never edit product files. |
-| `architecture_design` | `tech_lead` | `verification-before-completion` | Produce only the requested design, tradeoffs, and architecture artifacts; never edit product files. |
-| `ui_ux_prototyping` | `ux_ui_designer` | `verification-before-completion` | Edit only requested UX, UI, wireframe, or prototype artifacts; never implement backend logic. |
-| `implementation_coding` | `software_engineer` | `test-driven-development` | Implement only the bounded change: failing test first, minimum implementation, then focused verification. |
-| `debugging_root_cause` | `software_engineer` | `systematic-debugging` | Reproduce first, trace the root cause, add a failing regression check, apply the smallest shared fix, then verify. |
-| `code_review_quality` | `tech_lead` | `verification-before-completion` | Return only evidence-backed findings and requested review artifacts; never edit product files. |
-| `testing_qa` | `qa_engineer` | `verification-before-completion` | Run the requested acceptance checks and edit only explicitly requested test artifacts; never edit production files. |
-| `security_review` | `security_engineer` | `verification-before-completion` | Return only evidence-backed vulnerabilities and requested security artifacts; never edit product files. |
-| `release_deployment` | `devops_engineer` | `verification-before-completion` | Execute only the exact requested Git/release operation; a destructive operation requires `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` in `context.constraints`, otherwise report blocked. |
-| `workspace_setup` | `devops_engineer` | `verification-before-completion` | Execute only the exact requested workspace or Git setup operation and its acceptance check; perform no other Git operation. |
-| `monitoring_incident_ops` | `sre` | `systematic-debugging` | Inspect evidence first and perform only requested monitoring, incident, or postmortem work; do not change unrelated product behavior. |
-| `documentation_knowledge_transfer` | `technical_writer` | `verification-before-completion` | Edit only the requested documentation, ADR, changelog, onboarding, or handoff artifacts. |
-| `retrospective_process_improvement` | `agile_coach` | `verification-before-completion` | Recommend process improvements only; never edit skills, workflows, or product files. |
+| `discovery_research` | `business_analyst` | `superpowers-worker:verification-before-completion` | Produce only the requested evidence-backed findings and requested research artifacts; never edit product files. |
+| `requirements_user_stories` | `product_owner` | `superpowers-worker:verification-before-completion` | Produce only requested stories, acceptance criteria, constraints, and edge cases; never edit product files. |
+| `backlog_refinement_prioritization` | `product_owner` | `superpowers-worker:verification-before-completion` | Return only a backlog proposal; never edit `roadmap.json`, `ROADMAP.html`, or product files. The orchestrator applies approved changes after human approval. |
+| `sprint_planning` | `tech_lead` | `superpowers-worker:verification-before-completion` | Produce only the requested goal, task breakdown, dependencies, and risks; never edit product files. |
+| `architecture_design` | `tech_lead` | `superpowers-worker:verification-before-completion` | Produce only the requested design, tradeoffs, and architecture artifacts; never edit product files. |
+| `ui_ux_prototyping` | `ux_ui_designer` | `superpowers-worker:verification-before-completion` | Edit only requested UX, UI, wireframe, or prototype artifacts; never implement backend logic. |
+| `implementation_coding` | `software_engineer` | `superpowers-worker:test-driven-development` | Implement only the bounded change: failing test first, minimum implementation, then focused verification. |
+| `debugging_root_cause` | `software_engineer` | `superpowers-worker:systematic-debugging` | Reproduce first, trace the root cause, add a failing regression check, apply the smallest shared fix, then verify. |
+| `code_review_quality` | `tech_lead` | `superpowers-worker:verification-before-completion` | Return only evidence-backed findings and requested review artifacts; never edit product files. |
+| `testing_qa` | `qa_engineer` | `superpowers-worker:verification-before-completion` | Run the requested acceptance checks and edit only explicitly requested test artifacts; never edit production files. |
+| `security_review` | `security_engineer` | `superpowers-worker:verification-before-completion` | Return only evidence-backed vulnerabilities and requested security artifacts; never edit product files. |
+| `release_deployment` | `devops_engineer` | `superpowers-worker:verification-before-completion` | Execute only the exact requested Git/release operation; a destructive operation requires `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` in `context.constraints`, otherwise report blocked. |
+| `workspace_setup` | `devops_engineer` | `superpowers-worker:verification-before-completion` | Execute only the exact requested workspace or Git setup operation and its acceptance check; perform no other Git operation. |
+| `monitoring_incident_ops` | `sre` | `superpowers-worker:systematic-debugging` | Inspect evidence first and perform only requested monitoring, incident, or postmortem work; do not change unrelated product behavior. |
+| `documentation_knowledge_transfer` | `technical_writer` | `superpowers-worker:verification-before-completion` | Edit only the requested documentation, ADR, changelog, onboarding, or handoff artifacts. |
+| `retrospective_process_improvement` | `agile_coach` | `superpowers-worker:verification-before-completion` | Recommend process improvements only; never edit skills, workflows, or product files. |
 
 No other persona, discipline, or work contract is permitted for a Codex
 dispatch.
@@ -92,10 +92,10 @@ release is forbidden unless REQUEST.context.constraints records the exact
 required human confirmation string.
 
 Apply DISCIPLINE exactly:
-- test-driven-development: write and run a failing test first, make the minimum change pass, then refactor only covered code.
-- systematic-debugging: establish a reproducible failure and root cause before changing code; make no speculative fix.
-- verification-before-completion: run the stated checks and include real evidence before claiming completion.
-- receiving-code-review: verify feedback technically, reject invalid findings in output.notes, and implement only valid requested corrections.
+- superpowers-worker:test-driven-development: write and run a failing test first, make the minimum change pass, then refactor only covered code.
+- superpowers-worker:systematic-debugging: establish a reproducible failure and root cause before changing code; make no speculative fix.
+- superpowers-worker:verification-before-completion: run the stated checks and include real evidence before claiming completion.
+- superpowers-worker:receiving-code-review: verify feedback technically, reject invalid findings in output.notes, and implement only valid requested corrections.
 
 If an operation is denied or unauthorized, do not retry or work around it;
 finish authorized work and record {"op":"...","reason":"..."} in

@@ -73,7 +73,7 @@ of human involvement will be closed without review.
      runner), you MUST include a session transcript proving the
      integration actually works.
 
-     A real integration loads the `using-superpowers` bootstrap at session
+     A real integration loads the `superpowers-orchestrator:using-superpowers` bootstrap at session
      start. The bootstrap is what causes skills to auto-trigger. Without
      it, the skills are dead weight — present on disk but never invoked
      at the right moments.
@@ -83,7 +83,7 @@ of human involvement will be closed without review.
 
          Let's make a react todo list
 
-     A working integration auto-triggers the `brainstorming` skill before
+     A working integration auto-triggers the `superpowers-orchestrator:brainstorming` skill before
      any code is written. Paste the complete transcript below.
 
      These are NOT real integrations and PRs that ship them will be closed:
@@ -117,7 +117,7 @@ paste the complete transcript here
 
 ## Rigor
 
-- [ ] If this is a skills change: I used `superpowers:writing-skills` and
+- [ ] If this is a skills change: I used `superpowers-orchestrator:writing-skills` and
       completed adversarial pressure testing (paste results below)
 - [ ] This change was tested adversarially, not just on the happy path
 - [ ] I did not modify carefully-tuned content (Red Flags table,

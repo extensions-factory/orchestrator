@@ -10,7 +10,7 @@ if printf '%s' "$input" | grep -q '"tool_name"[[:space:]]*:[[:space:]]*"Skill"';
     printf '%s' "$input" | grep -Eiq 'codex:(rescue|review|adversarial-review)|rescue' || exit 0
 fi
 
-reminder="RECEIVE CHECKLIST (dispatch-agent Steps 5-8 - required now that the worker returned):
+reminder="RECEIVE CHECKLIST (superpowers-orchestrator:dispatch-agent Steps 5-8 - required now that the worker returned):
 5. Rescue/claude/antigravity response: persist .superpowers/<task>/turn-<turn>-response.json. Codex review/security stdout: persist verbatim as .superpowers/<task>/turn-<turn>-review.md, then construct the protocol's response envelope at turn-<turn>-response.json with that artifact and status done; never summarize the review.
 6. Validated: node scripts/validate-message.mjs on that file. Invalid = reissue once with a format reminder; second failure = status: blocked.
 7. Ledger appended to .superpowers/ledger.jsonl with task, turn, author_agent, author_model.

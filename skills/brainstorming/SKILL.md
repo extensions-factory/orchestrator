@@ -31,7 +31,7 @@ You MUST create a task for each of these items and complete them in order:
 <!-- riso-tech:orchestrator-split END -->
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+9. **Transition to implementation** — invoke `superpowers-orchestrator:writing-plans` to create implementation plan
 
 ## Process Flow
 
@@ -45,7 +45,7 @@ digraph brainstorming {
     "Write design doc" [shape=box];
     "Spec self-review\n(fix inline)" [shape=box];
     "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans skill" [shape=doublecircle];
+    "Invoke superpowers-orchestrator:writing-plans" [shape=doublecircle];
 
     "Explore project context" -> "Ask clarifying questions";
     "Ask clarifying questions" -> "Propose 2-3 approaches";
@@ -56,11 +56,11 @@ digraph brainstorming {
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "User reviews spec?" -> "Invoke superpowers-orchestrator:writing-plans" [label="approved"];
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**The terminal state is invoking `superpowers-orchestrator:writing-plans`.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is `superpowers-orchestrator:writing-plans`.
 
 ## The Process
 
@@ -115,7 +115,7 @@ digraph brainstorming {
 - Commit the design document to git
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D9` dispatches the approved design's complete documentation artifact set through `dispatch-agent` with the phase-matched role and phase-matched task_type — discovery → `role: business_analyst`, `task_type: discovery_research`; requirements → `role: product_owner`, `task_type: requirements_user_stories`; architecture → `role: tech_lead`, `task_type: architecture_design`; documentation/default → `role: technical_writer`, `task_type: documentation_knowledge_transfer`; the worker writes the spec, HTML companion, and roadmap: a spec `.md` following `skills/brainstorming/spec-template.md`, a self-contained HTML companion at the same path with a `.html` extension, and `docs/superpowers/roadmap.json` plus `docs/superpowers/ROADMAP.html` with one entry per User Story; the orchestrator validates all returned artifacts before presenting or committing them, and runs D9 inline only if the harness has no subagent capability at all.
+**Dispatch:** `D9` dispatches the approved design's complete documentation artifact set through `superpowers-orchestrator:dispatch-agent` with the phase-matched role and phase-matched task_type — discovery → `role: business_analyst`, `task_type: discovery_research`; requirements → `role: product_owner`, `task_type: requirements_user_stories`; architecture → `role: tech_lead`, `task_type: architecture_design`; documentation/default → `role: technical_writer`, `task_type: documentation_knowledge_transfer`; the worker writes the spec, HTML companion, and roadmap: a spec `.md` following `skills/brainstorming/spec-template.md`, a self-contained HTML companion at the same path with a `.html` extension, and `docs/superpowers/roadmap.json` plus `docs/superpowers/ROADMAP.html` with one entry per User Story; the orchestrator validates all returned artifacts before presenting or committing them, and runs D9 inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 **Spec Self-Review:**
@@ -140,8 +140,8 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 **Implementation:**
 
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- Invoke `superpowers-orchestrator:writing-plans` to create a detailed implementation plan
+- Do NOT invoke any other skill. `superpowers-orchestrator:writing-plans` is the next step.
 
 ## Key Principles
 

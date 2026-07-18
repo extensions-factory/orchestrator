@@ -19,14 +19,14 @@ independent review of the plan."
 
 ## When to Use
 
-Invoked when the user picks "Refine" at the `writing-plans` handoff, or again
-when `receiving-plan-refine`'s loop continues. Optional — skip when the user
+Invoked when the user picks "Refine" at the `superpowers-orchestrator:writing-plans` handoff, or again
+when `superpowers-orchestrator:receiving-plan-refine`'s loop continues. Optional — skip when the user
 chooses to execute directly.
 
 ## How to Request
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D11` — Dispatch the plan reviewer via `dispatch-agent` with `role: tech_lead`, `task_type: code_review_quality`, the plan and spec paths, and the plan's `author_agent` from `.superpowers/ledger.jsonl`; fill [plan-reviewer.md](plan-reviewer.md), save the independent plan review findings under `.superpowers/plan-refine/`, enforce provider diversity, and when `receiving-plan-refine` requests another refine loop, re-dispatch D11 against the revised plan until the human chooses Execute.
+**Dispatch:** `D11` — Dispatch the plan reviewer via `superpowers-orchestrator:dispatch-agent` with `role: tech_lead`, `task_type: code_review_quality`, the plan and spec paths, and the plan's `author_agent` from `.superpowers/ledger.jsonl`; fill [plan-reviewer.md](plan-reviewer.md), save the independent plan review findings under `.superpowers/plan-refine/`, enforce provider diversity, and when `superpowers-orchestrator:receiving-plan-refine` requests another refine loop, re-dispatch D11 against the revised plan until the human chooses Execute.
 <!-- riso-tech:orchestrator-split END -->
 
 **1. Locate the plan (and spec, if any):**

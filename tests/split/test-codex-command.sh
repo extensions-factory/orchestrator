@@ -87,27 +87,27 @@ while IFS='|' read -r task_type persona discipline; do
     exit 1
   }
 done <<'EOF'
-architecture_design|tech_lead|verification-before-completion
-backlog_refinement_prioritization|product_owner|verification-before-completion
-code_review_quality|tech_lead|verification-before-completion
-debugging_root_cause|software_engineer|systematic-debugging
-discovery_research|business_analyst|verification-before-completion
-documentation_knowledge_transfer|technical_writer|verification-before-completion
-implementation_coding|software_engineer|test-driven-development
-monitoring_incident_ops|sre|systematic-debugging
-release_deployment|devops_engineer|verification-before-completion
-requirements_user_stories|product_owner|verification-before-completion
-retrospective_process_improvement|agile_coach|verification-before-completion
-security_review|security_engineer|verification-before-completion
-sprint_planning|tech_lead|verification-before-completion
-testing_qa|qa_engineer|verification-before-completion
-ui_ux_prototyping|ux_ui_designer|verification-before-completion
-workspace_setup|devops_engineer|verification-before-completion
+architecture_design|tech_lead|superpowers-worker:verification-before-completion
+backlog_refinement_prioritization|product_owner|superpowers-worker:verification-before-completion
+code_review_quality|tech_lead|superpowers-worker:verification-before-completion
+debugging_root_cause|software_engineer|superpowers-worker:systematic-debugging
+discovery_research|business_analyst|superpowers-worker:verification-before-completion
+documentation_knowledge_transfer|technical_writer|superpowers-worker:verification-before-completion
+implementation_coding|software_engineer|superpowers-worker:test-driven-development
+monitoring_incident_ops|sre|superpowers-worker:systematic-debugging
+release_deployment|devops_engineer|superpowers-worker:verification-before-completion
+requirements_user_stories|product_owner|superpowers-worker:verification-before-completion
+retrospective_process_improvement|agile_coach|superpowers-worker:verification-before-completion
+security_review|security_engineer|superpowers-worker:verification-before-completion
+sprint_planning|tech_lead|superpowers-worker:verification-before-completion
+testing_qa|qa_engineer|superpowers-worker:verification-before-completion
+ui_ux_prototyping|ux_ui_designer|superpowers-worker:verification-before-completion
+workspace_setup|devops_engineer|superpowers-worker:verification-before-completion
 EOF
 ! grep -Fq '`executing-plans`' "$PROTOCOL"
 grep -Fq 'Return only a backlog proposal; never edit `roadmap.json`, `ROADMAP.html`, or product files. The orchestrator applies approved changes after human approval.' "$PROTOCOL"
 grep -Fq 'Recommend process improvements only; never edit skills, workflows, or product files.' "$PROTOCOL"
-grep -Fq '`receiving-code-review` has precedence over the task-type table for D16 and D18.' "$PROTOCOL"
-grep -Fq '`software_engineer` | `receiving-code-review` | Review remediation' "$PROTOCOL"
+grep -Fq '`superpowers-worker:receiving-code-review` has precedence over the task-type table for D16 and D18.' "$PROTOCOL"
+grep -Fq '`software_engineer` | `superpowers-worker:receiving-code-review` | Review remediation' "$PROTOCOL"
 
 echo 'PASS test-codex-command'

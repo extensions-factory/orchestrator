@@ -63,7 +63,7 @@ digraph process {
     "Read plan, note context and global constraints, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [shape=box];
-    "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Use superpowers-orchestrator:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
@@ -78,20 +78,20 @@ digraph process {
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="no"];
-    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Use superpowers:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Use superpowers-orchestrator:finishing-a-development-branch";
 }
 ```
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D13` runs for every plan task in sequence: call `dispatch-agent` with `role: software_engineer` and the plan task's task_type, paste `implementer-prompt.md` into the prompt body, and provide the task brief, global constraints, required prior-task interfaces, and report path so the worker can implement and test that task; after a successful response, the orchestrator performs Git bookkeeping inline and sends the task to `D14`, repeating D13–D16 for every plan task before `D17`.
+**Dispatch:** `D13` runs for every plan task in sequence: call `superpowers-orchestrator:dispatch-agent` with `role: software_engineer` and the plan task's task_type, paste `implementer-prompt.md` into the prompt body, and provide the task brief, global constraints, required prior-task interfaces, and report path so the worker can implement and test that task; after a successful response, the orchestrator performs Git bookkeeping inline and sends the task to `D14`, repeating D13–D16 for every plan task before `D17`.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D16` runs when `D14` or conditional `D15` reports Critical/Important findings: call `dispatch-agent` once with `role: software_engineer`, the plan task's task_type, `skill: receiving-code-review`, the original task brief/report, the complete actionable findings, and the covering test commands; the worker fixes the task, reruns and records those tests, then the orchestrator re-dispatches `D14` for re-review, repeating D16→D14 until clean.
+**Dispatch:** `D16` runs when `D14` or conditional `D15` reports Critical/Important findings: call `superpowers-orchestrator:dispatch-agent` once with `role: software_engineer`, the plan task's task_type, `skill: superpowers-worker:receiving-code-review`, the original task brief/report, the complete actionable findings, and the covering test commands; the worker fixes the task, reruns and records those tests, then the orchestrator re-dispatches `D14` for re-review, repeating D16→D14 until clean.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D18` runs only when final review `D17` returns findings: send the complete findings list in one fix wave through `dispatch-agent` with `role: software_engineer`, `task_type: implementation_coding`, and `skill: receiving-code-review`; require the worker to fix the whole-branch issues and report covering/full test results, then re-dispatch `D17`; repeat one wave at a time until the final whole-branch review is clean.
+**Dispatch:** `D18` runs only when final review `D17` returns findings: send the complete findings list in one fix wave through `superpowers-orchestrator:dispatch-agent` with `role: software_engineer`, `task_type: implementation_coding`, and `skill: superpowers-worker:receiving-code-review`; require the worker to fix the whole-branch issues and report covering/full test results, then re-dispatch `D17`; repeat one wave at a time until the final whole-branch review is clean.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Pre-Flight Plan Review
@@ -111,7 +111,7 @@ conflicts that only emerge from implementation.
 ## Model Selection
 
 <!-- riso-tech:orchestrator-split START -->
-**Under the orchestrator split, this section is rationale, not procedure.** Model choice is made by `dispatch-agent` Steps 1–2 (`task_type` → `sdlc-model-routing.json` lookup → readiness preflight). Never hand-pick a model or call the Agent tool directly at any dispatch node — including Task 1 and workspace setup. A dispatch that skips the lookup is a protocol violation even when the worker would be a claude subagent. If the table's pick conflicts with this section's principles, the table wins.
+**Under the orchestrator split, this section is rationale, not procedure.** Model choice is made by `superpowers-orchestrator:dispatch-agent` Steps 1–2 (`task_type` → `sdlc-model-routing.json` lookup → readiness preflight). Never hand-pick a model or call the Agent tool directly at any dispatch node — including Task 1 and workspace setup. A dispatch that skips the lookup is a protocol violation even when the worker would be a claude subagent. If the table's pick conflicts with this section's principles, the table wins.
 <!-- riso-tech:orchestrator-split END -->
 
 Use the least powerful model that can handle each role to conserve cost and increase speed.
@@ -283,7 +283,7 @@ a ledger file, not only in todos.
 
 - [implementer-prompt.md](implementer-prompt.md) - Dispatch implementer subagent
 - [task-reviewer-prompt.md](task-reviewer-prompt.md) - Dispatch task reviewer subagent (spec compliance + code quality)
-- Final whole-branch review: use superpowers:requesting-code-review's [code-reviewer.md](../requesting-code-review/code-reviewer.md)
+- Final whole-branch review: use superpowers-orchestrator:requesting-code-review's [code-reviewer.md](../requesting-code-review/code-reviewer.md)
 
 ## Example Workflow
 
@@ -422,13 +422,13 @@ Done!
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:requesting-code-review** - Code review template for the final whole-branch review
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers-orchestrator:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
+- **superpowers-orchestrator:writing-plans** - Creates the plan this skill executes
+- **superpowers-orchestrator:requesting-code-review** - Code review template for the final whole-branch review
+- **superpowers-orchestrator:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
-- **superpowers:test-driven-development** - Subagents follow TDD for each task
+- **superpowers-worker:test-driven-development** - Subagents follow TDD for each task
 
 **Alternative workflow:**
-- **superpowers:executing-plans** - Use for parallel session instead of same-session execution
+- **superpowers-orchestrator:executing-plans** - Use for parallel session instead of same-session execution

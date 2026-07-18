@@ -13,7 +13,7 @@ Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The or
 
 ## The Process
 
-1. **Resolve `task_type`** from the plan annotation (`writing-plans` writes it) or from the role for unplanned work.
+1. **Resolve `task_type`** from the plan annotation (`superpowers-orchestrator:writing-plans` writes it) or from the role for unplanned work.
 2. **Look up the model**: run `${CLAUDE_PLUGIN_ROOT}/scripts/model-lookup.sh <task_type>`, backed by `assets/sdlc-model-routing.json`. Select the rank using the rules below, then run `${CLAUDE_PLUGIN_ROOT}/scripts/model-lookup.sh --command <task_type> <rank>` and use its command template exactly, replacing only its named placeholders; never hand-compose a dispatch command.
    - **`agent`** from `provider` via this map: `"Claude Code" → claude`, `"Codex" → codex`, `"Antigravity CLI" → antigravity`.
    - **`effort`** rule: Antigravity encodes it in the model string (e.g. `"Gemini 3.5 Flash (Medium)"` → `medium`) — parse the parenthesized word; Codex takes an explicit `--effort`; Claude has none. When not otherwise determined, default `medium`, or apply the routing JSON's `selection_rules` (High/Thinking → `high`; Low/mini/haiku → `low`).
@@ -25,7 +25,7 @@ Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The or
 
    Set `message_type: "request"`. Record the diversity decision in `dispatch.provider_diversity`: for a review task set `{author_agent, author_model, rule: "reviewer_agent != author_agent"}`; otherwise set `provider_diversity: null`.
 
-   For `agent: codex`, set `dispatch.persona`, `skill`, and the work contract from the one matching row in `references/codex-worker-protocol.md`. The only precedence rule is `skill: receiving-code-review` for D16/D18; it selects the review-remediation row regardless of `task_type`. Reject any other mismatch instead of choosing a persona or discipline. For other agents, `dispatch.persona` remains the caller's role name.
+   For every agent, set `skill` to the namespaced discipline in the one matching row of `references/codex-worker-protocol.md`. The only precedence rule is `skill: superpowers-worker:receiving-code-review` for D16/D18; it selects the review-remediation row regardless of `task_type`. Reject any other mismatch instead of choosing another discipline. For `agent: codex`, also set `dispatch.persona` and the work contract from that row; for other agents, `dispatch.persona` remains the caller's role name.
 
    For `code_review_quality` and `security_review`, require the exact commit in `context.base_sha`. For `security_review`, also require the complete focus string in `context.security_focus`. Missing either required field makes the request malformed: stop before dispatch and correct the request; never degrade, use automatic/working-tree scope, or select another command.
 
@@ -58,7 +58,7 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 5. **Receive** the foreground result; there is no poll/fetch step:
    - Codex rescue stdout is the response JSON; persist it at `.superpowers/<task>/turn-<turn>-response.json`.
    - Codex review/security stdout is not an envelope. Persist it verbatim at `.superpowers/<task>/turn-<turn>-review.md`, then construct the single response envelope specified in `references/codex-worker-protocol.md`, pointing `output.artifacts` to that Markdown file and setting `output.status: done`.
-   - A claude worker writes its response via `report-task`; for antigravity, persist the human-relayed response yourself.
+   - A claude worker writes its response via `superpowers-worker:report-task`; for antigravity, persist the human-relayed response yourself.
 6. **Validate** it: `node scripts/validate-message.mjs .superpowers/<task>/turn-<turn>-response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
 7. **Append** the pair to `.superpowers/ledger.jsonl` as one line:
    `{"ts":"<iso>","task":"<task>","turn":<turn>,"request":{...},"response":{...},"author_agent":"<agent>","author_model":"<model>"}`
@@ -77,7 +77,7 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 2. Bridge/quota failure on codex → rely on codex-plugin-cc failover first, then rule 1. An empty, invalid, or failed foreground return is a bridge failure: never poll, resume, pin a profile, fabricate a response, or switch Codex command families.
 3. antigravity is never "not ready" — the human relay is always available. It fails only if the human declines to relay; then apply rule 1.
 4. A claude subagent is the ALWAYS-AVAILABLE worker and LAST RESORT (no external auth) — use it only when every non-claude entry in `recommended_models[]` is exhausted.
-5. Only when the harness has no subagent capability at all → skip dispatch-agent; the caller runs executing-plans inline. This is a harness property, NOT a fallback for failed workers.
+5. Only when the harness has no subagent capability at all → skip `superpowers-orchestrator:dispatch-agent`; the caller runs `superpowers-orchestrator:executing-plans` inline. This is a harness property, NOT a fallback for failed workers.
 
 <HARD-GATE>
 The ladder always terminates in a dispatch. Because a claude subagent is always available, "no worker could do it" is impossible — the orchestrator NEVER writes code, edits files, or runs tests itself, no matter how many workers failed.
@@ -96,7 +96,7 @@ The ladder is pre-authorized: never stop mid-ladder to ask the human's permissio
 | "Better ask the human which fallback to use" | The ladder already decided. Walk it; ask only when it's exhausted. |
 | "The Codex review failed, so retry with rescue" | Command family is fixed by task type. Degrade to the next routed provider. |
 
-## Role personas (the `dispatch.persona` role name; canonical list — mirrored read-only in intake-task)
+## Role personas (the `dispatch.persona` role name; canonical list — mirrored read-only in `superpowers-worker:intake-task`)
 
 - `product_owner` — owns and orders the Product Backlog; defines requirements and acceptance criteria; write no code.
 - `scrum_master` — facilitates Scrum events and removes impediments; do not implement or decide product scope.

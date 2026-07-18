@@ -45,7 +45,7 @@ Has the user already indicated their worktree preference in your instructions? I
 Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D12` runs only when Step 0 confirms isolation is needed and the human or standing instructions consent: dispatch worktree creation through `dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; require `output.artifacts` to contain the created worktree path, verify it exists, then `cd` exactly once and continue with setup and baseline tests, otherwise treat the response as blocked; create it inline only if the harness has no subagent capability at all.
+**Dispatch:** `D12` runs only when Step 0 confirms isolation is needed and the human or standing instructions consent: dispatch worktree creation through `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; require `output.artifacts` to contain the created worktree path, verify it exists, then `cd` exactly once and continue with setup and baseline tests, otherwise treat the response as blocked; create it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Step 1: Create Isolated Workspace
