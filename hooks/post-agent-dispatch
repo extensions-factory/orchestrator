@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # PostToolUse hook for superpowers plugin (matcher: Agent|Skill).
 # Reminds the orchestrator of the receive-side protocol right after a worker
-# returns. For Skill calls, only fires on codex:rescue; other skills stay silent.
+# returns. For Skill calls, fires on all three Codex worker command families.
 set -euo pipefail
 
 input="$(cat 2>/dev/null || true)"
 
 if printf '%s' "$input" | grep -q '"tool_name"[[:space:]]*:[[:space:]]*"Skill"'; then
-    printf '%s' "$input" | grep -q 'rescue' || exit 0
+    printf '%s' "$input" | grep -Eiq 'codex:(rescue|review|adversarial-review)|rescue' || exit 0
 fi
 
 reminder="RECEIVE CHECKLIST (dispatch-agent Steps 5-8 - required now that the worker returned):
-5. Response persisted at .superpowers/<task>/turn-<turn>-response.json (claude workers write it themselves; codex/antigravity responses you write yourself).
+5. Rescue/claude/antigravity response: persist .superpowers/<task>/turn-<turn>-response.json. Codex review/security stdout: persist verbatim as .superpowers/<task>/turn-<turn>-review.md, then construct the protocol's response envelope at turn-<turn>-response.json with that artifact and status done; never summarize the review.
 6. Validated: node scripts/validate-message.mjs on that file. Invalid = reissue once with a format reminder; second failure = status: blocked.
 7. Ledger appended to .superpowers/ledger.jsonl with task, turn, author_agent, author_model.
 8. Routed: done = next step; needs_revision/blocked = same task, turn+1. blocked_ops: git bookkeeping you run inline; any other denied op = dispatch a claude subagent for exactly that op. NEVER absorb the task and implement it yourself."

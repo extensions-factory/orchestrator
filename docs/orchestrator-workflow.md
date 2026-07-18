@@ -182,11 +182,24 @@ Every `◆ Dn` above enters this subtree.
 │   │       prompt="ROLE: subagent\n" + <request JSON>
 │   │
 │   ├── agent=codex
-│   │   └── ◆ Only permitted Codex invocation
-│   │       /codex:rescue --write
-│   │         --model <output.model>
-│   │         --effort <output.effort>
-│   │         "<prompt>"
+│   │   ├── task_type=code_review_quality
+│   │   │   └── ◆ /codex:review --wait --model <output.model>
+│   │   │         --base <context.base_sha>
+│   │   ├── task_type=security_review
+│   │   │   └── ◆ /codex:adversarial-review --wait --model <output.model>
+│   │   │         --base <context.base_sha> "<context.security_focus>"
+│   │   └── rescue task_type set
+│   │       ├── discovery_research, requirements_user_stories
+│   │       ├── backlog_refinement_prioritization, sprint_planning
+│   │       ├── architecture_design, ui_ux_prototyping
+│   │       ├── implementation_coding, debugging_root_cause, testing_qa
+│   │       ├── release_deployment, workspace_setup, monitoring_incident_ops
+│   │       ├── documentation_knowledge_transfer
+│   │       ├── retrospective_process_improvement
+│   │       └── ◆ /codex:rescue --wait --fresh --write
+│   │             --model <output.model>
+│   │             --effort <output.effort>
+│   │             "<prompt>"
 │   │
 │   └── agent=antigravity
 │       └── ◆ Human relay
@@ -195,7 +208,9 @@ Every `◆ Dn` above enters this subtree.
 │           return response JSON
 │
 ├── 8. ○ Receive and validate
-│   ├── write .superpowers/<task>/turn-<turn>-response.json
+│   ├── rescue/other provider → write turn-<turn>-response.json
+│   ├── Codex review → persist stdout as turn-<turn>-review.md
+│   │                  and construct turn-<turn>-response.json
 │   ├── run scripts/validate-message.mjs
 │   └── append request/response pair to .superpowers/ledger.jsonl
 │
@@ -226,8 +241,29 @@ use the exact invocation from output
 dispatch worker
 ```
 
-When the resolved agent is Codex, the only permitted worker invocation is:
+When the resolved agent is Codex, task type selects one invocation:
 
 ```text
-/codex:rescue --write --model <model> --effort <effort> "<prompt>"
+code_review_quality
+└── /codex:review --wait --model <model> --base <base_sha>
+
+security_review
+└── /codex:adversarial-review --wait --model <model> --base <base_sha> "<security focus>"
+
+rescue task types
+├── discovery_research
+├── requirements_user_stories
+├── backlog_refinement_prioritization
+├── sprint_planning
+├── architecture_design
+├── ui_ux_prototyping
+├── implementation_coding
+├── debugging_root_cause
+├── testing_qa
+├── release_deployment
+├── workspace_setup
+├── monitoring_incident_ops
+├── documentation_knowledge_transfer
+├── retrospective_process_improvement
+└── /codex:rescue --wait --fresh --write --model <model> --effort <effort> "<prompt>"
 ```

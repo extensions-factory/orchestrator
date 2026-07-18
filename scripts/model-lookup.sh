@@ -70,8 +70,20 @@ emit_command() {
   echo "effort=$effort"
   case "$agent" in
     codex)
-      echo "write=true"
-      echo "/codex:rescue --write --model $model --effort $effort \"<prompt>\""
+      case "$task_type" in
+        code_review_quality)
+          echo "write=false"
+          echo "/codex:review --wait --model $model --base <base_sha>"
+          ;;
+        security_review)
+          echo "write=false"
+          echo "/codex:adversarial-review --wait --model $model --base <base_sha> \"<security focus>\""
+          ;;
+        *)
+          echo "write=true"
+          echo "/codex:rescue --wait --fresh --write --model $model --effort $effort \"<prompt>\""
+          ;;
+      esac
       ;;
     claude)
       echo "write=false"

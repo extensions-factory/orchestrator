@@ -9,12 +9,12 @@ description: Use when the orchestrator is about to hand a task to a worker or re
 
 Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The orchestrator never does the work; it routes the work. This skill is the single codified path for every dispatch.
 
-**Every worker spawn goes through Steps 1–8.** Calling a provider bridge directly — including `/codex:rescue --write` — without routing lookup and readiness preflight is a protocol violation. Claude remains the final degradation rung; the routing table decides every task, including workspace setup.
+**Every worker spawn goes through Steps 1–8.** Calling any provider bridge directly without routing lookup and readiness preflight is a protocol violation. Claude remains the final degradation rung; the routing table decides every task and the task type decides the one permitted Codex command.
 
 ## The Process
 
 1. **Resolve `task_type`** from the plan annotation (`writing-plans` writes it) or from the role for unplanned work.
-2. **Look up the model**: run `${CLAUDE_PLUGIN_ROOT}/scripts/model-lookup.sh <task_type>`, backed by `assets/sdlc-model-routing.json`. Select the rank using the rules below, then run `${CLAUDE_PLUGIN_ROOT}/scripts/model-lookup.sh --command <task_type> <rank>` and use its output verbatim; never hand-compose a dispatch command.
+2. **Look up the model**: run `${CLAUDE_PLUGIN_ROOT}/scripts/model-lookup.sh <task_type>`, backed by `assets/sdlc-model-routing.json`. Select the rank using the rules below, then run `${CLAUDE_PLUGIN_ROOT}/scripts/model-lookup.sh --command <task_type> <rank>` and use its command template exactly, replacing only its named placeholders; never hand-compose a dispatch command.
    - **`agent`** from `provider` via this map: `"Claude Code" → claude`, `"Codex" → codex`, `"Antigravity CLI" → antigravity`.
    - **`effort`** rule: Antigravity encodes it in the model string (e.g. `"Gemini 3.5 Flash (Medium)"` → `medium`) — parse the parenthesized word; Codex takes an explicit `--effort`; Claude has none. When not otherwise determined, default `medium`, or apply the routing JSON's `selection_rules` (High/Thinking → `high`; Low/mini/haiku → `low`).
    - **Review tasks** (`code_review_quality`, `security_review`): read `author_agent` from `.superpowers/ledger.jsonl` and pick the first recommended model whose mapped `agent` differs (provider diversity). If no other provider is enabled, fall back to a different model on the same agent and note it in the ledger entry.
@@ -23,18 +23,25 @@ Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The or
    - `turn`: 1 + the highest existing turn number in `.superpowers/<task>/` (1 if the folder is empty or absent) — derived from the folder so it survives a crashed or resumed session.
    - Write the request to `.superpowers/<task>/turn-<turn>-request.json` (create the folder if needed).
 
-   Set `dispatch.persona` to the **role name** (e.g. `software_engineer`) — a short string, never a prompt-file's contents. Any role prompt file (e.g. `implementer-prompt.md`) is pasted into the spawn prompt body, not into `dispatch.persona`. Record the diversity decision in `dispatch.provider_diversity`: for a review task set `{author_agent, author_model, rule: "reviewer_agent != author_agent"}`; otherwise set `provider_diversity: null`. Set `message_type: "request"`.
+   Set `message_type: "request"`. Record the diversity decision in `dispatch.provider_diversity`: for a review task set `{author_agent, author_model, rule: "reviewer_agent != author_agent"}`; otherwise set `provider_diversity: null`.
 
-   **Standard worker-scope constraint** — always append to `context.constraints`, verbatim:
-   > "Write files and run tests only. Never run git commit/push or other privileged operations. If any operation is denied, do not retry or work around it — finish what you can and report the denied operation in output.blocked_ops."
+   For `agent: codex`, set `dispatch.persona`, `skill`, and the work contract from the one matching row in `references/codex-worker-protocol.md`. The only precedence rule is `skill: receiving-code-review` for D16/D18; it selects the review-remediation row regardless of `task_type`. Reject any other mismatch instead of choosing a persona or discipline. For other agents, `dispatch.persona` remains the caller's role name.
 
-   This keeps worker scope uniform across providers (a Codex sandbox denies git commits; a worker that tries anyway wastes the run). Git bookkeeping belongs to the orchestrator after validation (Step 8).
+   For `code_review_quality` and `security_review`, require the exact commit in `context.base_sha`. For `security_review`, also require the complete focus string in `context.security_focus`. Missing either required field makes the request malformed: stop before dispatch and correct the request; never degrade, use automatic/working-tree scope, or select another command.
+
+   Append the matching scope to `context.constraints`:
+   - `discovery_research`, `code_review_quality`, and `security_review`: findings and requested artifacts only; no product-file edits.
+   - `workspace_setup`: only the exact requested workspace/Git setup operation.
+   - `release_deployment`: only the exact requested Git/release operation. Before a destructive release operation, require the recorded constraint `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>`; without it, do not dispatch that operation.
+   - Every other task: only requested file/test work; no commit, push, dependency installation, permission change, or unrelated privileged operation.
+
+   If an operation is denied, the worker finishes authorized work and reports it in `output.blocked_ops`. These task-specific scopes replace the generic Git ban; workspace and release dispatches receive only their explicit exception.
 
 ### Provider-readiness preflight (before Send)
 
 Before sending, verify the target `agent` is actually reachable — a provider that is installed but not authenticated will hang the call:
 
-- `agent: codex` → run the Codex readiness check (`codex:setup`, i.e. `node <codex-plugin>/scripts/codex-companion.mjs setup --json`). Ready when `ready: true` OR at least one enabled profile in `profiles.json` shows `loggedIn: true`. If not ready, degrade. Readiness is authentication only; a permission error does not make Codex unavailable.
+- `agent: codex` → run `/codex:setup` before the first Codex dispatch in the session. Ready means `ready: true`, or at least one configured profile is both enabled and `loggedIn: true`. If not ready, degrade. Readiness is authentication only; a permission error does not make Codex unavailable.
 - `agent: antigravity` → always ready: the bridge is a HUMAN relay (see Send below), no auth needed.
 - `agent: claude` → always ready (the Agent tool needs no external auth).
 
@@ -42,9 +49,16 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 
 4. **Send** via the bridge matching `agent`:
    - `claude` → the Agent tool, prompt = `"ROLE: subagent\n" + <request JSON>`.
-   - If the resolved `agent` is `codex`, dispatch only with `/codex:rescue --write --model <model> --effort <effort> "<prompt>"`. This exact command applies to every Codex task, including review, research, and retrospective work. Never use `/codex:review`, `/codex:adversarial-review`, or omit `--write`. `<prompt>` is the filled inline block from `references/codex-worker-protocol.md` prepended to the request JSON.
+   - If the resolved `agent` is `codex`, `task_type` selects exactly one command:
+     - `code_review_quality` → `/codex:review --wait --model <model> --base <base_sha>`.
+     - `security_review` → `/codex:adversarial-review --wait --model <model> --base <base_sha> "<security focus>"`.
+     - `discovery_research`, `requirements_user_stories`, `backlog_refinement_prioritization`, `sprint_planning`, `architecture_design`, `ui_ux_prototyping`, `implementation_coding`, `debugging_root_cause`, `testing_qa`, `release_deployment`, `workspace_setup`, `monitoring_incident_ops`, `documentation_knowledge_transfer`, `retrospective_process_improvement` → `/codex:rescue --wait --fresh --write --model <model> --effort <effort> "<prompt>"`, where `<prompt>` is the filled rescue block from `references/codex-worker-protocol.md` prepended to the request JSON.
+     Never use background/status/result/cancel, resume, `--profile`, or `/codex:transfer`. Never substitute one command family for another; a failed review command degrades to the next routed provider, not rescue.
    - `antigravity` → HUMAN relay (no CLI bridge yet). The request already sits at `.superpowers/<task>/turn-<turn>-request.json` (Step 3) — tell the human: the exact model string to select (e.g. `Gemini 3.5 Flash (High)`), that file path, and "paste this request into Antigravity/Gemini on that model, then paste the worker's response JSON back here". The human's pasted response IS the worker's final message — validate and route it exactly like any other. When a real `/agy:task` bridge ships, replace this bullet with the CLI call.
-5. **Await** the worker's final message (the response JSON). Ensure it exists at `.superpowers/<task>/turn-<turn>-response.json` — a claude worker writes it there itself via `report-task`; for codex/antigravity (message-only) workers, write it there yourself.
+5. **Receive** the foreground result; there is no poll/fetch step:
+   - Codex rescue stdout is the response JSON; persist it at `.superpowers/<task>/turn-<turn>-response.json`.
+   - Codex review/security stdout is not an envelope. Persist it verbatim at `.superpowers/<task>/turn-<turn>-review.md`, then construct the single response envelope specified in `references/codex-worker-protocol.md`, pointing `output.artifacts` to that Markdown file and setting `output.status: done`.
+   - A claude worker writes its response via `report-task`; for antigravity, persist the human-relayed response yourself.
 6. **Validate** it: `node scripts/validate-message.mjs .superpowers/<task>/turn-<turn>-response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
 7. **Append** the pair to `.superpowers/ledger.jsonl` as one line:
    `{"ts":"<iso>","task":"<task>","turn":<turn>,"request":{...},"response":{...},"author_agent":"<agent>","author_model":"<model>"}`
@@ -60,9 +74,9 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 **Default:** Dispatch to a worker subagent is the DEFAULT, not conditional; different role = different worker.
 
 1. Chosen entry fails or its agent is not ready → walk down `recommended_models[]` in rank order and dispatch to the next entry whose mapped agent is ready. Never jump straight to claude.
-2. Bridge/quota failure on codex → rely on codex-plugin-cc failover first, then rule 1. A Codex permission error means the required `--write` command was not used; re-send once with the exact Step 4 command before degrading.
+2. Bridge/quota failure on codex → rely on codex-plugin-cc failover first, then rule 1. An empty, invalid, or failed foreground return is a bridge failure: never poll, resume, pin a profile, fabricate a response, or switch Codex command families.
 3. antigravity is never "not ready" — the human relay is always available. It fails only if the human declines to relay; then apply rule 1.
-4. A claude subagent is the LAST-RESORT worker (always available, no external auth) — use it only when every non-claude entry in `recommended_models[]` is exhausted.
+4. A claude subagent is the ALWAYS-AVAILABLE worker and LAST RESORT (no external auth) — use it only when every non-claude entry in `recommended_models[]` is exhausted.
 5. Only when the harness has no subagent capability at all → skip dispatch-agent; the caller runs executing-plans inline. This is a harness property, NOT a fallback for failed workers.
 
 <HARD-GATE>
@@ -80,7 +94,7 @@ The ladder is pre-authorized: never stop mid-ladder to ask the human's permissio
 | "The Agent tool is one call away, skip the lookup" | Routing IS the job. Steps 1–2 before any spawn, claude included. |
 | "This task is obviously claude-shaped" | The routing table decides, not intuition. Rank-1 may be another provider, ready. |
 | "Better ask the human which fallback to use" | The ladder already decided. Walk it; ask only when it's exhausted. |
-| "This Codex task is only a review, so omit `--write`" | No exceptions. Every Codex dispatch uses the exact Step 4 command. |
+| "The Codex review failed, so retry with rescue" | Command family is fixed by task type. Degrade to the next routed provider. |
 
 ## Role personas (the `dispatch.persona` role name; canonical list — mirrored read-only in intake-task)
 

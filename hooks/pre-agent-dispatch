@@ -2,7 +2,7 @@
 # PreToolUse hook for superpowers plugin (matcher: Agent|Skill).
 # Re-injects the dispatch-agent checklist at the moment of dispatch, where
 # skill text read many turns ago has decayed. For Skill calls, fires on Codex
-# worker commands so alternate Codex paths are redirected to rescue --write.
+# worker commands so each task type is pinned to its exact Codex command.
 set -euo pipefail
 
 input="$(cat 2>/dev/null || true)"
@@ -16,8 +16,8 @@ reminder="DISPATCH CHECKLIST (dispatch-agent Steps 1-4 - required before this sp
 1. task_type resolved from the plan annotation or role.
 2. Model/provider selected via ${CLAUDE_PLUGIN_ROOT:-<plugin-root>}/scripts/model-lookup.sh <task_type>, then exact command read from --command <task_type> <rank>.
 3. Target agent readiness checked (codex: setup --json; antigravity: always ready via human relay; claude: always ready). Not ready = walk the ladder, do NOT stop to ask permission mid-ladder.
-4. task (kebab slug) + turn assigned; request JSON written to .superpowers/<task>/turn-<turn>-request.json; dispatch.persona = role name only; standard worker-scope constraint appended (no git commit/push, report blocked_ops).
-If agent=codex, dispatch exactly /codex:rescue --write --model <model> --effort <effort> \"<prompt>\" for every task. No Codex exceptions."
+4. task (kebab slug) + turn assigned; request JSON written to .superpowers/<task>/turn-<turn>-request.json; Codex persona/skill/work contract read from codex-worker-protocol.md; review context includes mandatory base_sha (plus security_focus for security).
+If agent=codex, use only the task_type command: code_review_quality = /codex:review --wait --model <model> --base <base_sha>; security_review = /codex:adversarial-review --wait --model <model> --base <base_sha> \"<security focus>\"; rescue set [discovery_research, requirements_user_stories, backlog_refinement_prioritization, sprint_planning, architecture_design, ui_ux_prototyping, implementation_coding, debugging_root_cause, testing_qa, release_deployment, workspace_setup, monitoring_incident_ops, documentation_knowledge_transfer, retrospective_process_improvement] = /codex:rescue --wait --fresh --write --model <model> --effort <effort> \"<prompt>\". No background, resume, profile pin, status/result/cancel/transfer, or cross-command fallback."
 
 escape_for_json() {
     local s="$1"

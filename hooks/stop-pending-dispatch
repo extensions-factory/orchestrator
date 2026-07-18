@@ -3,7 +3,7 @@
 # Warns the user (systemMessage, non-blocking) when a dispatch request has no
 # matching response - a worker was spawned but its result was never received,
 # validated, or routed. Non-blocking on purpose: an unmatched pair can be a
-# legitimate wait (antigravity human relay, codex --background job).
+# legitimate wait (antigravity human relay).
 set -euo pipefail
 
 root="${CLAUDE_PROJECT_DIR:-$PWD}"

@@ -87,11 +87,11 @@ digraph process {
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D16` runs when `D14` or conditional `D15` reports Critical/Important findings: call `dispatch-agent` once with `role: software_engineer`, the plan task's task_type, the original task brief/report, the complete actionable findings, and the covering test commands; the worker fixes the task, reruns and records those tests, then the orchestrator re-dispatches `D14` for re-review, repeating D16→D14 until clean.
+**Dispatch:** `D16` runs when `D14` or conditional `D15` reports Critical/Important findings: call `dispatch-agent` once with `role: software_engineer`, the plan task's task_type, `skill: receiving-code-review`, the original task brief/report, the complete actionable findings, and the covering test commands; the worker fixes the task, reruns and records those tests, then the orchestrator re-dispatches `D14` for re-review, repeating D16→D14 until clean.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D18` runs only when final review `D17` returns findings: send the complete findings list in one fix wave through `dispatch-agent` with `role: software_engineer` and `task_type: implementation_coding`, require the worker to fix the whole-branch issues and report covering/full test results, then re-dispatch `D17`; repeat one wave at a time until the final whole-branch review is clean.
+**Dispatch:** `D18` runs only when final review `D17` returns findings: send the complete findings list in one fix wave through `dispatch-agent` with `role: software_engineer`, `task_type: implementation_coding`, and `skill: receiving-code-review`; require the worker to fix the whole-branch issues and report covering/full test results, then re-dispatch `D17`; repeat one wave at a time until the final whole-branch review is clean.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Pre-Flight Plan Review

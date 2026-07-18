@@ -1,73 +1,55 @@
-# Claude Code → Codex Workers
+# Claude Code → Codex workers
 
-When working in Claude Code with the `codex` plugin installed, use its
-`/codex:*` commands to send work to Codex. Codex works in the same checkout
-and machine-local environment, so a worker can inspect, edit, and test the
-current repository directly.
+The orchestrator uses the installed `codex` plugin as a synchronous worker
+bridge. Resolve the task type first; it selects exactly one command family.
 
-### Readiness
+## 1. Readiness
 
-Before the first dispatch, run:
+Run `/codex:setup` before the first Codex dispatch in a session. Codex is ready
+only when setup reports `ready: true`, or at least one configured profile is
+enabled and `loggedIn: true`. Otherwise, continue the dispatch-agent degradation
+ladder. Do not attempt a worker call while authentication is unavailable.
 
-```text
-/codex:setup
-```
+## 2. Runtime
 
-This verifies that Codex is installed and authenticated. Do not dispatch when
-it reports no ready account. If profiles are configured, setup also reports
-which are logged in and enabled.
+| Forced command | Exact task types |
+|---|---|
+| `/codex:review --wait --model <model> --base <base_sha>` | `code_review_quality` |
+| `/codex:adversarial-review --wait --model <model> --base <base_sha> "<security focus>"` | `security_review` |
+| `/codex:rescue --wait --fresh --write --model <model> --effort <effort> "<prompt>"` | `discovery_research`, `requirements_user_stories`, `backlog_refinement_prioritization`, `sprint_planning`, `architecture_design`, `ui_ux_prototyping`, `implementation_coding`, `debugging_root_cause`, `testing_qa`, `release_deployment`, `workspace_setup`, `monitoring_incident_ops`, `documentation_knowledge_transfer`, `retrospective_process_improvement` |
 
-### Dispatching work
+Use the model and effort emitted by `model-lookup.sh --command` verbatim.
+`context.base_sha` is mandatory for both review commands; security review also
+uses `context.security_focus` verbatim. Missing input is a malformed request,
+so stop before dispatch; do not degrade, use automatic scope detection, or
+select another command.
 
-For every dispatch resolved to Codex, use one command only:
+The rescue prompt is the filled inline contract from
+`codex-worker-protocol.md` followed by the request JSON. Its fixed flags mean:
 
-```text
-/codex:rescue --write --model gpt-5.4-mini --effort medium <request JSON>
-```
+- `--wait` keeps the plugin call in the foreground.
+- `--fresh` prevents cross-talk with repository/session-latest rescue threads.
+- `--write` selects the plugin's workspace-write task sandbox.
+- Explicit `--model` and `--effort` carry the routing decision into app-server.
+- Without `--profile`, each fresh task uses the plugin scheduler to choose a
+  compatible enabled account by configured weight.
 
-`--write` is mandatory for every Codex role and task type, including reviews,
-diagnosis, research, and retrospectives. Do not replace this with
-`/codex:review` or `/codex:adversarial-review` during worker dispatch.
+Review commands are foreground and read-only. They take the selected model and
+exact base commit, but no effort, write, fresh, or rescue prompt flags.
 
-The `--model` and `--effort` flags are optional; omit them to use Codex's
-configured defaults. `spark` selects `gpt-5.3-codex-spark`. With multiple
-accounts, add `--profile <name>` to pin a run; otherwise a fresh run may use
-weighted account rotation.
+Never use background/status/result/cancel, resume, `--profile`, or transfer.
+Never substitute one command family for another.
 
-Give the worker one bounded task. State the problem, relevant paths, required
-constraints, acceptance checks, and what it must report. For orchestration,
-pass the request JSON unchanged so the worker can return the matching response
-JSON. Do not delegate concurrent edits to overlapping files.
+## 3. Result
 
-Use `--background` for work expected to take more than a moment:
+For rescue, stdout must be the response JSON. Persist it as
+`.superpowers/<task>/turn-<turn>-response.json`, then validate and ledger it.
 
-```text
-/codex:rescue --write --background <request JSON>
-/codex:status
-/codex:result
-```
+Review commands return prose rather than a message envelope. Persist stdout
+verbatim as `.superpowers/<task>/turn-<turn>-review.md`, then construct the one
+response envelope defined by `codex-worker-protocol.md`, validate it, and ledger
+the pair. Do not alter or summarize the review artifact.
 
-`/codex:status [task-id]` shows active and recent jobs.
-`/codex:result [task-id]` retrieves the final stored response and, when
-available, the Codex session ID. `/codex:cancel [task-id]` stops an active job.
-
-### Continuing a worker
-
-Follow-up work normally continues the latest rescue thread for this repository.
-Use `--resume` to require that behavior, or `--fresh` to start a separate
-thread:
-
-```text
-/codex:rescue --write --resume apply the requested revision
-/codex:rescue --write --fresh investigate an unrelated failure
-```
-
-Resumed tasks stay on the profile that created them; do not request a different
-`--profile`. To continue the session directly in Codex, use the session ID
-reported by `/codex:result` with `codex resume <session-id>` (and that
-profile's `CODEX_HOME` when applicable).
-
-`/codex:transfer` is not a worker dispatch. It imports the current Claude Code
-conversation into a persistent Codex thread and prints the matching
-`codex resume` command. Use it when the human wants to continue the whole
-conversation in Codex.
+Any command failure continues the dispatch-agent degradation ladder. Never
+fabricate output, poll for another result, resume a thread, or substitute rescue
+for a failed review command.

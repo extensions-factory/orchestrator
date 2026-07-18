@@ -1,55 +1,112 @@
-# Codex worker protocol (inline discipline)
+# Codex worker protocol
 
-Codex has no native Skill-tool discovery for the worker skills in the
-`superpowers/worker` repo — `/codex:rescue --write "<request JSON>"` reaches
-a Codex worker with no `intake-task`, no `report-task`, and no discipline
-skill loaded. This block is prepended to the Codex prompt as a substitute:
-condensed inline instead of relying on a skill file the worker may never see.
+This reference defines the rescue prompt contract and the adapter for native
+review output. Command selection itself is fixed in `codex-workers.md`.
 
-The `claude` branch does not need this — the Agent tool spawns into the same
-Claude Code process with real skill discovery, so `"ROLE: subagent\n"` is
-enough for `intake-task` to self-trigger there.
+## Deterministic contract selection
 
-## Template
+`receiving-code-review` has precedence over the task-type table for D16 and D18. When the request skill has that exact value, use this row regardless of task type:
 
-Fill `<persona boundary>` from the matching line in dispatch-agent's Role
-personas list, and `<discipline bullet>` from the single entry below matching
-the request's `skill` field. Prepend the filled block to the request JSON.
+| Case | Persona | Discipline | Work contract |
+|---|---|---|---|
+| D16/D18 review remediation | `software_engineer` | `receiving-code-review` | Review remediation: verify each finding, apply only technically valid requested corrections, and run the original acceptance checks. |
 
-```
-ROLE: subagent (codex worker)
+For every other request, use the single row matching `task_type`. Set both
+`dispatch.persona` and `skill` to that row; a mismatch is a malformed request,
+not a reason to choose another row.
 
-You are dispatched to do ONE bounded task. Follow this protocol exactly.
+| Task type | Persona | Discipline | Work contract |
+|---|---|---|---|
+| `discovery_research` | `business_analyst` | `verification-before-completion` | Produce only the requested evidence-backed findings and requested research artifacts; never edit product files. |
+| `requirements_user_stories` | `product_owner` | `verification-before-completion` | Produce only requested stories, acceptance criteria, constraints, and edge cases; never edit product files. |
+| `backlog_refinement_prioritization` | `product_owner` | `verification-before-completion` | Return only a backlog proposal; never edit `roadmap.json`, `ROADMAP.html`, or product files. The orchestrator applies approved changes after human approval. |
+| `sprint_planning` | `tech_lead` | `verification-before-completion` | Produce only the requested goal, task breakdown, dependencies, and risks; never edit product files. |
+| `architecture_design` | `tech_lead` | `verification-before-completion` | Produce only the requested design, tradeoffs, and architecture artifacts; never edit product files. |
+| `ui_ux_prototyping` | `ux_ui_designer` | `verification-before-completion` | Edit only requested UX, UI, wireframe, or prototype artifacts; never implement backend logic. |
+| `implementation_coding` | `software_engineer` | `test-driven-development` | Implement only the bounded change: failing test first, minimum implementation, then focused verification. |
+| `debugging_root_cause` | `software_engineer` | `systematic-debugging` | Reproduce first, trace the root cause, add a failing regression check, apply the smallest shared fix, then verify. |
+| `code_review_quality` | `tech_lead` | `verification-before-completion` | Return only evidence-backed findings and requested review artifacts; never edit product files. |
+| `testing_qa` | `qa_engineer` | `verification-before-completion` | Run the requested acceptance checks and edit only explicitly requested test artifacts; never edit production files. |
+| `security_review` | `security_engineer` | `verification-before-completion` | Return only evidence-backed vulnerabilities and requested security artifacts; never edit product files. |
+| `release_deployment` | `devops_engineer` | `verification-before-completion` | Execute only the exact requested Git/release operation; a destructive operation requires `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` in `context.constraints`, otherwise report blocked. |
+| `workspace_setup` | `devops_engineer` | `verification-before-completion` | Execute only the exact requested workspace or Git setup operation and its acceptance check; perform no other Git operation. |
+| `monitoring_incident_ops` | `sre` | `systematic-debugging` | Inspect evidence first and perform only requested monitoring, incident, or postmortem work; do not change unrelated product behavior. |
+| `documentation_knowledge_transfer` | `technical_writer` | `verification-before-completion` | Edit only the requested documentation, ADR, changelog, onboarding, or handoff artifacts. |
+| `retrospective_process_improvement` | `agile_coach` | `verification-before-completion` | Recommend process improvements only; never edit skills, workflows, or product files. |
 
-PERSONA: <dispatch.persona> — <persona boundary>
+No other persona, discipline, or work contract is permitted for a Codex
+dispatch.
 
-SCOPE: Write files and run tests only. Never run git commit/push or any
-privileged operation (installing dependencies, changing permissions, network
-access beyond the task). If the environment denies an operation, do not
-retry or work around it — finish everything else you can.
+## Review output adapter
 
-DISCIPLINE (<skill>): <discipline bullet>
+Review commands do not use the rescue prompt contract. Both require
+`context.base_sha`; `/codex:adversarial-review` additionally receives
+`context.security_focus` verbatim. Missing `base_sha` is a malformed request:
+stop before dispatch; do not degrade, use automatic/working-tree scope, or fall
+back to another command.
 
-OUTPUT: When finished, respond with ONLY the JSON envelope below, edited in
-place — message_type "deliver", output.status one of done/needs_revision/
-blocked, output.artifacts = paths you touched, output.notes = evidence
-summary, and output.blocked_ops = [{op, reason}] for any denied operation
-(status can still be "done" if everything else succeeded). No prose outside
-the JSON.
+After a successful review command:
+
+1. Persist stdout verbatim at
+   `.superpowers/<task>/turn-<turn>-review.md`.
+2. Construct `.superpowers/<task>/turn-<turn>-response.json` by copying the
+   request, setting `message_type: "deliver"`, swapping `from` and `to`, and
+   setting `output` exactly to:
+
+   ```json
+   {
+     "artifacts": [".superpowers/<task>/turn-<turn>-review.md"],
+     "status": "done",
+     "notes": "Codex review stdout persisted verbatim."
+   }
+   ```
+3. Validate and ledger that constructed envelope. The Markdown artifact is the
+   complete review; never paraphrase it into `output.notes`.
+
+Command failure degrades to the next routed provider. It never switches to
+rescue.
+
+## Rescue prompt contract
+
+`/codex:rescue` reaches a Codex task through the plugin's forwarding subagent;
+it does not load the Superpowers worker skills. The orchestrator therefore
+inlines one complete contract before the request JSON.
+
+Fill the three contract placeholders from the effective row above. Paste the
+request envelope unchanged at `<request JSON>`.
+
+```text
+ROLE: subagent (Codex worker)
+
+Do exactly one bounded task in the current checkout.
+
+PERSONA: <persona>
+DISCIPLINE: <discipline>
+WORK CONTRACT: <work contract>
+
+The runtime uses workspace-write, but authority is limited to WORK CONTRACT
+and REQUEST. Do not commit, push, install dependencies, change permissions, or
+perform an unrequested Git/release operation. The workspace_setup and
+release_deployment contracts are the only Git/release exceptions. A destructive
+release is forbidden unless REQUEST.context.constraints records the exact
+required human confirmation string.
+
+Apply DISCIPLINE exactly:
+- test-driven-development: write and run a failing test first, make the minimum change pass, then refactor only covered code.
+- systematic-debugging: establish a reproducible failure and root cause before changing code; make no speculative fix.
+- verification-before-completion: run the stated checks and include real evidence before claiming completion.
+- receiving-code-review: verify feedback technically, reject invalid findings in output.notes, and implement only valid requested corrections.
+
+If an operation is denied or unauthorized, do not retry or work around it;
+finish authorized work and record {"op":"...","reason":"..."} in
+output.blocked_ops.
+
+Return ONLY the response JSON: set message_type to "deliver"; preserve task,
+turn, task_type, skill, context, and dispatch; swap from/to; set output.status
+to done, needs_revision, or blocked; set output.artifacts to paths produced;
+set output.notes to concise verification evidence; include output.blocked_ops
+when applicable. No prose outside JSON.
 
 REQUEST:
 <request JSON>
 ```
-
-## Discipline bullets (pick the one matching the request's `skill` field)
-
-- **test-driven-development**: write the test first, watch it fail, write
-  the minimum code to make it pass, refactor only what's covered.
-- **systematic-debugging**: find the root cause via the failing test/repro
-  before changing code; no speculative fixes.
-- **verification-before-completion**: re-run the acceptance checks and show
-  their real output before claiming done; a claim without evidence is not done.
-- **executing-plans**: follow the plan as written; do not silently expand
-  or shrink scope.
-- **receiving-code-review**: evaluate feedback technically before applying
-  it; push back on anything wrong instead of complying performatively.
