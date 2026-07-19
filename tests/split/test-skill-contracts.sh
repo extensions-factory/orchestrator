@@ -85,6 +85,16 @@ before "$FB" 'Run the shared Step 5b recipe on the feature branch now' '# Verify
   "finishing PR path tests before updating and committing the roadmap"
 before "$FB" 'Run the shared Step 5b recipe on the feature branch now' 'git push -u origin <feature-branch>' \
   "finishing PR path pushes before updating and committing the roadmap"
+check "$FB" 'gh pr create --draft' \
+  "finishing PR path does not always create a draft PR"
+check "$FB" "Validate the completed body before creating the draft PR" \
+  "finishing PR path does not validate the completed PR body"
+check "$FB" "grep -Fqx '## User Stories Delivered'" \
+  "finishing PR body validation does not require the template's user-story section"
+check "$FB" "grep -Eq '^- \[x\] US-[0-9]+:'" \
+  "finishing PR body validation does not require traceable delivered user stories"
+check "$FB" "grep -Eq '^  - US-[0-9]+:'" \
+  "finishing PR body validation does not require user-story test checkpoints"
 
 RC="$ROOT/skills/requesting-code-review/SKILL.md"
 reject "$RC" 'HEAD~1' "requesting-code-review still suggests HEAD~1"

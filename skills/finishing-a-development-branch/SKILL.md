@@ -71,7 +71,7 @@ Or ask: "This branch split from main - is that correct?"
 Implementation complete. What would you like to do?
 
 1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
+2. Push and create a draft Pull Request
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
 
@@ -83,7 +83,7 @@ Which option?
 ```
 Implementation complete. You're on a detached HEAD (externally managed workspace).
 
-1. Push as new branch and create a Pull Request
+1. Push as new branch and create a draft Pull Request
 2. Keep as-is (I'll handle it later)
 3. Discard this work
 
@@ -93,7 +93,7 @@ Which option?
 **Don't add explanation** - keep options concise.
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D19` executes the selected finish path only after tests pass and the human chooses an option. Resolve the chosen option's menu selection to a named action before dispatch: attached branch: 1 = `merge`, 2 = `pr`, 3 = `keep`, 4 = `discard`; detached: 1 = `pr`, 2 = `keep`, 3 = `discard`. Then call `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: release_deployment` for that action's Git mechanics in the documented order. The `merge` action merges first, runs the shared roadmap recipe and commits it on the base branch, then tests the merged result. The `pr` action creates a branch at detached `HEAD` when needed, runs and commits the roadmap recipe on the feature branch, tests, pushes, then creates the PR body and calls `gh pr create --body-file`. The `keep` and `discard` actions skip the roadmap recipe. Preserve worktrees for `pr` and `keep`; clean up only for `merge` and confirmed `discard`, except detached externally managed workspaces are never cleaned up. For detached `discard`, do not delete a branch or worktree; after confirmation, report the abandoned `HEAD` SHA and leave disposal to the external workspace manager. For any `discard`, after the human's exact discard confirmation and before dispatch, append `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` to `context.constraints`, replacing `<operation>` with the exact confirmed destructive operation; never infer confirmation. Run the documented commands inline only if the harness has no subagent capability at all.
+**Dispatch:** `D19` executes the selected finish path only after tests pass and the human chooses an option. Resolve the chosen option's menu selection to a named action before dispatch: attached branch: 1 = `merge`, 2 = `pr`, 3 = `keep`, 4 = `discard`; detached: 1 = `pr`, 2 = `keep`, 3 = `discard`. Then call `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: release_deployment` for that action's Git mechanics in the documented order. The `merge` action merges first, runs the shared roadmap recipe and commits it on the base branch, then tests the merged result. The `pr` action creates a branch at detached `HEAD` when needed, runs and commits the roadmap recipe on the feature branch, tests, pushes, validates the PR body against the template, then calls `gh pr create --draft --body-file`. The `keep` and `discard` actions skip the roadmap recipe. Preserve worktrees for `pr` and `keep`; clean up only for `merge` and confirmed `discard`, except detached externally managed workspaces are never cleaned up. For detached `discard`, do not delete a branch or worktree; after confirmation, report the abandoned `HEAD` SHA and leave disposal to the external workspace manager. For any `discard`, after the human's exact discard confirmation and before dispatch, append `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` to `context.constraints`, replacing `<operation>` with the exact confirmed destructive operation; never infer confirmation. Run the documented commands inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ### Step 5: Execute Choice
@@ -124,7 +124,7 @@ Then: Cleanup worktree (Step 6), then delete branch:
 git branch -d <feature-branch>
 ```
 
-#### Option 2: Push and Create PR
+#### Option 2: Push and Create Draft PR
 
 Run the shared Step 5b recipe on the feature branch now, including its roadmap commit, then verify the branch before pushing.
 
@@ -137,10 +137,24 @@ git push -u origin <feature-branch>
 ```
 
 <!-- riso-tech:orchestrator-split START -->
-Then create the PR with a body following `skills/finishing-a-development-branch/pr-body-template.md` — read it before writing. Fill every section from the spec, plan, and this session's actual test results; write the body to a temp file and create the PR:
+Then create the draft PR with a body following `skills/finishing-a-development-branch/pr-body-template.md` — read it before writing. Fill every section from the spec, plan, and this session's actual test results, preserving the template's exact section headings; write the body to a temp file.
+
+Validate the completed body before creating the draft PR. Compare it against the template line by line, reject placeholders or invented results, and run these minimum traceability checks (when no spec/plan exists, omit the Design Docs and US-ID checks as the template permits):
 
 ```bash
-gh pr create --base <base-branch> --title "<type>: <feature title>" --body-file <path-to-body-file>
+grep -Fqx '## Summary' <path-to-body-file>
+grep -Fqx '## User Stories Delivered' <path-to-body-file>
+grep -Fqx '## Key Changes' <path-to-body-file>
+grep -Fqx '## Design Docs' <path-to-body-file>
+grep -Fqx '## Testing' <path-to-body-file>
+grep -Eq '^- \[x\] US-[0-9]+:' <path-to-body-file>
+grep -Eq '^  - US-[0-9]+:' <path-to-body-file>
+```
+
+Every command that applies must succeed. Every checked User Story must have the same ID under Testing checkpoints. Only then create the PR:
+
+```bash
+gh pr create --draft --base <base-branch> --title "<type>: <feature title>" --body-file <path-to-body-file>
 ```
 
 Show the user the PR URL when done.

@@ -24,7 +24,7 @@ check "$RELEASE" "riso-tech:orchestrator-split END"
 check "$RELEASE" "role: devops_engineer"
 check "$RELEASE" "task_type: release_deployment"
 check "$RELEASE" "pr-body-template.md"
-check "$RELEASE" "gh pr create --body-file"
+check "$RELEASE" "gh pr create --draft --body-file"
 check "$RELEASE" "### Step 5b: Update Product Roadmap"
 check "$RELEASE" 'Runs for the `merge` and `pr` actions only'
 check "$RELEASE" "status: released"
