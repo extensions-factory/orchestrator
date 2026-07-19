@@ -4,8 +4,8 @@
   "model_name_policy": "Every recommended_models[].model value must not be normalized before passing to --model.",
   "selection_rules": [
     "Use the first recommended model unless cost, latency, privacy, or provider availability pushes you to another listed model.",
-    "Claude Code models are last-resort fallbacks: dispatch to them only when every non-Claude entry is exhausted — except architecture_design and security_review, where fable is rank 1.",
-    "Use High, Thinking, fable, opus, or gpt-5.6-sol for ambiguous, high-risk, multi-file, long-context, security, or architecture work.",
+    "Claude Code models are last-resort fallbacks: dispatch to them only when every non-Claude entry is exhausted.",
+    "Use High, Thinking, opus, or gpt-5.6-sol for ambiguous, high-risk, multi-file, long-context, security, or architecture work.",
     "Use Low, mini, haiku, gpt-5.6-luna, or GPT-OSS 120B (Medium) for bounded, repetitive, low-risk, or private/offline work.",
     "Use provider diversity for review: ask a different provider than the one that produced the first draft."
   ],
@@ -28,7 +28,6 @@
       "GPT-OSS 120B (Medium)"
     ],
     "Claude Code": [
-      "fable",
       "opus",
       "sonnet",
       "haiku"
@@ -201,19 +200,6 @@
       "best_for": [
         "security_review",
         "testing_qa"
-      ]
-    },
-    "claude-code.fable": {
-      "provider": "Claude Code",
-      "model": "fable",
-      "role": "Top Claude Code alias for long-running agentic work, hard planning, and expert review.",
-      "best_for": [
-        "architecture_design",
-        "code_review_quality",
-        "discovery_research",
-        "retrospective_process_improvement",
-        "security_review",
-        "sprint_planning"
       ]
     },
     "claude-code.opus": {
@@ -638,12 +624,6 @@
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (Medium)",
           "why": "Balanced research when latency matters."
-        },
-        {
-          "rank": 5,
-          "provider": "Claude Code",
-          "model": "fable",
-          "why": "Best when the research may turn into long-running agentic planning."
         }
       ]
     },
@@ -764,12 +744,6 @@
         {
           "rank": 4,
           "provider": "Claude Code",
-          "model": "fable",
-          "why": "Use when the plan may need long-running agentic execution."
-        },
-        {
-          "rank": 5,
-          "provider": "Claude Code",
           "model": "sonnet",
           "why": "Default for normal sprint/task plans."
         }
@@ -788,30 +762,24 @@
       "recommended_models": [
         {
           "rank": 1,
-          "provider": "Claude Code",
-          "model": "fable",
-          "why": "Strongest option for high-stakes long-horizon architecture."
-        },
-        {
-          "rank": 2,
           "provider": "Codex",
           "model": "gpt-5.6-sol",
           "why": "Strong complex reasoning and coding-aware design."
         },
         {
-          "rank": 3,
+          "rank": 2,
           "provider": "Antigravity CLI",
           "model": "Claude Opus 4.6 (Thinking)",
           "why": "Careful design review for large codebases and edge cases."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.1 Pro (High)",
           "why": "Good for broad multimodal/long-context tradeoff analysis."
         },
         {
-          "rank": 5,
+          "rank": 4,
           "provider": "Claude Code",
           "model": "opus",
           "why": "Good Claude Code option for implementation-oriented architecture."
@@ -980,12 +948,6 @@
           "provider": "Antigravity CLI",
           "model": "Gemini 3.5 Flash (High)",
           "why": "Good provider-diverse review for hard diffs."
-        },
-        {
-          "rank": 5,
-          "provider": "Claude Code",
-          "model": "fable",
-          "why": "Use for high-stakes review and cross-repo context."
         }
       ]
     },
@@ -1044,30 +1006,24 @@
       "recommended_models": [
         {
           "rank": 1,
-          "provider": "Claude Code",
-          "model": "fable",
-          "why": "Use for high-stakes security analysis."
-        },
-        {
-          "rank": 2,
           "provider": "Antigravity CLI",
           "model": "Claude Opus 4.6 (Thinking)",
           "why": "Strong for cybersecurity-oriented review and deep reasoning."
         },
         {
-          "rank": 3,
+          "rank": 2,
           "provider": "Codex",
           "model": "gpt-5.6-sol",
           "why": "Strong independent security reasoning."
         },
         {
-          "rank": 4,
+          "rank": 3,
           "provider": "Antigravity CLI",
           "model": "Gemini 3.1 Pro (High)",
           "why": "Good for broad system and document context."
         },
         {
-          "rank": 5,
+          "rank": 4,
           "provider": "Antigravity CLI",
           "model": "GPT-OSS 120B (Medium)",
           "why": "Use when code or findings must stay local/private."
@@ -1277,12 +1233,6 @@
         {
           "rank": 4,
           "provider": "Claude Code",
-          "model": "fable",
-          "why": "Good for long-horizon process and org reasoning."
-        },
-        {
-          "rank": 5,
-          "provider": "Claude Code",
           "model": "sonnet",
           "why": "Default for normal retrospective notes and action items."
         }
@@ -1443,7 +1393,7 @@
       "id": "anthropic_models_overview",
       "title": "Claude models overview",
       "url": "https://platform.claude.com/docs/en/about-claude/models/overview",
-      "used_for": "Claude Code alias-family mapping for fable, opus, sonnet, and haiku."
+      "used_for": "Claude Code alias-family mapping for opus, sonnet, and haiku."
     },
     {
       "id": "atlassian_agile_roles",
