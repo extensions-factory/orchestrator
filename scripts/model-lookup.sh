@@ -81,7 +81,7 @@ emit_command() {
           ;;
         *)
           echo "write=true"
-          echo "/codex:rescue --wait --fresh --write --model $model --effort $effort \"<prompt>\""
+          echo "/codex:rescue --background --fresh --write --model $model --effort $effort \"<prompt>\""
           ;;
       esac
       ;;
