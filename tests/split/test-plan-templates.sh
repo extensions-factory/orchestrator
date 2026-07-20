@@ -32,6 +32,13 @@ same_plan_template "$REF/skills/writing-plans/plan-template.md" "$ROOT/skills/wr
 check "$ROOT/skills/writing-plans/plan-template.md" "**Orchestrator Git Bookkeeping (not a worker step):**"
 same "$REF/skills/finishing-a-development-branch/pr-body-template.md" "$ROOT/skills/finishing-a-development-branch/pr-body-template.md"
 same "$REF/assets/roadmap.html" "$ROOT/assets/roadmap.html"
+roadmap_feature_parity(){
+  diff -u \
+    <(awk '/<div class="card">/{card=1; next} card && /<\/div>/{card=0} card && /<li>/{gsub(/.*<li>|<\/li>.*/, ""); print}' "$1" | sort) \
+    <(awk '/<section class="section" data-section>/{section=1; next} section && /<\/section>/{section=0} section && /<h2>/{gsub(/.*<h2>|<\/h2>.*/, ""); print}' "$1" | sort) \
+    >/dev/null || { echo "[FAIL] $1 card and section feature names differ"; fail=1; }
+}
+roadmap_feature_parity "$ROOT/assets/roadmap.html"
 check "$ROOT/skills/brainstorming/roadmap.md" "roadmap.json"
 check "$ROOT/assets/roadmap.html" "data-status=\"released\""
 [ "$fail" -eq 0 ] && echo "PASS test-plan-templates"
