@@ -15,6 +15,8 @@ check "$SKILL" "role: technical_writer"
 check "$SKILL" "self-contained HTML companion at the same path with a \`.html\` extension"
 check "$SKILL" "docs/superpowers/roadmap.json"
 check "$SKILL" "docs/superpowers/ROADMAP.html"
+check "$SKILL" '${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md'
+check "$SKILL" '${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html'
 check "$SKILL" "one entry per User Story"
 check "$SKILL" "5. **Template check:**"
 
