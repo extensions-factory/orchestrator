@@ -1,6 +1,6 @@
 {
   "name": "superpowers-orchestrator",
   "description": "Core skills library: TDD, debugging, collaboration patterns, and proven techniques",
-  "version": "6.16.5",
+  "version": "6.16.6",
   "contextFileName": "GEMINI.md"
 }
