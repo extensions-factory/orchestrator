@@ -27,9 +27,13 @@ git_contract(){
 
 PK="$ROOT/skills/project-kickoff/SKILL.md"
 d5="$(grep -F -- '**Dispatch:** `D5`' "$PK" || true)"
-d7="$(grep -F -- '**Dispatch:** `D7`' "$PK" || true)"
+d7="$(sed -n '/\*\*Dispatch:\*\* `D7`/,/These bootstrap commits/p' "$PK")"
 [[ "$d5" != *commit* ]] || { echo "[FAIL] project-kickoff D5 requires a commit before git init"; fail=1; }
-[[ "$d7" == *discovery* ]] || { echo "[FAIL] project-kickoff D7 initial commit does not include discovery"; fail=1; }
+[[ "$d7" == *'.gitignore'*discovery* ]] || { echo "[FAIL] project-kickoff D7 does not commit .gitignore before discovery"; fail=1; }
+[[ "$d7" == *'stage only `.gitignore`'* ]] || {
+  echo "[FAIL] project-kickoff D7 does not isolate the .gitignore commit"
+  fail=1
+}
 [[ "$d7" == *'stage only the discovery document'* ]] || {
   echo "[FAIL] project-kickoff D7 does not limit staging to the discovery document"
   fail=1
@@ -41,12 +45,12 @@ d7="$(grep -F -- '**Dispatch:** `D7`' "$PK" || true)"
 
 WORKFLOW="$ROOT/docs/orchestrator-workflow.md"
 workflow_d7="$(grep -F -- 'D7 ' "$WORKFLOW" | head -1 || true)"
-[[ "$workflow_d7" == *commit*discovery* ]] || {
-  echo "[FAIL] orchestrator workflow D7 does not commit discovery"
+[[ "$workflow_d7" == *'.gitignore'*discovery* ]] || {
+  echo "[FAIL] orchestrator workflow D7 does not commit .gitignore before discovery"
   fail=1
 }
-[[ "$workflow_d7" == *normal*otherwise* ]] || {
-  echo "[FAIL] orchestrator workflow D7 omits normal-commit behavior when HEAD exists"
+[[ "$workflow_d7" == *initial*HEAD*absent* ]] || {
+  echo "[FAIL] orchestrator workflow D7 omits initial-commit behavior when HEAD is absent"
   fail=1
 }
 

@@ -56,7 +56,7 @@ Discovery → Setup → Scaffold spec → Handoff. Each phase is defined below. 
 **Dispatch:** `D5` runs only after `D1`–`D4` return: dispatch `role: business_analyst`, `task_type: discovery_research` through `superpowers-orchestrator:dispatch-agent` to synthesize their results into the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, covering the selected track's four acceptance areas; validate the returned file and present it to the human before Setup.
 <!-- riso-tech:orchestrator-split END -->
 
-**This phase gates the rest.** Do not start Setup until the discovery doc is written, validated, and presented — even if the human "already knows the space." Once Setup begins, do not proceed beyond repository initialization until `D7` commits the discovery document. The research grounds the stack decision and the later `superpowers-orchestrator:brainstorming` session.
+**This phase gates the rest.** Do not start Setup until the discovery doc is written, validated, and presented — even if the human "already knows the space." Once Setup begins, do not proceed beyond repository initialization until `D7` commits the generated `.gitignore` and then the discovery document. The research grounds the stack decision and the later `superpowers-orchestrator:brainstorming` session.
 
 ## Phase 2 — Setup
 
@@ -72,16 +72,23 @@ Ask questions **one at a time**, multiple-choice where possible (same discipline
 **Dispatch:** `D6` initializes the Git repository: if `git rev-parse --git-dir` fails, dispatch `git init` alone through `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; if a repository already exists, skip D6, and do not continue to `D7` until repository initialization is confirmed; run it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
+### Step 5 — Create the bootstrap commits
+
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D7` commits the discovery document as a separate dispatch after `D6` succeeds or an existing repository is confirmed. Determine commit type from repository state: if `git rev-parse --verify HEAD` fails, this is the initial commit; otherwise it is a normal commit, regardless of which process initialized the repository. Use `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; stage only the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, then run `git diff --cached --name-only` and require exactly that path with no `.superpowers/` entry or other file before committing. On any mismatch, stop without committing; otherwise require the worker to return the commit SHA before continuing to the scaffold spec. Run it inline only if the harness has no subagent capability at all.
+**Dispatch:** `D7` creates two isolated commits after `D6` succeeds or an existing repository is confirmed: dispatch `role: devops_engineer` and `task_type: workspace_setup` through `superpowers-orchestrator:dispatch-agent`, making `.gitignore` the initial commit when `HEAD` is absent and committing discovery second, following the steps below; run it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
-This is the one piece of bootstrapping nothing downstream can do for itself.
+1. **Generate `.gitignore`.** If `.gitignore` already exists, stop and ask the human whether to preserve or replace it. Otherwise map every approved language, framework/library, package manager, and test runner to the smallest covering set of valid gitignore.io templates; count a broader template as coverage only when its generated patterns cover that stack choice's outputs. Follow `https://docs.gitignore.io/install/command-line`, using `curl --fail --silent --show-error --location` for both the template-list and generation requests. Validate names against `https://www.toptal.com/developers/gitignore/api/list`, fetch the templates in one comma-separated request into a repository-root temporary file, and require non-empty output whose `Created by` and `End of` markers contain the exact request URL before moving it to `.gitignore`. Do not modify a shell profile or global Git configuration. On any request, response-validation, or coverage failure, remove the temporary file and stop without creating or truncating `.gitignore`.
+2. **Commit `.gitignore`.** Run `git rev-parse --verify HEAD` before committing: absent `HEAD` makes this the initial commit; otherwise it is normal. For this commit, stage only `.gitignore`, run `git diff --cached --name-only`, and require exactly `.gitignore` with no `.superpowers/` entry or other file before committing with the approved convention.
+3. **Commit discovery.** For the second commit, stage only the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, repeat the exact staged-path check for that file, and commit it separately. On any mismatch, stop without committing.
+4. **Return evidence.** The worker must return both commit SHAs as a labelled commit SHA for each file, the template-to-stack coverage mapping, both staged-path outputs, and `git show --name-only --format= <sha>` output proving each SHA contains only its intended file. Do not continue to the scaffold spec until both commits are verified.
+
+These bootstrap commits are the one piece of setup nothing downstream can do for itself.
 
 ## Phase 3 — Scaffold spec
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D8` dispatches the scaffold spec through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: architecture_design`; the worker writes `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` from the discovery and approved stack/tooling choices, and the orchestrator validates and presents it for user approval before handing it to `superpowers-orchestrator:writing-plans`; write it inline only if the harness has no subagent capability at all.
+**Dispatch:** `D8` dispatches the scaffold spec through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: architecture_design`; the worker writes `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` from the discovery and approved stack/tooling choices, initializes the product roadmap as described below, and the orchestrator validates and presents the returned artifacts for user approval before handing the scaffold spec to `superpowers-orchestrator:writing-plans`; write them inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 Write `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` using the standard `superpowers-orchestrator:brainstorming` spec format and self-review, scoped to tooling not features. Express all concrete scaffolding as **tasks for the plan** (do NOT run them here):
@@ -93,7 +100,7 @@ Write `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` using the s
 - Write a minimal CI stub (lint + test) for the developer's git host. See `references/ci-stub-templates.md`.
 - Walking-skeleton verification: run build/dev/test and the linter once; confirm a green baseline before the branch is finished.
 
-For projects that use a product roadmap, add roadmap entries for the discovery and scaffold specs. (Skip if the project has no roadmap.)
+Initialize the product roadmap during `D8`: write `docs/superpowers/roadmap.json` as `[]` and generate `docs/superpowers/ROADMAP.html` following `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md`, starting from `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html` verbatim. Do not invent backlog entries; `superpowers-orchestrator:brainstorming` adds the first User Stories when it designs the first real feature.
 
 ## Phase 4 — Handoff
 

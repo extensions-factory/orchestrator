@@ -32,10 +32,10 @@ SUPERPOWERS ORCHESTRATOR
 │       │      task_type: discovery_research
 │       ├── ◇ select stack, standards, and AI tools
 │       ├── ◆ D6 initialize Git repository
-│       ├── ◆ D7 commit discovery (initial commit when HEAD is absent; normal commit otherwise)
+│       ├── ◆ D7 generate and commit tech-stack `.gitignore` (initial when HEAD is absent), then commit discovery
 │       │      role: devops_engineer
 │       │      task_type: workspace_setup
-│       ├── ◆ D8 write scaffold spec
+│       ├── ◆ D8 write scaffold spec and initialize product roadmap
 │       │      role: tech_lead
 │       │      task_type: architecture_design
 │       └── continue to Writing Plan
