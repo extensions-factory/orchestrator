@@ -20,7 +20,7 @@ Use this skill when **either** holds:
 
 ## Flow
 
-Discovery → Setup → Scaffold spec → Handoff. Each phase is defined below. **Do not skip or reorder phases.** Discovery gates everything after it.
+Discovery (+ backlog) → Setup → Scaffold spec → Handoff. Each phase is defined below. **Do not skip or reorder phases.** Discovery gates everything after it.
 
 ## Phase 1 — Discovery (gates everything)
 
@@ -53,8 +53,10 @@ Discovery → Setup → Scaffold spec → Handoff. Each phase is defined below. 
 4. **Synthesize, validate, present.**
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D5` runs only after `D1`–`D4` return: dispatch `role: business_analyst`, `task_type: discovery_research` through `superpowers-orchestrator:dispatch-agent` to synthesize their results into the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, covering the selected track's four acceptance areas; validate the returned file and present it to the human before Setup.
+**Dispatch:** `D5` runs only after `D1`–`D4` return: dispatch `role: business_analyst`, `task_type: discovery_research` through `superpowers-orchestrator:dispatch-agent` to synthesize their results into the discovery document `docs/superpowers/specs/YYYY-MM-DD-<topic>-discovery.md`, covering the selected track's four acceptance areas, and to close the doc with a **Proposed backlog** section decomposing the findings into an Epic → Feature → User Story hierarchy (candidates only, no specs); validate the returned file and present it to the human before Setup.
 <!-- riso-tech:orchestrator-split END -->
+
+5. **Confirm the backlog (inline, never dispatched).** Present the discovery doc's Proposed backlog to the human and refine it together — the discovery findings seed the candidates; the human edits, adds, drops, and approves before anything is written to the roadmap. This is a live conversation like `superpowers-orchestrator:brainstorming`; a dispatched worker never talks to the human. The confirmed Epic → Feature → US list is the input Phase 3 writes to `roadmap.json`. Do not seed the roadmap from unconfirmed candidates.
 
 **This phase gates the rest.** Do not start Setup until the discovery doc is written, validated, and presented — even if the human "already knows the space." Once Setup begins, do not proceed beyond repository initialization until `D7` commits the generated `.gitignore` and then the discovery document. The research grounds the stack decision and the later `superpowers-orchestrator:brainstorming` session.
 
@@ -100,7 +102,7 @@ Write `docs/superpowers/specs/YYYY-MM-DD-<topic>-scaffold-design.md` using the s
 - Write a minimal CI stub (lint + test) for the developer's git host. See `references/ci-stub-templates.md`.
 - Walking-skeleton verification: run build/dev/test and the linter once; confirm a green baseline before the branch is finished.
 
-Initialize the product roadmap during `D8`: write `docs/superpowers/roadmap.json` as `[]` and generate `docs/superpowers/ROADMAP.html` following `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md`, starting from `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html` verbatim. Do not invent backlog entries; `superpowers-orchestrator:brainstorming` adds the first User Stories when it designs the first real feature.
+Seed the product roadmap during `D8` from the **confirmed backlog** (Phase 1 step 5): write `docs/superpowers/roadmap.json` with one entry per confirmed User Story and generate `docs/superpowers/ROADMAP.html`, following `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md` and starting from `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html` verbatim. Follow that file's level mapping exactly: **Epic → summary card**, **Feature → exactly one detail section** (dedup by feature — never emit two sections for the same feature), **User Story → one `.item`**. Every seeded US is `status: open` with `spec` and `plan` set to `null`; kickoff creates no spec but Scaffold, so no roadmap entry points at a spec yet. `superpowers-orchestrator:brainstorming` attaches specs and adds later User Stories per feature as it designs them. Write nothing that wasn't in the human-confirmed backlog; if the backlog is empty, write `[]`.
 
 ## Phase 4 — Handoff
 
@@ -121,3 +123,6 @@ Invoke `superpowers-orchestrator:writing-plans` on the scaffold spec. From there
 | "It's a toy project, skip the CI stub / verification" | The scaffold spec still lists the CI stub and walking-skeleton verification. A green baseline is the point of kickoff. |
 | Walking-skeleton verification fails | Do not finish the branch or hand off to `superpowers-orchestrator:brainstorming` with a broken baseline. |
 | Tempted to run init/lint/CI commands here | Don't. Concrete scaffolding is plan tasks (Phase 3), executed by the pipeline — not by this skill. |
+| Seeding the roadmap from discovery candidates the human never confirmed | Stop. Phase 1 step 5 confirmation gates the seed. Present the Proposed backlog, refine it with the human, then write only what they approved. |
+| Two detail sections rendered for the same Feature | Wrong. One detail section per distinct Feature (dedup, first-appearance order); its User Stories are `.item`s inside it. See `roadmap.md`. |
+| Attaching a spec path to a seeded US, or inventing a Scaffold roadmap entry | Seeded US are `status: open`, `spec`/`plan` = `null`. Scaffold is tooling, not a product US — it stays its own spec, off the roadmap. |
