@@ -170,15 +170,16 @@ Every `◆ Dn` above enters this subtree.
 │   └── write .superpowers/<task>/turn-<turn>-request.json
 │
 ├── 6. ○ Provider readiness preflight
-│   ├── agent=claude      → Agent tool is ready
+│   ├── agent=claude      → Agent tool is ready; spawn with permissionMode=bypassPermissions
 │   ├── agent=codex       → run /codex:setup
-│   └── agent=antigravity → human relay is ready
+│   └── agent=antigravity → run /antigravity:setup
 │
 ├── 7. Actual worker dispatch
 │   │
 │   ├── agent=claude
 │   │   └── ◆ Agent tool
 │   │       model=<output.model>
+│   │       permissionMode=bypassPermissions
 │   │       prompt="ROLE: subagent\n" + <request JSON>
 │   │
 │   ├── agent=codex
@@ -196,19 +197,19 @@ Every `◆ Dn` above enters this subtree.
 │   │       ├── release_deployment, workspace_setup, monitoring_incident_ops
 │   │       ├── documentation_knowledge_transfer
 │   │       ├── retrospective_process_improvement
-│   │       └── ◆ /codex:rescue --wait --fresh --write
+│   │       └── ◆ /codex:rescue --background --fresh --write
 │   │             --model <output.model>
 │   │             --effort <output.effort>
 │   │             "<prompt>"
 │   │
 │   └── agent=antigravity
-│       └── ◆ Human relay
-│           select <output.model>
-│           send request JSON
-│           return response JSON
+│       └── ◆ /antigravity:rescue --background --fresh --write
+│           --model <output.model>
+│           --effort <output.effort>
+│           "<prompt>"
 │
 ├── 8. ○ Receive and validate
-│   ├── rescue/other provider → write turn-<turn>-response.json
+│   ├── Codex/Antigravity rescue → poll status, result, then write turn-<turn>-response.json
 │   ├── Codex review → persist stdout as turn-<turn>-review.md
 │   │                  and construct turn-<turn>-response.json
 │   ├── run scripts/validate-message.mjs
@@ -265,5 +266,16 @@ rescue task types
 ├── monitoring_incident_ops
 ├── documentation_knowledge_transfer
 ├── retrospective_process_improvement
-└── /codex:rescue --wait --fresh --write --model <model> --effort <effort> "<prompt>"
+└── /codex:rescue --background --fresh --write --model <model> --effort <effort> "<prompt>"
 ```
+
+When the resolved agent is Antigravity, every task type uses:
+
+```text
+/antigravity:rescue --background --fresh --write --model <model> --effort <effort> "<prompt>"
+```
+
+The bridge supplies the checkout and full tool permission. `--write` is always
+present; the request work contract remains the authority boundary. Receive the
+background job through `/antigravity:status <job-id>` then
+`/antigravity:result <job-id>`.

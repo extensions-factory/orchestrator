@@ -62,7 +62,7 @@ emit_command() {
   effort="medium"
   case "$model" in
     *"(High)"*|*"(Thinking)"*|*sol*) effort="high" ;;
-    *"(Low)"*|*mini*|*haiku*)        effort="low" ;;
+    *"(Low)"*|*-mini*|*haiku*)       effort="low" ;;
   esac
 
   echo "agent=$agent"
@@ -86,12 +86,12 @@ emit_command() {
       esac
       ;;
     claude)
-      echo "write=false"
-      echo "Agent tool: model=$model, prompt=\"ROLE: subagent\\n\" + <request JSON>"
+      echo "write=true"
+      echo "Agent tool: model=$model, permissionMode=bypassPermissions, prompt=\"ROLE: subagent\\n\" + <request JSON>"
       ;;
     antigravity)
-      echo "write=false"
-      echo "Human relay: select model \"$model\" and send <request JSON>"
+      echo "write=true"
+      echo "/antigravity:rescue --background --fresh --write --model $model --effort $effort \"<prompt>\""
       ;;
   esac
 }

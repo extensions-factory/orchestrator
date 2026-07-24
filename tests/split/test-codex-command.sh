@@ -7,20 +7,20 @@ SKILL="$ROOT/skills/dispatch-agent/SKILL.md"
 WORKERS="$ROOT/skills/dispatch-agent/references/codex-workers.md"
 PROTOCOL="$ROOT/skills/dispatch-agent/references/codex-worker-protocol.md"
 ROUTING="$ROOT/assets/sdlc-model-routing.json"
-RESCUE='/codex:rescue --wait --fresh --write --model <model> --effort <effort> "<prompt>"'
+RESCUE='/codex:rescue --background --fresh --write --model <model> --effort <effort> "<prompt>"'
 REVIEW='/codex:review --wait --model <model> --base <base_sha>'
 SECURITY='/codex:adversarial-review --wait --model <model> --base <base_sha> "<security focus>"'
 
 codex="$(bash "$LOOKUP" --command implementation_coding 1 2>&1 || true)"
 grep -Fq 'agent=codex' <<<"$codex"
 grep -Fq 'write=true' <<<"$codex"
-grep -Fxq '/codex:rescue --wait --fresh --write --model gpt-5.6-terra --effort medium "<prompt>"' <<<"$codex"
+grep -Fxq '/codex:rescue --background --fresh --write --model gpt-5.6-terra --effort medium "<prompt>"' <<<"$codex"
 
 review="$(bash "$LOOKUP" --command code_review_quality 2)"
 grep -Fq 'write=false' <<<"$review"
 grep -Fxq '/codex:review --wait --model gpt-5.6-sol --base <base_sha>' <<<"$review"
 
-security="$(bash "$LOOKUP" --command security_review 3)"
+security="$(bash "$LOOKUP" --command security_review 2)"
 grep -Fq 'write=false' <<<"$security"
 grep -Fxq '/codex:adversarial-review --wait --model gpt-5.6-sol --base <base_sha> "<security focus>"' <<<"$security"
 
@@ -41,16 +41,16 @@ while IFS=$'\t' read -r task_type rank model; do
       ;;
     *)
       case "$command" in
-        "/codex:rescue --wait --fresh --write --model $model --effort low \"<prompt>\""|\
-        "/codex:rescue --wait --fresh --write --model $model --effort medium \"<prompt>\""|\
-        "/codex:rescue --wait --fresh --write --model $model --effort high \"<prompt>\"") ;;
+        "/codex:rescue --background --fresh --write --model $model --effort low \"<prompt>\""|\
+        "/codex:rescue --background --fresh --write --model $model --effort medium \"<prompt>\""|\
+        "/codex:rescue --background --fresh --write --model $model --effort high \"<prompt>\"") ;;
         *) echo "wrong Codex command family for $task_type rank $rank" >&2; exit 1 ;;
       esac
       ;;
   esac
 done < <(jq -r '.task_types | to_entries[] | .key as $task | .value.recommended_models[] | select(.provider == "Codex") | [$task, .rank, .model] | @tsv' "$ROUTING")
 
-other="$(bash "$LOOKUP" --command architecture_design 1 2>&1 || true)"
+other="$(bash "$LOOKUP" --command requirements_user_stories 4 2>&1 || true)"
 grep -Fq 'agent=claude' <<<"$other"
 ! grep -Fq '/codex:rescue' <<<"$other"
 
@@ -67,7 +67,8 @@ grep -Fq "$SECURITY" "$WORKERS"
 grep -Fxq "| \`$REVIEW\` | \`code_review_quality\` |" "$WORKERS"
 grep -Fxq "| \`$SECURITY\` | \`security_review\` |" "$WORKERS"
 grep -Fxq "| \`$RESCUE\` | \`discovery_research\`, \`requirements_user_stories\`, \`backlog_refinement_prioritization\`, \`sprint_planning\`, \`architecture_design\`, \`ui_ux_prototyping\`, \`implementation_coding\`, \`debugging_root_cause\`, \`testing_qa\`, \`release_deployment\`, \`workspace_setup\`, \`monitoring_incident_ops\`, \`documentation_knowledge_transfer\`, \`retrospective_process_improvement\` |" "$WORKERS"
-grep -Fq 'Never use background/status/result/cancel, resume, `--profile`, or transfer.' "$WORKERS"
+grep -Fq 'For rescue, `--background` + `/codex:status` + `/codex:result` are the routed path.' "$WORKERS"
+grep -Fq 'Never use `/codex:cancel`, resume, `--profile`, or transfer; never background a review' "$WORKERS"
 grep -Fq 'Never substitute one command family for another.' "$WORKERS"
 grep -Fq 'Without `--profile`, each fresh task uses the plugin scheduler' "$WORKERS"
 

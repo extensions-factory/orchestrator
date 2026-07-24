@@ -1,4 +1,4 @@
-# Codex worker protocol
+# Worker protocol
 
 This reference defines the rescue prompt contract and the adapter for native
 review output. Command selection itself is fixed in `codex-workers.md`.
@@ -34,7 +34,7 @@ not a reason to choose another row.
 | `documentation_knowledge_transfer` | `technical_writer` | `superpowers-worker:verification-before-completion` | Edit only the requested documentation, ADR, changelog, onboarding, or handoff artifacts. |
 | `retrospective_process_improvement` | `agile_coach` | `superpowers-worker:verification-before-completion` | Recommend process improvements only; never edit skills, workflows, or product files. |
 
-No other persona, discipline, or work contract is permitted for a Codex
+No other persona, discipline, or work contract is permitted for a worker
 dispatch.
 
 ## Review output adapter
@@ -76,7 +76,7 @@ Fill the three contract placeholders from the effective row above. Paste the
 request envelope unchanged at `<request JSON>`.
 
 ```text
-ROLE: subagent (Codex worker)
+ROLE: subagent (delegated worker)
 
 Do exactly one bounded task in the current checkout.
 

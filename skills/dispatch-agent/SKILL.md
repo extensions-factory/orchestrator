@@ -46,28 +46,28 @@ Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The or
 Before sending, verify the target `agent` is actually reachable — a provider that is installed but not authenticated will hang the call:
 
 - `agent: codex` → run `/codex:setup` before the first Codex dispatch in the session. Ready means `ready: true`, or at least one configured profile is both enabled and `loggedIn: true`. If not ready, degrade. Readiness is authentication only; a permission error does not make Codex unavailable.
-- `agent: antigravity` → always ready: the bridge is a HUMAN relay (see Send below), no auth needed.
-- `agent: claude` → always ready (the Agent tool needs no external auth).
+- `agent: antigravity` → run `/antigravity:setup` before the first Antigravity dispatch in the session. Ready means the CLI and at least one enabled profile are logged in. If not ready, degrade.
+- `agent: claude` → always ready (the Agent tool needs no external auth). Spawn task workers with `permissionMode: bypassPermissions`; the request contract, not a sandbox default, bounds their authority.
 
 If the chosen agent is **not ready**, apply the degradation ladder (walk down `recommended_models[]` to the next entry whose mapped agent is ready) rather than emitting a call that blocks.
 
 4. **Send** via the bridge matching `agent`:
-   - `claude` → the Agent tool, prompt = `"ROLE: subagent\n" + <request JSON>`.
+   - `claude` → the Agent tool with `permissionMode: bypassPermissions`, prompt = `"ROLE: subagent\n" + <request JSON>`. The request contract remains the authority boundary.
    - If the resolved `agent` is `codex`, `task_type` selects exactly one command:
      - `code_review_quality` → `/codex:review --wait --model <model> --base <base_sha>`.
      - `security_review` → `/codex:adversarial-review --wait --model <model> --base <base_sha> "<security focus>"`.
      - `discovery_research`, `requirements_user_stories`, `backlog_refinement_prioritization`, `sprint_planning`, `architecture_design`, `ui_ux_prototyping`, `implementation_coding`, `debugging_root_cause`, `testing_qa`, `release_deployment`, `workspace_setup`, `monitoring_incident_ops`, `documentation_knowledge_transfer`, `retrospective_process_improvement` → `/codex:rescue --background --fresh --write --model <model> --effort <effort> "<prompt>"`, where `<prompt>` is the filled rescue block from `references/codex-worker-protocol.md` prepended to the request JSON.
      For the rescue family, `--background` + `/codex:status` + `/codex:result` ARE the routed path (see Receive). Never use `/codex:cancel`, resume, `--profile`, or `/codex:transfer`. Review commands stay foreground (`--wait`); never run them backgrounded. Never substitute one command family for another; a failed review command degrades to the next routed provider, not rescue.
-   - `antigravity` → HUMAN relay (no CLI bridge yet). The request already sits at `.superpowers/<task>/turn-<turn>-request.json` (Step 3) — tell the human: the exact model string to select (e.g. `Gemini 3.5 Flash (High)`), that file path, and "paste this request into Antigravity/Gemini on that model, then paste the worker's response JSON back here". The human's pasted response IS the worker's final message — validate and route it exactly like any other. When a real `/agy:task` bridge ships, replace this bullet with the CLI call.
+   - `antigravity` → `/antigravity:rescue --background --fresh --write --model <model> --effort <effort> "<prompt>"`, where `<prompt>` is the filled rescue block from `references/codex-worker-protocol.md` prepended to the request JSON. Every Antigravity dispatch uses `--write`: the bridge supplies the current workspace and full tool permission; the request contract still limits the task. See `references/antigravity-workers.md`.
 5. **Receive** by command family:
    - Codex **rescue** ran `--background`: poll `/codex:status` until the task reports complete, then run `/codex:result` to get the response JSON; persist it at `.superpowers/<task>/turn-<turn>-response.json`. This poll/fetch is the normal background path, not a degradation hack. Do not resume, cancel, or pin a profile while polling.
    - Codex **review/security** ran foreground (`--wait`): stdout is the immediate result — no poll/fetch.
    - Codex review/security stdout is not an envelope. Persist it verbatim at `.superpowers/<task>/turn-<turn>-review.md`, then construct the single response envelope specified in `references/codex-worker-protocol.md`, pointing `output.artifacts` to that Markdown file and setting `output.status: done`.
-   - A claude worker writes its response via `superpowers-worker:report-task`; for antigravity, persist the human-relayed response yourself.
+   - Antigravity **rescue** ran `--background`: poll `/antigravity:status <job-id>` until complete, then run `/antigravity:result <job-id>` to get the response JSON; persist it at `.superpowers/<task>/turn-<turn>-response.json`. A failed/killed status or empty/invalid result is a bridge failure.
+   - A claude worker writes its response via `superpowers-worker:report-task`.
 6. **Validate** it: `node scripts/validate-message.mjs .superpowers/<task>/turn-<turn>-response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
 7. **Append** the pair to `.superpowers/ledger.jsonl` as one line:
    `{"ts":"<iso>","task":"<task>","turn":<turn>,"request":{...},"response":{...},"author_agent":"<agent>","author_model":"<model>"}`
-   For a human-relayed dispatch add `"via":"human_relay"`.
 8. **Route:** `status: done` → forward to the next step; `needs_revision` → re-request the same role with feedback (same `task`, `turn + 1`); `blocked` → answer from context or escalate to the human, then re-request (same `task`, `turn + 1`).
 
    **Residual ops** — if the response carries `output.blocked_ops` (or `done` work needs committing):
@@ -80,14 +80,14 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 
 1. Chosen entry fails or its agent is not ready → walk down `recommended_models[]` in rank order and dispatch to the next entry whose mapped agent is ready. Never jump straight to claude.
 2. Bridge/quota failure on codex → rely on codex-plugin-cc failover first, then rule 1. Polling `/codex:status` + `/codex:result` for a `--background` rescue is the normal Receive path, NOT a degradation hack. A failure is: a foreground review returning empty/invalid, or a background rescue whose `/codex:status` reports failed/killed or whose `/codex:result` is empty/invalid — treat those as a bridge failure and walk the ladder. Never resume, pin a profile, fabricate a response, or switch Codex command families.
-3. antigravity is never "not ready" — the human relay is always available. It fails only if the human declines to relay; then apply rule 1.
+3. Antigravity setup or bridge failure → apply rule 1. Never replace it with a human relay.
 4. A claude subagent is the ALWAYS-AVAILABLE worker and LAST RESORT (no external auth) — use it only when every non-claude entry in `recommended_models[]` is exhausted.
 5. Only when the harness has no subagent capability at all → skip `superpowers-orchestrator:dispatch-agent`; the caller runs `superpowers-orchestrator:executing-plans` inline. This is a harness property, NOT a fallback for failed workers.
 
 <HARD-GATE>
 The ladder always terminates in a dispatch. Because a claude subagent is always available, "no worker could do it" is impossible — the orchestrator NEVER writes code, edits files, or runs tests itself, no matter how many workers failed.
 
-The ladder is pre-authorized: never stop mid-ladder to ask the human's permission. The human appears in the flow only as the antigravity relay mechanism itself, or when the entire ladder is exhausted. "Which fallback should I use?" is a question the ladder already answered.
+The ladder is pre-authorized: never stop mid-ladder to ask the human's permission. "Which fallback should I use?" is a question the ladder already answered.
 </HARD-GATE>
 
 | Rationalization | Reality |
