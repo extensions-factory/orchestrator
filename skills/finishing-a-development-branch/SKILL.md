@@ -96,6 +96,21 @@ Which option?
 **Dispatch:** `D19` executes the selected finish path only after tests pass and the human chooses an option. Resolve the chosen option's menu selection to a named action before dispatch: attached branch: 1 = `merge`, 2 = `pr`, 3 = `keep`, 4 = `discard`; detached: 1 = `pr`, 2 = `keep`, 3 = `discard`. Then call `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: release_deployment` for that action's Git mechanics in the documented order. The `merge` action merges first, runs the shared roadmap recipe and commits it on the base branch, then tests the merged result. The `pr` action creates a branch at detached `HEAD` when needed, runs and commits the roadmap recipe on the feature branch, tests, pushes, validates the PR body against the template, then calls `gh pr create --draft --body-file`. The `keep` and `discard` actions skip the roadmap recipe. Preserve worktrees for `pr` and `keep`; clean up only for `merge` and confirmed `discard`, except detached externally managed workspaces are never cleaned up. For detached `discard`, do not delete a branch or worktree; after confirmation, report the abandoned `HEAD` SHA and leave disposal to the external workspace manager. For any `discard`, after the human's exact discard confirmation and before dispatch, append `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` to `context.constraints`, replacing `<operation>` with the exact confirmed destructive operation; never infer confirmation. Run the documented commands inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
+### Step 4b: Post-Land Knowledge Graph Refresh
+
+After D19 returns `done` for `merge` or `pr`, run this orchestrator-owned step against the landed checkout. For `keep` or `discard`, skip this entire step: do not freshness-check the graph and do not present a gate.
+
+1. Resolve the graph read-only: use `.ua/knowledge-graph.json` first; use the legacy path only when `.understand-anything/` exists. If the graph is absent or malformed, skip the gate and continue without error.
+2. Freshness-check the landed graph: compare `project.gitCommitHash` with `git log -1 --format=%H -- .`. If the graph is already fresh, continue without a gate. If `git log` fails, record the one-line failure and continue without dispatch.
+3. If the graph is stale, ask exactly: `Knowledge graph is stale. Refresh it now? (yes/no)`.
+   - On `no`, skip the refresh and continue without error.
+   - On `yes`, proceed to the D20 dispatch.
+<!-- riso-tech:orchestrator-split START -->
+**Dispatch:** `D20` routes through `superpowers-orchestrator:dispatch-agent` with `role: technical_writer`, `task_type: documentation_knowledge_transfer`, no provider pin, and a request to run `/understand` in the checkout; only reached after a merge or PR finish path and an explicit human `yes` at the freshness gate.
+<!-- riso-tech:orchestrator-split END -->
+4. When the worker returns, validate the worker response, then verify that the rebuilt graph's `project.gitCommitHash` matches the current scoped HEAD from `git log -1 --format=%H -- .`; append one result to the project ledger.
+5. If the worker returns `blocked` or `needs_revision`, or the rebuilt hash is still stale, append that result to the ledger and surface it to the human. Do not retry automatically.
+
 ### Step 5: Execute Choice
 
 #### Option 1: Merge Locally
