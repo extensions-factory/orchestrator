@@ -100,7 +100,7 @@ Which option?
 
 After D19 returns `done` for `merge` or `pr`, run this orchestrator-owned step against the landed checkout. For `keep` or `discard`, skip this entire step: do not freshness-check the graph and do not present a gate.
 
-1. Resolve the graph read-only: use `.ua/knowledge-graph.json` first; use the legacy path only when `.understand-anything/` exists. If the graph is absent or malformed, skip the gate and continue without error.
+1. Resolve the graph read-only: use `.ua/knowledge-graph.json` first; use `.understand-anything/knowledge-graph.json` only when `.understand-anything/` exists. If the graph is absent or malformed (including a missing or null `project.gitCommitHash`), skip the gate and continue without error.
 2. Freshness-check the landed graph: compare `project.gitCommitHash` with `git log -1 --format=%H -- .`. If the graph is already fresh, continue without a gate. If `git log` fails, record the one-line failure and continue without dispatch.
 3. If the graph is stale, ask exactly: `Knowledge graph is stale. Refresh it now? (yes/no)`.
    - On `no`, skip the refresh and continue without error.
