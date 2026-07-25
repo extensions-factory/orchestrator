@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understand-Anything Knowledge Graph Integration — Design Spec</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --panel: #161618;
+    --panel-2: #1d1d20;
+    --text: #ececec;
+    --muted: #9a9aa2;
+    --line: #2a2a2e;
+    --accent: #9b6bff;
+    --accent-2: #19c3c9;
+    --warn: #f5a623;
+    --ok: #37c871;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+  a { color: var(--accent-2); }
+
+  /* Hero */
+  .hero { padding: 72px 0 48px; border-bottom: 1px solid var(--line); }
+  .hero .badge { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; background: var(--warn); color: #0e0e10; padding: 3px 12px; border-radius: 999px; margin-bottom: 20px; }
+  .hero h1 { font-size: clamp(28px, 4vw, 44px); line-height: 1.15; margin: 0 0 16px; letter-spacing: -.02em; }
+  .hero .meta { color: var(--muted); font-size: 14px; margin: 0; }
+
+  /* TOC */
+  .toc { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px 28px; margin: 40px 0; }
+  .toc h2 { margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc li { font-size: 14px; padding: 3px 0; }
+  .toc a { color: var(--text); text-decoration: none; }
+  .toc a:hover { color: var(--accent-2); }
+
+  /* Sections */
+  .section { padding: 48px 0 0; }
+  .section h2 { font-size: clamp(20px, 2.5vw, 28px); margin: 0 0 16px; letter-spacing: -.01em; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+  .section h3 { font-size: 17px; margin: 32px 0 10px; color: var(--accent); }
+  .section p { margin: 0 0 16px; color: var(--text); }
+
+  /* Callouts */
+  .callout { border-left: 3px solid var(--accent); background: var(--panel); border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 20px 0; }
+  .callout.warn { border-color: var(--warn); }
+  .callout.ok { border-color: var(--ok); }
+  .callout p { margin: 0; font-size: 14px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+  th { background: var(--panel-2); color: var(--muted); font-weight: 600; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  tr:hover td { background: var(--panel); }
+
+  /* User stories */
+  .story { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin: 24px 0; }
+  .story-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .story-id { font-size: 12px; font-weight: 700; letter-spacing: .06em; background: var(--accent); color: #fff; padding: 3px 10px; border-radius: 999px; }
+  .story-priority { font-size: 12px; font-weight: 600; background: var(--panel-2); color: var(--muted); padding: 3px 10px; border-radius: 999px; }
+  .story h3 { margin: 0; font-size: 16px; }
+  .story .narrative { font-style: italic; color: var(--muted); margin: 10px 0 16px; font-size: 14px; }
+  .story ul { margin: 0; padding-left: 20px; }
+  .story li { font-size: 14px; padding: 4px 0; }
+  .ac-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ok); margin-bottom: 8px; }
+
+  /* Code */
+  pre { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 16px 0; }
+  code { font-family: "JetBrains Mono", "Fira Code", Consolas, monospace; }
+  :not(pre) > code { background: var(--panel-2); padding: 2px 6px; border-radius: 4px; font-size: .88em; color: var(--accent-2); }
+
+  /* Success criteria */
+  .sc-list { list-style: none; padding: 0; margin: 0; }
+  .sc-list li { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .sc-list li:last-child { border-bottom: 0; }
+  .sc-num { font-weight: 700; color: var(--ok); min-width: 40px; }
+
+  footer { border-top: 1px solid var(--line); padding: 40px 0; color: var(--muted); font-size: 13px; margin-top: 80px; }
+
+  @media (max-width: 700px) {
+    .wrap { padding: 0 20px; }
+    .hero { padding: 48px 0 32px; }
+    .story-header { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <div class="badge">Draft</div>
+    <h1>Understand-Anything Knowledge Graph Integration</h1>
+    <p class="meta">Design Spec · 2026-07-25 · Superpowers Orchestrator</p>
+  </div>
+</header>
+
+<!-- TOC -->
+<div class="wrap">
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#context">Context &amp; Assumptions</a></li>
+      <li><a href="#scope">Scope</a></li>
+      <li><a href="#user-stories">User Stories</a></li>
+      <li><a href="#approach">Approach</a></li>
+      <li><a href="#design">Design</a></li>
+      <li><a href="#testing">Testing Strategy</a></li>
+      <li><a href="#success">Success Criteria</a></li>
+    </ol>
+  </div>
+</div>
+
+<!-- 1. OVERVIEW -->
+<div class="wrap">
+  <div class="section" id="overview">
+    <h2>1. Overview</h2>
+    <p>The Superpowers orchestrator currently approaches brainstorming by exploring the codebase with file searches alone and finishes branches without updating any project intelligence layer. This spec adds two lightweight integration points with the <code>understand-anything</code> plugin's knowledge graph: (1) the brainstorming skill reads a fresh graph to seed design context without requiring a build, and (2) the finishing skill gates and dispatches a graph refresh after code lands. The intended users are orchestrators running Superpowers with the <code>understand-anything</code> plugin installed; the outcome is richer brainstorming context and an always-current graph after each integration.</p>
+  </div>
+
+  <!-- 2. CONTEXT & ASSUMPTIONS -->
+  <div class="section" id="context">
+    <h2>2. Context &amp; Assumptions</h2>
+    <p>The <code>understand-anything</code> plugin writes a knowledge graph to <code>.ua/knowledge-graph.json</code> (canonical) or <code>.understand-anything/knowledge-graph.json</code> (legacy, present only when the legacy directory exists). The graph's <code>project.gitCommitHash</code> field records the commit at which it was last built. The plugin's <code>/understand</code> slash command rebuilds the graph; it is computationally expensive and must never run inline in the orchestrator.</p>
+    <ul>
+      <li><strong>understand-anything is installed on all providers</strong> including Codex; no provider pin is needed for the refresh worker.</li>
+      <li>"Fresh" means the graph's <code>project.gitCommitHash</code> equals <code>git log -1 --format=%H -- .</code>.</li>
+      <li>Legacy path is only considered when <code>.understand-anything/</code> directory is present; <code>.ua/</code> is checked first.</li>
+      <li>The collect step (Piece 1) is best-effort — it must never block brainstorming or add a dispatch point.</li>
+      <li>The refresh step (Piece 2) fires only on merge/PR-finish paths; keep and discard paths skip it.</li>
+      <li>The human gate on refresh is mandatory; the orchestrator must not auto-refresh without confirmation.</li>
+    </ul>
+  </div>
+
+  <!-- 3. SCOPE -->
+  <div class="section" id="scope">
+    <h2>3. Scope</h2>
+    <h3>Goals</h3>
+    <ul>
+      <li>Add a graph-aware context-seeding step to <code>skills/brainstorming/SKILL.md</code> at the "Explore project context" checklist item (Piece 1 — COLLECT).</li>
+      <li>Add a post-land graph refresh gate and dispatch to <code>skills/finishing-a-development-branch/SKILL.md</code> after phase E merge/PR paths complete (Piece 2 — REFRESH).</li>
+      <li>Document both changes in <code>docs/orchestrator-workflow.md</code>: new <code>◆ D</code> dispatch node after D19 and an <code>○</code> inline note at the brainstorming collect step.</li>
+      <li>Keep the orchestrator thin: collect is a cheap inline grep; refresh is always dispatched.</li>
+    </ul>
+    <h3>Non-Goals</h3>
+    <ul>
+      <li>Auto-refreshing without a human gate — no silent background rebuilds.</li>
+      <li>Modifying how <code>understand-anything</code> itself builds the graph.</li>
+      <li>Supporting graph formats other than what the plugin currently produces.</li>
+      <li>Restructuring the brainstorming skill's Red Flags table or rationalization-prevention content.</li>
+      <li>Implementing the three file changes — those are for the subsequent implementation plan.</li>
+    </ul>
+  </div>
+
+  <!-- 4. USER STORIES -->
+  <div class="section" id="user-stories">
+    <h2>4. User Stories</h2>
+
+    <div class="story">
+      <div class="story-header">
+        <span class="story-id">US-1</span>
+        <span class="story-priority">P1 — Must have</span>
+      </div>
+      <h3>Graph-aware brainstorming context</h3>
+      <p class="narrative">As an orchestrator beginning a brainstorming session, I want to grep the knowledge graph for the feature's keywords when a fresh graph is present, so that I seed my design context with pre-built node names, summaries, and edges instead of discovering them solely through file exploration.</p>
+      <div class="ac-label">Acceptance criteria</div>
+      <ul>
+        <li>GIVEN a knowledge graph exists AND <code>project.gitCommitHash</code> matches <code>git log -1 --format=%H -- .</code> WHEN the orchestrator reaches "Explore project context" THEN it greps the graph for the feature's keywords and surfaces relevant node names, summaries, and edges as seed context before normal file exploration.</li>
+        <li>GIVEN the graph is missing OR stale WHEN the orchestrator reaches "Explore project context" THEN it notes this in one line and falls back to normal file exploration without dispatching any worker.</li>
+        <li>GIVEN the graph is fresh AND the grep finds no matching nodes WHEN the collect step completes THEN the orchestrator proceeds to normal file exploration without error.</li>
+        <li>GIVEN any state WHEN the collect step runs THEN no new dispatch point is introduced and no worker is launched.</li>
+      </ul>
+    </div>
+
+    <div class="story">
+      <div class="story-header">
+        <span class="story-id">US-2</span>
+        <span class="story-priority">P1 — Must have</span>
+      </div>
+      <h3>Post-land knowledge graph refresh gate</h3>
+      <p class="narrative">As an orchestrator completing a merge or PR-finish path, I want to offer a human-gated graph refresh after code lands, so that the knowledge graph reflects the new HEAD before the next brainstorming session.</p>
+      <div class="ac-label">Acceptance criteria</div>
+      <ul>
+        <li>GIVEN a branch has just been merged or a PR has just been finished (phase E merge/PR paths) WHEN the orchestrator runs post-land steps THEN it freshness-checks the graph against the new HEAD.</li>
+        <li>GIVEN the graph is stale after merge/PR finish WHEN the freshness check fails THEN the orchestrator presents a yes/no gate to the human before any refresh action.</li>
+        <li>GIVEN the human answers yes THEN the orchestrator dispatches a worker (role: <code>technical_writer</code>, task_type: <code>documentation_knowledge_transfer</code>) via <code>superpowers-orchestrator:dispatch-agent</code> to run <code>/understand</code> in the checkout.</li>
+        <li>GIVEN the worker returns WHEN the orchestrator validates the response THEN it confirms that <code>project.gitCommitHash</code> matches the current HEAD and appends the result to the project ledger.</li>
+        <li>GIVEN the human answers no WHEN the gate is declined THEN the orchestrator skips the refresh and continues without error.</li>
+        <li>GIVEN a keep or discard path WHEN phase E completes THEN no refresh gate is presented.</li>
+        <li>GIVEN no provider pin is set WHEN the refresh worker is dispatched THEN the standard model-lookup ranking is used.</li>
+      </ul>
+    </div>
+
+    <div class="story">
+      <div class="story-header">
+        <span class="story-id">US-3</span>
+        <span class="story-priority">P2 — Should have</span>
+      </div>
+      <h3>Workflow diagram updated</h3>
+      <p class="narrative">As a developer reading <code>docs/orchestrator-workflow.md</code>, I want the diagram to show both new integration points, so that I can understand how graph collection and refresh fit the overall Superpowers flow.</p>
+      <div class="ac-label">Acceptance criteria</div>
+      <ul>
+        <li>GIVEN the orchestrator-workflow.md diagram WHEN updated THEN a new <code>◆ D</code> dispatch node appears after D19 in the phase E "Finish Branch" subtree, labelled as the conditional refresh dispatch.</li>
+        <li>GIVEN the diagram WHEN updated THEN an <code>○</code> inline note appears at the brainstorming "Explore project context" step.</li>
+        <li>GIVEN the diagram WHEN updated THEN existing legend symbols (<code>○</code>, <code>◆ Dn</code>, <code>◇</code>, <code>↻</code>) retain their original meanings.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 5. APPROACH -->
+  <div class="section" id="approach">
+    <h2>5. Approach</h2>
+    <p>The integration deliberately avoids any architectural change to Superpowers. Both pieces reuse patterns already present in the skills:</p>
+    <ul>
+      <li><strong>Piece 1 (COLLECT):</strong> A conditional grep inside an existing checklist item — the same pattern used to read reference files for context. The freshness check is two shell-readable fields; the grep uses <code>grep_search</code>. No new skill, no new dispatch, no structural change.</li>
+      <li><strong>Piece 2 (REFRESH):</strong> A new dispatch node in the finishing skill, guarded by both a path check (merge/PR only) and a human gate — the same pattern as the existing four-option menu's option 2 (create PR). Worker routing follows standard dispatch-agent ranking.</li>
+    </ul>
+
+    <h3>Alternatives considered</h3>
+    <table>
+      <thead>
+        <tr><th>Option</th><th>Why rejected</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Auto-refresh on every branch finish without a gate</td><td>Would run expensive graph builds silently; violates the orchestrator's principle that expensive work always has a human checkpoint.</td></tr>
+        <tr><td>Inline graph build during brainstorming</td><td>Building is heavy; orchestrator work is thin. Would introduce latency and a failure mode into what is currently a fast, stateless step.</td></tr>
+        <tr><td>A new dedicated skill for graph interaction</td><td>Overkill — two small insertions into existing skills are simpler and maintain fewer moving parts than a third skill to invoke.</td></tr>
+        <tr><td>Triggering refresh from a CI hook</td><td>Out of scope for Superpowers; requires infrastructure outside the plugin boundary.</td></tr>
+        <tr><td>Reading the full graph JSON rather than grepping</td><td>Graph JSON can be large; grepping by keyword is proportional to query intent and matches how <code>/understand-chat</code> reads the graph.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6. DESIGN -->
+  <div class="section" id="design">
+    <h2>6. Design</h2>
+
+    <h3>Architecture</h3>
+    <p>Two insertion points in existing skills; no new files created by this feature.</p>
+    <pre><code>brainstorming/SKILL.md
+  Phase B / checklist item 1 "Explore project context"
+    └─ ○ COLLECT: if graph fresh → grep keywords → seed context
+                  if graph missing/stale → note + fallback
+
+finishing-a-development-branch/SKILL.md
+  Phase E / merge path or PR-finish path (after D19)
+    └─ ◇ Human gate: refresh graph?
+         ├─ yes → ◆ D(new): dispatch worker → /understand → validate hash → ledger
+         └─ no  → continue
+
+docs/orchestrator-workflow.md
+  Phase E subtree: new ◆ D node after D19
+  Brainstorming subtree: new ○ annotation</code></pre>
+
+    <h3>Components &amp; Interfaces</h3>
+    <p><strong>Collect step (inline, brainstorming skill):</strong></p>
+    <ul>
+      <li><strong>Input:</strong> feature keywords from the brainstorming topic; filesystem paths <code>.ua/knowledge-graph.json</code> and <code>.understand-anything/knowledge-graph.json</code>.</li>
+      <li><strong>Operation:</strong> read <code>project.gitCommitHash</code>; compare to <code>git log -1 --format=%H -- .</code>; if fresh, grep for each keyword and extract matching node names, summaries, and edge targets.</li>
+      <li><strong>Output:</strong> seed context injected into the brainstorming session; one-line note if missing/stale.</li>
+      <li><strong>Dependencies:</strong> <code>view_file</code> or <code>grep_search</code> on graph JSON; <code>run_command</code> for git log.</li>
+    </ul>
+    <p><strong>Refresh gate + dispatch (finishing skill):</strong></p>
+    <ul>
+      <li><strong>Trigger:</strong> merge/PR-finish path only.</li>
+      <li><strong>Gate:</strong> human yes/no confirmation.</li>
+      <li><strong>Dispatch payload:</strong> <code>role: technical_writer</code>, <code>task_type: documentation_knowledge_transfer</code>, command <code>/understand</code> in the checkout, no provider pin.</li>
+      <li><strong>Validation:</strong> after worker returns, read <code>project.gitCommitHash</code> from rebuilt graph; compare to HEAD; append to ledger.</li>
+      <li><strong>Dependencies:</strong> <code>invoke_subagent</code> (via dispatch-agent skill); <code>view_file</code> on graph JSON; ledger append.</li>
+    </ul>
+
+    <h3>Data Model &amp; Flow</h3>
+    <p>The knowledge graph JSON is authored by the plugin; this spec only reads it. Fields used:</p>
+    <pre><code>{
+  "project": {
+    "gitCommitHash": "&lt;sha&gt;"
+  },
+  "nodes": [
+    { "name": "...", "summary": "...", "edges": [...] }
+  ]
+}</code></pre>
+    <p><strong>Freshness check:</strong></p>
+    <pre><code>graph_hash = graph.project.gitCommitHash
+head_hash  = git log -1 --format=%H -- .
+fresh      = (graph_hash == head_hash)</code></pre>
+
+    <h3>Error Handling</h3>
+    <table>
+      <thead>
+        <tr><th>Scenario</th><th>Handling</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Graph file does not exist</td><td>Note "no graph found" in one line; fall back to normal file exploration (collect) or skip refresh gate (finish).</td></tr>
+        <tr><td>Graph JSON is malformed</td><td>Treat as missing; note parse error; continue with fallback.</td></tr>
+        <tr><td><code>git log</code> fails</td><td>Treat graph as stale; note in one line; continue with fallback.</td></tr>
+        <tr><td>Refresh worker returns <code>blocked</code> or <code>needs_revision</code></td><td>Note failure in ledger; do not retry; surface to human.</td></tr>
+        <tr><td>Refresh worker succeeds but hash still stale</td><td>Note mismatch in ledger; surface to human for investigation.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Edge Cases</h3>
+    <ul>
+      <li><strong>Monorepo:</strong> <code>-- .</code> scope on <code>git log</code> limits hash comparison to the project root, preventing false-fresh readings when only other packages changed.</li>
+      <li><strong>Legacy path co-existence:</strong> If both paths exist, <code>.ua/</code> takes precedence. Legacy path only checked if <code>.understand-anything/</code> directory is present.</li>
+      <li><strong>Keep/discard paths:</strong> The gate is skipped entirely; no freshness check is performed.</li>
+      <li><strong>Graph already fresh after merge:</strong> Freshness check passes; no gate is shown; finishing continues normally.</li>
+      <li><strong>Empty grep results:</strong> Not an error; proceed to normal file exploration without comment.</li>
+    </ul>
+  </div>
+
+  <!-- 7. TESTING -->
+  <div class="section" id="testing">
+    <h2>7. Testing Strategy</h2>
+    <div class="callout">
+      <p>All tests are manual inspection scenarios — this feature modifies skill instructions (Markdown), not executable code. Automated tests are not applicable.</p>
+    </div>
+    <h3>US-1 — Collect</h3>
+    <ul>
+      <li>Start brainstorming with a fresh graph → verify seed context surfaces in session notes.</li>
+      <li>Start brainstorming with a stale graph → verify one-line note appears and no dispatch occurs.</li>
+      <li>Start brainstorming with no graph → verify one-line note appears and fallback proceeds.</li>
+      <li>Inspection: review brainstorming skill diff to confirm no new dispatch point was introduced.</li>
+    </ul>
+    <h3>US-2 — Refresh</h3>
+    <ul>
+      <li>Finish branch via merge path with stale graph → verify gate appears; answer yes → verify worker dispatched; verify hash matches HEAD; verify ledger entry.</li>
+      <li>Finish branch via merge path with stale graph → gate appears; answer no → verify skip, no worker dispatched.</li>
+      <li>Finish branch via keep path → verify gate is absent.</li>
+      <li>Finish branch via discard path → verify gate is absent.</li>
+      <li>Inspection: review finishing skill diff to confirm gate only fires on merge/PR paths.</li>
+    </ul>
+    <h3>US-3 — Diagram</h3>
+    <ul>
+      <li>Open <code>docs/orchestrator-workflow.md</code> after implementation; verify new <code>◆ D</code> node appears after D19; verify <code>○</code> annotation at brainstorming collect step; verify legend semantics unchanged.</li>
+    </ul>
+  </div>
+
+  <!-- 8. SUCCESS CRITERIA -->
+  <div class="section" id="success">
+    <h2>8. Success Criteria</h2>
+    <ul class="sc-list">
+      <li><span class="sc-num">SC-1</span> When a fresh knowledge graph is present, the brainstorming session notes contain at least one graph-derived node name or summary without any manual graph read by the human.</li>
+      <li><span class="sc-num">SC-2</span> No new dispatch point is introduced into the brainstorming flow; the collect step adds zero orchestrator turns.</li>
+      <li><span class="sc-num">SC-3</span> After a merge or PR finish on a project with understand-anything installed, the human is presented with a yes/no graph-refresh gate before the session ends.</li>
+      <li><span class="sc-num">SC-4</span> On yes, a refresh worker is dispatched and returns; the graph's <code>project.gitCommitHash</code> matches the merged HEAD within the same session.</li>
+      <li><span class="sc-num">SC-5</span> Keep and discard finishing paths complete without presenting the refresh gate.</li>
+      <li><span class="sc-num">SC-6</span> <code>docs/orchestrator-workflow.md</code> contains the new <code>◆ D</code> node and <code>○</code> annotation with no change to existing legend symbols.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">Superpowers Orchestrator · Design Spec · 2026-07-25 · status: draft</div>
+</footer>
+
+</body>
+</html>
