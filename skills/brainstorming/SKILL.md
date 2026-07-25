@@ -21,7 +21,11 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, recent commits
+1. **Explore project context** — check files, docs, recent commits, then collect graph context inline and best-effort before normal file exploration:
+   - Resolve the graph path read-only: use `.ua/knowledge-graph.json` when present; otherwise use `.understand-anything/knowledge-graph.json` only when `.understand-anything/` exists. If neither graph exists, note `Knowledge graph missing or stale; continuing with file exploration.` and continue.
+   - Compare `project.gitCommitHash` with `git log -1 --format=%H -- .`. If the graph is malformed, `git log` fails, or the hashes differ, note `Knowledge graph missing or stale; continuing with file exploration.` and continue.
+   - When the graph is fresh, `grep_search` the graph for the feature keywords and seed context from matching node names, summaries, and edge targets. If there are no matches, continue normal file exploration without error.
+   - Never call `/understand`, dispatch a worker, write the graph, or block normal file exploration from this collect step.
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
