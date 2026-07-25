@@ -73,7 +73,7 @@ check "$BS" "product_owner"
 check "$BS" "never talks to the human"
 fenced "$BS"
 
-# Lifecycle tree: every D1-D22 dispatch is an exact three-line marker block.
+# Lifecycle tree: every D1-D23 dispatch is an exact three-line marker block.
 PK="$ROOT/skills/project-kickoff/SKILL.md"
 check_dispatch "$PK" D1 "four distinct dispatches" "role: business_analyst" "task_type: discovery_research" "research domains"
 check_dispatch "$PK" D2 "four distinct dispatches" "role: business_analyst" "task_type: discovery_research" "research domains"
@@ -101,11 +101,12 @@ check_dispatch "$SDD" D18 "role: software_engineer" "task_type: implementation_c
 
 check_dispatch "$FB" D19 "role: devops_engineer" "task_type: release_deployment" "selected finish path" "context.constraints" "HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>" "exact discard confirmation" "chosen option"
 SR="$ROOT/skills/sprint-retrospective/SKILL.md"
-check_dispatch "$SR" D20 "role: agile_coach" "task_type: retrospective_process_improvement" "process review"
+check_dispatch "$SR" D21 "role: agile_coach" "task_type: retrospective_process_improvement" "process review"
 WS="$ROOT/skills/writing-skills/SKILL.md"
-check_dispatch "$WS" D21 "role: software_engineer" "task_type: implementation_coding" "human-approved skill improvement" "writing-skills"
+check_dispatch "$WS" D22 "role: software_engineer" "task_type: implementation_coding" "human-approved skill improvement" "writing-skills"
 BR="$ROOT/skills/backlog-refinement/SKILL.md"
-check_dispatch "$BR" D22 "role: product_owner" "task_type: backlog_refinement_prioritization" "propose ordering and grooming" "human approves"
+check_dispatch "$BR" D23 "role: product_owner" "task_type: backlog_refinement_prioritization" "propose ordering and grooming" "human approves"
+check_dispatch "$FB" D20 "role: technical_writer" "task_type: documentation_knowledge_transfer" "no provider pin" "/understand"
 
 [ "$fail" -eq 0 ] && echo "PASS test-dispatch-completeness"
 exit $fail

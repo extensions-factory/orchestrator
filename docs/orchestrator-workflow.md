@@ -43,6 +43,7 @@ SUPERPOWERS ORCHESTRATOR
 ├── B. Feature/change in an existing project
 │   └── brainstorming
 │       ├── ○ inspect project context
+│       │      ○ collect fresh graph matches inline; missing, stale, malformed, or no matches → normal file exploration
 │       ├── ○ ask one question at a time
 │       ├── ○ present two or three approaches
 │       ├── ◇ approve design
@@ -108,28 +109,38 @@ SUPERPOWERS ORCHESTRATOR
 ├── E. Finish Branch
 │   ├── ○ verify test results
 │   ├── ◇ choose merge, PR, keep, or discard
-│   └── ◆ D19 execute the selected finish path
-│          role: devops_engineer
-│          task_type: release_deployment
-│          ├── Git mechanics
-│          ├── PR body and gh pr create
-│          ├── roadmap release update
-│          └── worktree cleanup
+│   ├── ◆ D19 execute the selected finish path
+│   │      role: devops_engineer
+│   │      task_type: release_deployment
+│   │      ├── Git mechanics
+│   │      ├── PR body and gh pr create
+│   │      ├── roadmap release update
+│   │      └── worktree cleanup
+│   ├── merge or PR finished?
+│   │   ├── no (keep/discard) → continue
+│   │   └── yes → ○ freshness-check knowledge graph
+│   │       ├── fresh, missing, or malformed → continue
+│   │       └── stale → ◇ refresh graph?
+│   │           ├── no → continue
+│   │           └── yes → ◆ D20 refresh knowledge graph [conditional]
+│   │                  role: technical_writer
+│   │                  task_type: documentation_knowledge_transfer
+│   └── continue
 │
 ├── F. Sprint Retrospective
 │   ├── ○ calculate metrics from ledger.jsonl
-│   ├── ◆ D20 process review
+│   ├── ◆ D21 process review
 │   │      role: agile_coach
 │   │      task_type: retrospective_process_improvement
 │   ├── ◇ approve process improvements
 │   └── approved skill improvement?
-│       └── ◆ D21 edit skill
+│       └── ◆ D22 edit skill
 │              role: software_engineer
 │              task_type: implementation_coding
 │
 └── G. Backlog Refinement
     ├── ○ read roadmap
-    ├── ◆ D22 propose ordering and grooming
+    ├── ◆ D23 propose ordering and grooming
     │      role: product_owner
     │      task_type: backlog_refinement_prioritization
     ├── ◇ approve proposal
