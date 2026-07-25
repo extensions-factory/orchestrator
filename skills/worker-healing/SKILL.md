@@ -31,7 +31,7 @@ when a dispatch failed because its bridge mangled or terminated the invocation.
 4. **Validate and ledger.** Confirm the worker's regression test and suite
    pass, and confirm the forwarded invocation is no longer mangled. Validate
    the response envelope and record the request/response pair through the
-   normal dispatch-agent ledger flow.
+   normal `superpowers-orchestrator:dispatch-agent` ledger flow.
 5. **Remind the human to release.** Do not release it. In `codex-plugin-cc`,
    release requires `node scripts/bump-version.mjs <version>`, an entry in the
    affected plugin's `CHANGELOG.md`, and a GitHub push. The orchestrator must
