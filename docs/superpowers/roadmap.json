@@ -5,11 +5,11 @@
     "feature": "Knowledge graph context seeding",
     "title": "Graph-aware brainstorming context",
     "description": "Orchestrator greps a fresh knowledge graph for feature keywords at the 'Explore project context' step to seed brainstorming with pre-built node names, summaries, and edges.",
-    "status": "open",
+    "status": "released",
     "spec": "specs/2026-07-25-understand-anything-integration-design.md",
-    "plan": null,
+    "plan": "plans/2026-07-25-understand-anything-integration.md",
     "created": "2026-07-25",
-    "completed": null
+    "completed": "2026-07-25"
   },
   {
     "slug": "ua-integration--post-land-graph-refresh",
@@ -17,11 +17,11 @@
     "feature": "Post-land knowledge graph refresh",
     "title": "Post-land knowledge graph refresh gate",
     "description": "After a merge or PR finish, the orchestrator freshness-checks the graph, presents a human yes/no gate, and dispatches a worker to rebuild the graph on confirmation.",
-    "status": "open",
+    "status": "released",
     "spec": "specs/2026-07-25-understand-anything-integration-design.md",
-    "plan": null,
+    "plan": "plans/2026-07-25-understand-anything-integration.md",
     "created": "2026-07-25",
-    "completed": null
+    "completed": "2026-07-25"
   },
   {
     "slug": "ua-integration--workflow-diagram",
@@ -29,10 +29,10 @@
     "feature": "Post-land knowledge graph refresh",
     "title": "Workflow diagram updated",
     "description": "Add a ◆ D dispatch node after D19 in the phase E diagram and an ○ inline note at the brainstorming collect step in docs/orchestrator-workflow.md.",
-    "status": "open",
+    "status": "released",
     "spec": "specs/2026-07-25-understand-anything-integration-design.md",
-    "plan": null,
+    "plan": "plans/2026-07-25-understand-anything-integration.md",
     "created": "2026-07-25",
-    "completed": null
+    "completed": "2026-07-25"
   }
 ]
