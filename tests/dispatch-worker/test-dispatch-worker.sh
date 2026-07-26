@@ -29,13 +29,17 @@ check '`low|medium|high`'
 PLUGIN="$TMP/plugin"
 mkdir -p "$PLUGIN/scripts"
 cat > "$PLUGIN/scripts/codex-companion.mjs" <<'FAKE'
-import { appendFileSync } from "node:fs";
+import { appendFileSync, existsSync } from "node:fs";
 
 const [command, ...args] = process.argv.slice(2);
 if (process.env.FAKE_TRACE) appendFileSync(process.env.FAKE_TRACE, `${command} ${args.join(" ")}\n`);
 if (command === "task") {
   console.log("Queued task-fixture-1: Codex Task.");
 } else if (command === "status") {
+  if (process.env.FAKE_JOB_FILE && !existsSync(process.env.FAKE_JOB_FILE)) {
+    console.error("job file missing before wait");
+    process.exit(2);
+  }
   const mode = process.env.FAKE_CASE;
   const status = mode === "long" ? "running" : mode === "killed" ? "killed" : mode === "future" ? "archived" : "completed";
   console.log(JSON.stringify({id: "task-fixture-1", status, phase: status}));
@@ -107,5 +111,20 @@ check 'Output begins TERMINAL -> return that line verbatim. Stop.'
 check 'Output begins PENDING  -> run the RESUME command printed beneath it. Repeat.'
 check 'Return nothing else. Do not read files, summarize, or run any other command.'
 check 'COMMAND:'
+
+work="$TMP/crash"
+mkdir -p "$work"
+printf '{}\n' > "$work/turn-1-request.json"
+printf 'bounded prompt\n' > "$work/turn-1-prompt.txt"
+output="$(FAKE_CASE=happy FAKE_JOB_FILE="$work/turn-1-job.txt" node "$SCRIPT" \
+  --provider codex \
+  --plugin-root "$PLUGIN" \
+  --request "$work/turn-1-request.json" \
+  --prompt "$work/turn-1-prompt.txt" \
+  --model gpt-5.6-sol \
+  --effort high)"
+assert_contains "$output" "TERMINAL completed"
+check 'node scripts/dispatch-worker.mjs --job $(cat turn-N-job.txt) ...<same flags>'
+check 'If haiku returns no `TERMINAL` line'
 
 echo "PASS test-dispatch-worker"
