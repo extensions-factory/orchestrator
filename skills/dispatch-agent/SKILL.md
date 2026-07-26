@@ -51,6 +51,14 @@ Before sending, verify the target `agent` is actually reachable — a provider t
 
 If the chosen agent is **not ready**, apply the degradation ladder (walk down `recommended_models[]` to the next entry whose mapped agent is ready) rather than emitting a call that blocks.
 
+### Step 4a: Read the provider rescue doc
+
+For a Codex or Antigravity rescue dispatch, read `<plugin-root>/<provider>/<ver>/commands/rescue.md` before building the command. Extract the flag surface, effort enum, model aliases, plugin root, and profile policy. Cache this read once per provider per session.
+
+Ignore the entire "Execution mode" section. It instructs the slash-command forwarder and must not determine whether the companion receives `--background`.
+
+Validate the effort from `model-lookup.sh` against the provider doc: Codex accepts only `none|minimal|low|medium|high|xhigh`; Antigravity accepts only `low|medium|high`. Pass a resolved model alias verbatim, and pass `--profile` only when an existing profile was explicitly selected; never invent a profile.
+
 4. **Send** via the bridge matching `agent`:
    - `claude` → the Agent tool with `permissionMode: bypassPermissions`, prompt = `"ROLE: subagent\n" + <request JSON>`. The request contract remains the authority boundary.
    - If the resolved `agent` is `codex`, `task_type` selects exactly one command:
