@@ -38,7 +38,7 @@ roadmap_feature_parity(){
     <(awk '/<section class="section" data-section>/{section=1; next} section && /<\/section>/{section=0} section && /<h2>/{gsub(/.*<h2>|<\/h2>.*/, ""); print}' "$1" | sort) \
     >/dev/null || { echo "[FAIL] $1 card and section feature names differ"; fail=1; }
 }
-roadmap_feature_parity "$ROOT/assets/roadmap.html"
+roadmap_feature_parity "$ROOT/docs/superpowers/ROADMAP.html"
 check "$ROOT/skills/brainstorming/roadmap.md" "roadmap.json"
 check "$ROOT/assets/roadmap.html" "data-status=\"released\""
 [ "$fail" -eq 0 ] && echo "PASS test-plan-templates"
