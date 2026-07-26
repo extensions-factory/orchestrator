@@ -101,4 +101,11 @@ assert_contains "$output" "TERMINAL failed wrapper invalid---job-task-fixture-1;
 output="$(run_case future)"
 assert_contains "$output" "TERMINAL failed archived"
 
+check 'Step 4c: Invoke the haiku forwarder'
+check 'Run the command given below. Then:'
+check 'Output begins TERMINAL -> return that line verbatim. Stop.'
+check 'Output begins PENDING  -> run the RESUME command printed beneath it. Repeat.'
+check 'Return nothing else. Do not read files, summarize, or run any other command.'
+check 'COMMAND:'
+
 echo "PASS test-dispatch-worker"

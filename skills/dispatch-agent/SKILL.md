@@ -59,6 +59,20 @@ Ignore the entire "Execution mode" section. It instructs the slash-command forwa
 
 Validate the effort from `model-lookup.sh` against the provider doc: Codex accepts only `none|minimal|low|medium|high|xhigh`; Antigravity accepts only `low|medium|high`. Pass a resolved model alias verbatim, and pass `--profile` only when an existing profile was explicitly selected; never invent a profile.
 
+### Step 4c: Invoke the haiku forwarder
+
+Spawn an Agent with `model: haiku` and give it only this instruction, replacing the final line with the literal command from Step 4b:
+
+```text
+Run the command given below. Then:
+- Output begins TERMINAL -> return that line verbatim. Stop.
+- Output begins PENDING  -> run the RESUME command printed beneath it. Repeat.
+Return nothing else. Do not read files, summarize, or run any other command.
+
+COMMAND:
+<literal command string>
+```
+
 4. **Send** via the bridge matching `agent`:
    - `claude` → the Agent tool with `permissionMode: bypassPermissions`, prompt = `"ROLE: subagent\n" + <request JSON>`. The request contract remains the authority boundary.
    - If the resolved `agent` is `codex`, `task_type` selects exactly one command:
