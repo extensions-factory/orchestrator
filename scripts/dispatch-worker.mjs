@@ -6,6 +6,14 @@ import { fileURLToPath } from "node:url";
 
 const ACTIVE = new Set(["queued", "running"]);
 const WAIT_TIMEOUT_MS = "570000";
+const DEFAULT_MAX_WALL_MS = 60 * 60 * 1000;
+
+function maxWallMs(values) {
+  if (values["max-wall-ms"] === undefined) return DEFAULT_MAX_WALL_MS;
+  const parsed = Number(values["max-wall-ms"]);
+  if (!Number.isInteger(parsed) || parsed <= 0) throw new Error("--max-wall-ms must be a positive integer");
+  return parsed;
+}
 
 function parseArgs(argv) {
   const values = {};
@@ -73,7 +81,8 @@ function resumeLine(values, jobId) {
     "--effort", values.effort,
   ];
   if (values.profile) flags.push("--profile", values.profile);
-  return `RESUME node scripts/dispatch-worker.mjs --job ${jobId} ${flags.map(shellQuote).join(" ")}`;
+  if (values["max-wall-ms"]) flags.push("--max-wall-ms", values["max-wall-ms"]);
+  return `RESUME node scripts/dispatch-worker.mjs --job ${shellQuote(jobId)} ${flags.map(shellQuote).join(" ")}`;
 }
 
 export function main(argv) {
@@ -104,6 +113,11 @@ export function main(argv) {
 
     const state = statusFrom(runCompanion(companion, ["status", jobId, "--wait", "--timeout-ms", WAIT_TIMEOUT_MS]));
     if (ACTIVE.has(state.status)) {
+      const createdAt = Date.parse(state.createdAt);
+      if (Number.isFinite(createdAt) && Date.now() - createdAt >= maxWallMs(values)) {
+        console.log(`TERMINAL failed timeout ${jobId}`);
+        return;
+      }
       console.log(`PENDING ${jobId}\n${resumeLine(values, jobId)}`);
       return;
     }

@@ -41,8 +41,13 @@ if (command === "task") {
     process.exit(2);
   }
   const mode = process.env.FAKE_CASE;
-  const status = mode === "long" ? "running" : mode === "killed" ? "killed" : mode === "future" ? "archived" : "completed";
-  console.log(JSON.stringify({id: "task-fixture-1", status, phase: status}));
+  const status =
+    mode === "long" || mode === "runaway" ? "running" :
+    mode === "killed" ? "killed" :
+    mode === "future" ? "archived" :
+    "completed";
+  const createdAt = mode === "runaway" ? "1970-01-01T00:00:00.000Z" : new Date().toISOString();
+  console.log(JSON.stringify({id: "task-fixture-1", status, phase: status, createdAt}));
 } else if (command === "result") {
   if (process.env.FAKE_CASE === "malformed") console.log("worker returned prose");
   else console.log('worker prose\n```json\n{"message_type":"deliver","output":{"status":"done"}}\n```');
@@ -77,7 +82,7 @@ output="$(run_case killed)"
 assert_contains "$output" "TERMINAL failed killed"
 
 output="$(run_case long)"
-assert_contains "$output" $'PENDING task-fixture-1\nRESUME node scripts/dispatch-worker.mjs --job task-fixture-1'
+assert_contains "$output" $'PENDING task-fixture-1\nRESUME node scripts/dispatch-worker.mjs --job \'task-fixture-1\''
 
 TRACE="$TMP/resume.trace"
 FAKE_TRACE="$TRACE" FAKE_CASE=long node "$SCRIPT" \
@@ -126,5 +131,30 @@ output="$(FAKE_CASE=happy FAKE_JOB_FILE="$work/turn-1-job.txt" node "$SCRIPT" \
 assert_contains "$output" "TERMINAL completed"
 check 'node scripts/dispatch-worker.mjs --job $(cat turn-N-job.txt) ...<same flags>'
 check 'If haiku returns no `TERMINAL` line'
+
+work="$TMP/runaway"
+mkdir -p "$work"
+printf '{}\n' > "$work/turn-1-request.json"
+printf 'bounded prompt\n' > "$work/turn-1-prompt.txt"
+output="$(FAKE_CASE=runaway node "$SCRIPT" \
+  --provider codex \
+  --plugin-root "$PLUGIN" \
+  --request "$work/turn-1-request.json" \
+  --prompt "$work/turn-1-prompt.txt" \
+  --model gpt-5.6-sol \
+  --effort high \
+  --max-wall-ms 1)"
+[[ "$output" == "TERMINAL failed timeout task-fixture-1" ]] || fail "runaway output: $output"
+
+output="$(FAKE_CASE=long node "$SCRIPT" \
+  --provider codex \
+  --plugin-root "$PLUGIN" \
+  --request "$TMP/long/turn-1-request.json" \
+  --prompt "$TMP/long/turn-1-prompt.txt" \
+  --model gpt-5.6-sol \
+  --effort high \
+  --max-wall-ms 3600000)"
+assert_contains "$output" "PENDING task-fixture-1"
+assert_contains "$output" "'--max-wall-ms' '3600000'"
 
 echo "PASS test-dispatch-worker"
