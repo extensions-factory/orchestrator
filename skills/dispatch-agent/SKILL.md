@@ -96,9 +96,11 @@ COMMAND:
 <literal command string>
 ```
 
-5. **Step 5: Receive one terminal line.**
+5. **Receive one terminal line.**
 
-For Codex, Antigravity, and claude worker results, require `TERMINAL <status> <path>`. Read the embedded path from that line. Pass that path unchanged to Step 6 validation.
+For Codex RESCUE results, Antigravity RESCUE results, and claude worker results, require `TERMINAL <status> <path>`. Read the embedded path from that line. Pass that path unchanged to Step 6 validation.
+
+Codex `code_review_quality` and `security_review` bypass the `TERMINAL` receive entirely; their review-output adapter in `references/codex-worker-protocol.md` persists stdout verbatim to `.superpowers/<task>/turn-<turn>-review.md` and constructs the response envelope before Step 6 validation.
 
 `TERMINAL malformed <path-to-turn-N-result-raw.txt>` reissues once to the same provider with a format reminder; a second malformed result becomes `blocked`. `TERMINAL failed <status> <reason>` follows the existing degradation ladder.
 
