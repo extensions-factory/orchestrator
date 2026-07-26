@@ -174,4 +174,26 @@ output="$(FAKE_CASE=long node "$SCRIPT" \
 assert_contains "$output" "PENDING task-fixture-1"
 assert_contains "$output" "'--max-wall-ms' '3600000'"
 
+SEND_RECEIVE="$(sed -n '/^4\. \*\*Prepare and send/,/^6\. \*\*Validate/p' "$SKILL")"
+
+check_step() {
+  local needle="$1"
+  grep -Fq -- "$needle" <<< "$SEND_RECEIVE" || fail "missing send/receive contract: $needle"
+}
+check_absent() {
+  local needle="$1"
+  ! grep -Fq -- "$needle" <<< "$SEND_RECEIVE" || fail "obsolete send/receive contract remains: $needle"
+}
+
+check_step 'Step 4b: Build the literal command string'
+check_step 'node scripts/dispatch-worker.mjs \'
+check_step '--request .superpowers/<task>/turn-N-request.json \'
+check_step '--prompt .superpowers/<task>/turn-N-prompt.txt \'
+check_step 'Step 5: Receive one terminal line'
+check_step 'Pass that path unchanged to Step 6 validation.'
+check_absent 'poll `/codex:status`'
+check_absent 'run `/codex:result`'
+check_absent 'poll `/antigravity:status'
+check_absent 'run `/antigravity:result'
+
 echo "PASS test-dispatch-worker"
