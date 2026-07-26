@@ -42,12 +42,14 @@ if (command === "task") {
   }
   const mode = process.env.FAKE_CASE;
   const status =
-    mode === "long" || mode === "runaway" ? "running" :
+    mode === "long" || mode === "runaway" || mode === "no-created-at" ? "running" :
     mode === "killed" ? "killed" :
     mode === "future" ? "archived" :
     "completed";
   const createdAt = mode === "runaway" ? "1970-01-01T00:00:00.000Z" : new Date().toISOString();
-  console.log(JSON.stringify({id: "task-fixture-1", status, phase: status, createdAt}));
+  const state = {id: "task-fixture-1", status, phase: status, createdAt};
+  if (mode === "no-created-at") delete state.createdAt;
+  console.log(JSON.stringify(state));
 } else if (command === "result") {
   if (process.env.FAKE_CASE === "malformed") console.log("worker returned prose");
   else console.log('worker prose\n```json\n{"message_type":"deliver","output":{"status":"done"}}\n```');
@@ -145,6 +147,21 @@ output="$(FAKE_CASE=runaway node "$SCRIPT" \
   --effort high \
   --max-wall-ms 1)"
 [[ "$output" == "TERMINAL failed timeout task-fixture-1" ]] || fail "runaway output: $output"
+
+work="$TMP/no-created-at"
+mkdir -p "$work"
+printf '{}\n' > "$work/turn-1-request.json"
+printf 'bounded prompt\n' > "$work/turn-1-prompt.txt"
+output="$(FAKE_CASE=no-created-at node "$SCRIPT" \
+  --provider codex \
+  --plugin-root "$PLUGIN" \
+  --request "$work/turn-1-request.json" \
+  --prompt "$work/turn-1-prompt.txt" \
+  --model gpt-5.6-sol \
+  --effort high)"
+[[ "$output" == "TERMINAL failed no-createdAt task-fixture-1" ]] || fail "no-created-at output: $output"
+[[ "$output" != *"PENDING "* ]] || fail "no-created-at emitted PENDING: $output"
+[[ "$output" != *"RESUME "* ]] || fail "no-created-at emitted RESUME: $output"
 
 output="$(FAKE_CASE=long node "$SCRIPT" \
   --provider codex \

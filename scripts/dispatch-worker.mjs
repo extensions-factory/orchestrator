@@ -81,7 +81,7 @@ function resumeLine(values, jobId) {
     "--effort", values.effort,
   ];
   if (values.profile) flags.push("--profile", values.profile);
-  if (values["max-wall-ms"]) flags.push("--max-wall-ms", values["max-wall-ms"]);
+  if (values["max-wall-ms"] !== undefined) flags.push("--max-wall-ms", values["max-wall-ms"]);
   return `RESUME node scripts/dispatch-worker.mjs --job ${shellQuote(jobId)} ${flags.map(shellQuote).join(" ")}`;
 }
 
@@ -114,7 +114,11 @@ export function main(argv) {
     const state = statusFrom(runCompanion(companion, ["status", jobId, "--wait", "--timeout-ms", WAIT_TIMEOUT_MS]));
     if (ACTIVE.has(state.status)) {
       const createdAt = Date.parse(state.createdAt);
-      if (Number.isFinite(createdAt) && Date.now() - createdAt >= maxWallMs(values)) {
+      if (!Number.isFinite(createdAt)) {
+        console.log(`TERMINAL failed no-createdAt ${jobId}`);
+        return;
+      }
+      if (Date.now() - createdAt >= maxWallMs(values)) {
         console.log(`TERMINAL failed timeout ${jobId}`);
         return;
       }
