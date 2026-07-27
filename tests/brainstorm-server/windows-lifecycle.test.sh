@@ -21,6 +21,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${SUPERPOWERS_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 START_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/start-server.sh"
+RUN_ID="20260727T141500Z-brainstorm-test"
 STOP_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/stop-server.sh"
 SERVER_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/server.cjs"
 
@@ -167,7 +168,7 @@ exit 0
 FAKENODE
   chmod +x "$FAKE_NODE_DIR/node"
 
-  captured=$(PATH="$FAKE_NODE_DIR:$PATH" bash "$START_SCRIPT" --project-dir "$TEST_DIR/session" --foreground 2>/dev/null || true)
+  captured=$(PATH="$FAKE_NODE_DIR:$PATH" bash "$START_SCRIPT" --project-dir "$TEST_DIR/session" --run-id "$RUN_ID" --foreground 2>/dev/null || true)
   owner_pid_value=$(echo "$captured" | grep "CAPTURED_OWNER_PID=" | head -1 | sed 's/CAPTURED_OWNER_PID=//')
 
   if [[ "$owner_pid_value" == "" || "$owner_pid_value" == "__UNSET__" ]]; then
@@ -205,7 +206,7 @@ FAKENODE
   chmod +x "$FAKE_NODE_DIR/node"
 
   # Run WITHOUT --foreground flag — Windows should auto-detect
-  captured=$(PATH="$FAKE_NODE_DIR:$PATH" bash "$START_SCRIPT" --project-dir "$TEST_DIR/session2" 2>/dev/null || true)
+  captured=$(PATH="$FAKE_NODE_DIR:$PATH" bash "$START_SCRIPT" --project-dir "$TEST_DIR/session2" --run-id "$RUN_ID" 2>/dev/null || true)
 
   if echo "$captured" | grep -q "FOREGROUND_MODE=true"; then
     pass "Windows auto-detects foreground mode"

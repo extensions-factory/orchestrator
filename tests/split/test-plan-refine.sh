@@ -16,7 +16,7 @@ check "$REQUEST" "riso-tech:orchestrator-split — new skill, no upstream counte
 check "$REQUEST" "Dispatch the plan reviewer via \`superpowers-orchestrator:dispatch-agent\`"
 check "$REQUEST" "role: tech_lead"
 check "$REQUEST" "task_type: code_review_quality"
-check "$REQUEST" ".superpowers/ledger.jsonl"
+check "$REQUEST" "active run's \`ledger.jsonl\`"
 check "$REQUEST" "provider diversity"
 check "$REQUEST" "[plan-reviewer.md](plan-reviewer.md)"
 absent "$REQUEST" "START SDLC: code_review_quality"

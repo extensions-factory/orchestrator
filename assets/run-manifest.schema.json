@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://superpowers.local/run-manifest.schema.json",
+  "title": "Superpowers workflow run manifest",
+  "type": "object",
+  "required": ["run_id", "topic", "status", "created_at", "phases", "artifacts", "tasks"],
+  "properties": {
+    "schema": {"const": "assets/run-manifest.schema.json"},
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "topic": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "status": {"enum": ["active", "done", "blocked"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "directory", "status"],
+        "properties": {
+          "name": {"enum": ["discovery", "design", "plan", "execution", "finish", "retrospective"]},
+          "directory": {"type": "string"},
+          "status": {"enum": ["pending", "active", "done", "blocked"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "phase", "kind", "producer"],
+        "properties": {
+          "path": {"type": "string"},
+          "phase": {"type": "string"},
+          "kind": {"type": "string"},
+          "producer": {"type": "string"},
+          "template": {"type": ["string", "null"]},
+          "status": {"enum": ["planned", "created", "validated"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task", "status", "detail"],
+        "properties": {
+          "task": {"type": "string"},
+          "status": {"enum": ["pending", "active", "done", "blocked"]},
+          "detail": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

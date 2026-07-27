@@ -77,7 +77,7 @@ grep -Fq 'Never substitute one command family for another.' "$WORKERS"
 grep -Fq 'Without `--profile`, each fresh task uses the plugin scheduler' "$WORKERS"
 
 grep -Fq 'Missing `base_sha` is a malformed request' "$PROTOCOL"
-grep -Fq '.superpowers/<task>/turn-<turn>-review.md' "$PROTOCOL"
+grep -Fq '<turn-dir>/review.md' "$PROTOCOL"
 grep -Fq 'Persist stdout verbatim' "$PROTOCOL"
 grep -Fq 'Review commands do not use the rescue prompt contract' "$PROTOCOL"
 

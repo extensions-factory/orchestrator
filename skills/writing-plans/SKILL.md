@@ -17,11 +17,11 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Git ownership:** Implementation workers never commit or push; they edit files, run tests, and report. The orchestrator owns Git bookkeeping after each successful worker response or successful inline task execution with passing tests.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/superpowers/features/<feature-slug>/plan.md`
 - (User preferences for plan location override this default)
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D10` dispatches plan authoring through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: sprint_planning`; from the approved spec, the worker writes the plan and HTML companion using `skills/writing-plans/plan-template.md`, rendering checkboxes as a readable checklist and regenerating the companion whenever the plan changes, then returns both for the orchestrator's Self-Review before the Execute-or-Refine choice; write them inline only if the harness has no subagent capability at all.
+**Dispatch:** `D10` dispatches plan authoring through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: sprint_planning`; from the approved spec, the worker writes the plan and HTML companion, using `skills/writing-plans/plan-template.md` for the plan and `skills/brainstorming/document-companion-template.html` for the HTML, rendering checkboxes as a readable checklist and regenerating the companion whenever the plan changes, then returns both for the orchestrator's Self-Review before the Execute-or-Refine choice; write them inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Scope Check
@@ -101,7 +101,7 @@ Each task ends with a labeled orchestrator-only Git bookkeeping block. It preser
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-orchestrator:subagent-driven-development when the harness supports subagents; use superpowers-orchestrator:executing-plans only when the harness has no subagent capability. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 <!-- riso-tech:orchestrator-split START -->
-**Spec:** `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+**Spec:** `docs/superpowers/features/<feature-slug>/design.md`
 <!-- riso-tech:orchestrator-split END -->
 
 **Goal:** [One sentence describing what this builds]

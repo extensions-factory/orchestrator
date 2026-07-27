@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
@@ -89,16 +89,16 @@ export function main(argv) {
   try {
     const values = parseArgs(argv);
     const companion = join(resolve(values["plugin-root"]), "scripts", `${values.provider}-companion.mjs`);
-    const requestName = values.request.match(/turn-(\d+)-request\.json$/);
-    if (!requestName) throw new Error("--request must end in turn-N-request.json");
-    const turn = requestName[1];
     const taskDir = dirname(resolve(values.request));
+    const turnName = basename(taskDir).match(/^(\d{3})-[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    if (basename(values.request) !== "request.json" || !turnName)
+      throw new Error("--request must be request.json inside NNN-purpose");
     const displayDir = dirname(values.request);
-    const jobPath = join(taskDir, `turn-${turn}-job.txt`);
-    const responsePath = join(taskDir, `turn-${turn}-response.json`);
-    const rawPath = join(taskDir, `turn-${turn}-result-raw.txt`);
-    const displayResponse = join(displayDir, `turn-${turn}-response.json`);
-    const displayRaw = join(displayDir, `turn-${turn}-result-raw.txt`);
+    const jobPath = join(taskDir, "job.txt");
+    const responsePath = join(taskDir, "response.json");
+    const rawPath = join(taskDir, "result-raw.txt");
+    const displayResponse = join(displayDir, "response.json");
+    const displayRaw = join(displayDir, "result-raw.txt");
 
     let jobId = values.job;
     if (jobId && !/^task-[A-Za-z0-9-]+$/.test(jobId)) throw new Error(`invalid --job ${jobId}`);

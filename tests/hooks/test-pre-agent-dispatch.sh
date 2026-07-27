@@ -100,7 +100,7 @@ fi
 
 post_review_output="$(echo '{"tool_name":"Skill","tool_input":{"skill":"codex:review"}}' | bash "$POST_HOOK_UNDER_TEST")"
 post_review_context="$(printf '%s' "$post_review_output" | jq -r '.hookSpecificOutput.additionalContext')"
-if [[ "$post_review_context" == *'.superpowers/<task>/turn-<turn>-review.md'* && "$post_review_context" == *'construct'*'response envelope'* ]]; then
+if [[ "$post_review_context" == *'<turn-dir>/review.md'* && "$post_review_context" == *'construct response.json'* ]]; then
     pass "post hook enforces the native-review adapter"
 else
     fail "post hook enforces the native-review adapter"
@@ -108,7 +108,7 @@ fi
 
 post_rescue_output="$(echo '{"tool_name":"Skill","tool_input":{"skill":"codex:rescue"}}' | bash "$POST_HOOK_UNDER_TEST")"
 post_rescue_context="$(printf '%s' "$post_rescue_output" | jq -r '.hookSpecificOutput.additionalContext')"
-if [[ "$post_rescue_context" == *'.superpowers/<task>/turn-<turn>-response.json'* ]]; then
+if [[ "$post_rescue_context" == *'<turn-dir>/response.json'* ]]; then
     pass "post hook preserves the rescue response path"
 else
     fail "post hook preserves the rescue response path"

@@ -249,6 +249,10 @@ Everything you paste into a dispatch prompt — and everything a subagent
 prints back — stays resident in your context for the rest of the session
 and is re-read on every later turn. Hand artifacts over as files:
 
+Set `SUPERPOWERS_RUN_ID=<workflow-id>` and `SUPERPOWERS_TASK_ID=<task>` on
+every `task-brief` and `review-package` call so both helpers write into the
+same run-scoped task directory.
+
 - **Task brief:** before dispatching an implementer, run this skill's
   `scripts/task-brief PLAN_FILE N` — it extracts the task's full text to a
   uniquely named file and prints the path. Compose the dispatch so the
@@ -260,9 +264,9 @@ and is re-read on every later turn. Hand artifacts over as files:
   any ambiguity you noticed in the brief; (5) the report-file path and
   report contract. Exact values (numbers, magic strings, signatures, test
   cases) appear only in the brief.
-- **Report file:** name the implementer's report file after the brief
-  (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
-  the dispatch prompt. The implementer writes the full report there and
+- **Report file:** use `<run>/40-execution/tasks/<task>/report.md` from
+  [task-report-template.md](task-report-template.md) and put it in the
+  dispatch prompt. The implementer writes the full report there and
   returns only status, files changed, a one-line test summary, and concerns.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
   file, the report file, and the review package — plus the global
@@ -272,23 +276,15 @@ and is re-read on every later turn. Hand artifacts over as files:
 
 ## Durable Progress
 
-Conversation memory does not survive compaction. In real sessions,
-controllers that lost their place have re-dispatched entire completed task
-sequences — the single most expensive failure observed. Track progress in
-a ledger file, not only in todos.
+Conversation memory does not survive compaction. Use the active run's
+`manifest.json` as the single progress source.
 
-- At skill start, check for a ledger:
-  `cat "$(git rev-parse --show-toplevel)/.superpowers/sdd/progress.md"`. Tasks listed there
-  as complete are DONE — do not re-dispatch them; resume at the first task
-  not marked complete.
-- When a task's review comes back clean, append one line to the ledger in
-  the same message as your other bookkeeping:
-  `Task N: complete (commits <base7>..<head7>, review clean)`.
-- The ledger is your recovery map: the commits it names exist in git even
-  when your context no longer remembers creating them. After compaction,
-  trust the ledger and `git log` over your own recollection.
-- `git clean -fdx` will destroy the ledger (it's git-ignored scratch); if
-  that happens, recover from `git log`.
+- At skill start, read `.superpowers/runs/<workflow-id>/manifest.json`. Tasks
+  marked `done` are DONE; resume at the first task not complete.
+- Before dispatch and after a clean review, update status with
+  `node scripts/run-paths.mjs task-status --root <repo-root> --run <workflow-id> --task <task> --status <active|done|blocked> --detail "<evidence>"`.
+- The manifest is the recovery map: trust it and `git log` after compaction.
+- `git clean -fdx` destroys ignored run evidence; recover from Git history.
 
 ## Prompt Templates
 

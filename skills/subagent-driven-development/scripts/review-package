@@ -5,8 +5,8 @@
 # tasks intact.
 #
 # Usage: review-package BASE HEAD [OUTFILE]
-# Default OUTFILE: <repo-root>/.superpowers/sdd/review-<base7>..<head7>.diff
-# (named per range, so a re-review after fixes gets a distinct fresh file).
+# Default OUTFILE:
+# <run>/40-execution/tasks/<task>/reviews/review-<base7>..<head7>.diff
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
@@ -23,7 +23,14 @@ git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&
 if [ $# -eq 3 ]; then
   out=$3
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
+  root=$(git rev-parse --show-toplevel)
+  run_id="${SUPERPOWERS_RUN_ID:?SUPERPOWERS_RUN_ID is required}"
+  task_id="${SUPERPOWERS_TASK_ID:?SUPERPOWERS_TASK_ID is required}"
+  plugin_root="$(cd "$(dirname "$0")/../../.." && pwd)"
+  task_dir="$(node "$plugin_root/scripts/run-paths.mjs" task \
+    --root "$root" --run "$run_id" --phase execution --task "$task_id")"
+  dir="$task_dir/reviews"
+  mkdir -p "$dir"
   out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
 fi
 

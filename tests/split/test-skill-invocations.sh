@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 TARGETS=(
   "$ROOT/skills"
   "$ROOT/hooks"
-  "$ROOT/assets/message-protocol.json"
+  "$ROOT/assets/message-envelope.schema.json"
   "$ROOT/CLAUDE.md"
   "$ROOT/.github/PULL_REQUEST_TEMPLATE.md"
   "$ROOT/docs/orchestrator-workflow.md"

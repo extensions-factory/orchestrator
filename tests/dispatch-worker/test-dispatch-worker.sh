@@ -56,29 +56,50 @@ if (command === "task") {
 }
 FAKE
 
+case_dir() {
+  printf '%s/%s/.superpowers/runs/20260727T141500Z-test/40-execution/tasks/task-%s/turns/001-implement' "$TMP" "$1" "$1"
+}
+
 run_case() {
-  local mode="$1" work="$TMP/$1"
+  local mode="$1" work
+  work="$(case_dir "$mode")"
   mkdir -p "$work"
-  printf '{}\n' > "$work/turn-1-request.json"
-  printf 'bounded prompt\n' > "$work/turn-1-prompt.txt"
+  printf '{}\n' > "$work/request.json"
+  printf 'bounded prompt\n' > "$work/prompt.txt"
   FAKE_CASE="$mode" node "$SCRIPT" \
     --provider codex \
     --plugin-root "$PLUGIN" \
-    --request "$work/turn-1-request.json" \
-    --prompt "$work/turn-1-prompt.txt" \
+    --request "$work/request.json" \
+    --prompt "$work/prompt.txt" \
     --model gpt-5.6-sol \
     --effort high
 }
 
+scoped="$TMP/scoped/.superpowers/runs/20260727T141500Z-test/40-execution/tasks/task-1-build/turns/001-implement"
+mkdir -p "$scoped"
+printf '{}\n' > "$scoped/request.json"
+printf 'bounded prompt\n' > "$scoped/prompt.txt"
+output="$(FAKE_CASE=happy node "$SCRIPT" \
+  --provider codex \
+  --plugin-root "$PLUGIN" \
+  --request "$scoped/request.json" \
+  --prompt "$scoped/prompt.txt" \
+  --model gpt-5.6-sol \
+  --effort high)"
+[[ "$output" == "TERMINAL completed $scoped/response.json" ]] || fail "run-scoped output: $output"
+[[ -s "$scoped/job.txt" ]] || fail "run-scoped job id was not persisted"
+
 output="$(run_case happy)"
-[[ "$output" == "TERMINAL completed $TMP/happy/turn-1-response.json" ]] || fail "happy output: $output"
-node -e 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"))' "$TMP/happy/turn-1-response.json"
-[[ -s "$TMP/happy/turn-1-job.txt" ]] || fail "job id was not persisted"
+happy="$(case_dir happy)"
+[[ "$output" == "TERMINAL completed $happy/response.json" ]] || fail "happy output: $output"
+node -e 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"))' "$happy/response.json"
+[[ -s "$happy/job.txt" ]] || fail "job id was not persisted"
 
 output="$(run_case malformed)"
-[[ "$output" == "TERMINAL malformed $TMP/malformed/turn-1-result-raw.txt" ]] || fail "malformed output: $output"
-grep -Fq 'worker returned prose' "$TMP/malformed/turn-1-result-raw.txt" || fail "raw result not preserved"
-[[ ! -e "$TMP/malformed/turn-1-response.json" ]] || fail "malformed result created a response"
+malformed="$(case_dir malformed)"
+[[ "$output" == "TERMINAL malformed $malformed/result-raw.txt" ]] || fail "malformed output: $output"
+grep -Fq 'worker returned prose' "$malformed/result-raw.txt" || fail "raw result not preserved"
+[[ ! -e "$malformed/response.json" ]] || fail "malformed result created a response"
 
 output="$(run_case killed)"
 assert_contains "$output" "TERMINAL failed killed"
@@ -87,12 +108,13 @@ output="$(run_case long)"
 assert_contains "$output" $'PENDING task-fixture-1\nRESUME node scripts/dispatch-worker.mjs --job \'task-fixture-1\''
 
 TRACE="$TMP/resume.trace"
+long="$(case_dir long)"
 FAKE_TRACE="$TRACE" FAKE_CASE=long node "$SCRIPT" \
   --job task-fixture-1 \
   --provider codex \
   --plugin-root "$PLUGIN" \
-  --request "$TMP/long/turn-1-request.json" \
-  --prompt "$TMP/long/turn-1-prompt.txt" \
+  --request "$long/request.json" \
+  --prompt "$long/prompt.txt" \
   --model gpt-5.6-sol \
   --effort high >/dev/null
 grep -q '^status ' "$TRACE" || fail "resume did not wait"
@@ -102,8 +124,8 @@ output="$(FAKE_CASE=long node "$SCRIPT" \
   --job 'task-fixture-1;echo-pwned' \
   --provider codex \
   --plugin-root "$PLUGIN" \
-  --request "$TMP/long/turn-1-request.json" \
-  --prompt "$TMP/long/turn-1-prompt.txt" \
+  --request "$long/request.json" \
+  --prompt "$long/prompt.txt" \
   --model gpt-5.6-sol \
   --effort high)"
 assert_contains "$output" "TERMINAL failed wrapper invalid---job-task-fixture-1;echo-pwned"
@@ -119,44 +141,44 @@ check 'Output begins PENDING  -> run the RESUME command printed beneath it. Repe
 check 'Return nothing else. Do not read files, summarize, or run any other command.'
 check 'COMMAND:'
 
-work="$TMP/crash"
+work="$(case_dir crash)"
 mkdir -p "$work"
-printf '{}\n' > "$work/turn-1-request.json"
-printf 'bounded prompt\n' > "$work/turn-1-prompt.txt"
-output="$(FAKE_CASE=happy FAKE_JOB_FILE="$work/turn-1-job.txt" node "$SCRIPT" \
+printf '{}\n' > "$work/request.json"
+printf 'bounded prompt\n' > "$work/prompt.txt"
+output="$(FAKE_CASE=happy FAKE_JOB_FILE="$work/job.txt" node "$SCRIPT" \
   --provider codex \
   --plugin-root "$PLUGIN" \
-  --request "$work/turn-1-request.json" \
-  --prompt "$work/turn-1-prompt.txt" \
+  --request "$work/request.json" \
+  --prompt "$work/prompt.txt" \
   --model gpt-5.6-sol \
   --effort high)"
 assert_contains "$output" "TERMINAL completed"
-check 'node scripts/dispatch-worker.mjs --job $(cat turn-N-job.txt) ...<same flags>'
+check 'node scripts/dispatch-worker.mjs --job $(cat <turn-dir>/job.txt) ...<same flags>'
 check 'If haiku returns no `TERMINAL` line'
 
-work="$TMP/runaway"
+work="$(case_dir runaway)"
 mkdir -p "$work"
-printf '{}\n' > "$work/turn-1-request.json"
-printf 'bounded prompt\n' > "$work/turn-1-prompt.txt"
+printf '{}\n' > "$work/request.json"
+printf 'bounded prompt\n' > "$work/prompt.txt"
 output="$(FAKE_CASE=runaway node "$SCRIPT" \
   --provider codex \
   --plugin-root "$PLUGIN" \
-  --request "$work/turn-1-request.json" \
-  --prompt "$work/turn-1-prompt.txt" \
+  --request "$work/request.json" \
+  --prompt "$work/prompt.txt" \
   --model gpt-5.6-sol \
   --effort high \
   --max-wall-ms 1)"
 [[ "$output" == "TERMINAL failed timeout task-fixture-1" ]] || fail "runaway output: $output"
 
-work="$TMP/no-created-at"
+work="$(case_dir no-created-at)"
 mkdir -p "$work"
-printf '{}\n' > "$work/turn-1-request.json"
-printf 'bounded prompt\n' > "$work/turn-1-prompt.txt"
+printf '{}\n' > "$work/request.json"
+printf 'bounded prompt\n' > "$work/prompt.txt"
 output="$(FAKE_CASE=no-created-at node "$SCRIPT" \
   --provider codex \
   --plugin-root "$PLUGIN" \
-  --request "$work/turn-1-request.json" \
-  --prompt "$work/turn-1-prompt.txt" \
+  --request "$work/request.json" \
+  --prompt "$work/prompt.txt" \
   --model gpt-5.6-sol \
   --effort high)"
 [[ "$output" == "TERMINAL failed no-createdAt task-fixture-1" ]] || fail "no-created-at output: $output"
@@ -166,8 +188,8 @@ output="$(FAKE_CASE=no-created-at node "$SCRIPT" \
 output="$(FAKE_CASE=long node "$SCRIPT" \
   --provider codex \
   --plugin-root "$PLUGIN" \
-  --request "$TMP/long/turn-1-request.json" \
-  --prompt "$TMP/long/turn-1-prompt.txt" \
+  --request "$long/request.json" \
+  --prompt "$long/prompt.txt" \
   --model gpt-5.6-sol \
   --effort high \
   --max-wall-ms 3600000)"
@@ -187,12 +209,12 @@ check_absent() {
 
 check_step 'Step 4b: Build the literal command string'
 check_step 'node scripts/dispatch-worker.mjs \'
-check_step '--request .superpowers/<task>/turn-N-request.json \'
-check_step '--prompt .superpowers/<task>/turn-N-prompt.txt \'
+check_step '--request <turn-dir>/request.json \'
+check_step '--prompt <turn-dir>/prompt.txt \'
 check_step 'Receive one terminal line.'
 check_absent 'Step 5: Receive one terminal line'
 check_step 'For Codex RESCUE results, Antigravity RESCUE results, and claude worker results, require `TERMINAL <status> <path>`.'
-check_step 'Codex `code_review_quality` and `security_review` bypass the `TERMINAL` receive entirely; their review-output adapter in `references/codex-worker-protocol.md` persists stdout verbatim to `.superpowers/<task>/turn-<turn>-review.md` and constructs the response envelope before Step 6 validation.'
+check_step 'Codex `code_review_quality` and `security_review` bypass the `TERMINAL` receive entirely; their review-output adapter in `references/codex-worker-protocol.md` persists stdout verbatim to `<turn-dir>/review.md` and constructs `<turn-dir>/response.json` before Step 6 validation.'
 check_step 'Pass that path unchanged to Step 6 validation.'
 check_absent 'poll `/codex:status`'
 check_absent 'run `/codex:result`'

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Resolve and ensure the working-tree directory SDD uses for its short-lived
-# artifacts: task briefs, implementer reports, review packages, and the
-# progress ledger. Print the directory's absolute path.
+# Resolve and ensure the run-scoped execution task directory. Print its
+# absolute path.
 #
 # The workspace lives in the working tree (not under .git/) because Claude Code
 # treats .git/ as a protected path and denies agent writes there — which blocks
@@ -9,14 +8,13 @@
 # .gitignore keeps the workspace out of `git status` and out of accidental
 # commits without modifying any tracked file.
 #
-# Single source of truth for the workspace location, so task-brief and
-# review-package cannot drift to different directories.
-#
 # Usage: sdd-workspace
 set -euo pipefail
 
 root=$(git rev-parse --show-toplevel)
-dir="$root/.superpowers/sdd"
+run_id="${SUPERPOWERS_RUN_ID:?SUPERPOWERS_RUN_ID is required}"
+plugin_root="$(cd "$(dirname "$0")/../../.." && pwd)"
+dir="$(node "$plugin_root/scripts/run-paths.mjs" phase \
+  --root "$root" --run "$run_id" --phase execution)/tasks"
 mkdir -p "$dir"
-printf '*\n' > "$dir/.gitignore"
 cd "$dir" && pwd

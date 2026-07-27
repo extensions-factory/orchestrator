@@ -7,8 +7,8 @@ check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] missing: $2"; fail=1; }; }
 test -f "$SKILL" || { echo "[FAIL] no dispatch-agent/SKILL.md"; exit 1; }
 check "$SKILL" "name: dispatch-agent"
 check "$SKILL" "sdlc-model-routing.json"
-check "$SKILL" "message-protocol.json"
-check "$SKILL" ".superpowers/ledger.jsonl"
+check "$SKILL" "message-envelope.schema.json"
+check "$SKILL" ".superpowers/runs/<workflow-id>/ledger.jsonl"
 check "$SKILL" "provider_diversity"
 check "$SKILL" "Claude Code"          # provider->agent map present
 check "$SKILL" "codex-plugin-cc failover"

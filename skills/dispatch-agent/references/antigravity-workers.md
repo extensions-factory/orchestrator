@@ -30,6 +30,6 @@ Do not add the bridge-owned dangerous-permission flag to the command.
 
 `--background` returns a job ID. Poll `/antigravity:status <job-id>` until it
 completes, then run `/antigravity:result <job-id>`. Persist its response JSON
-as `.superpowers/<task>/turn-<turn>-response.json`, validate it, and ledger it.
+as `<turn-dir>/response.json`, validate it, and ledger it.
 A failed/killed status or empty/invalid result continues the degradation ladder.
 Never resume, cancel, pin a profile, or substitute a human relay.

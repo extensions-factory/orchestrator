@@ -5,6 +5,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 START_SCRIPT="$REPO_ROOT/skills/brainstorming/scripts/start-server.sh"
+RUN_ID="20260727T141500Z-brainstorm-test"
 
 TEST_DIR="${TMPDIR:-/tmp}/brainstorm-start-test-$$"
 passed=0
@@ -56,7 +57,7 @@ chmod +x "$TEST_DIR/fake-bin/node"
 captured=$(
   PATH="$TEST_DIR/fake-bin:$PATH" \
     MSYSTEM="" \
-    bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" --foreground 2>/dev/null || true
+    bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" --run-id "$RUN_ID" --foreground 2>/dev/null || true
 )
 owner_pid_value=$(echo "$captured" | grep "CAPTURED_OWNER_PID=" | head -1 | sed 's/CAPTURED_OWNER_PID=//')
 
@@ -74,7 +75,7 @@ else
        "expected exact --brainstorm-server-id=<safe id> argv line, got: $captured"
 fi
 
-server_id_file=$(find "$TEST_DIR/project/.superpowers/brainstorm" -name server-instance-id -print 2>/dev/null | head -1)
+server_id_file=$(find "$TEST_DIR/project/.superpowers/runs/$RUN_ID/20-design/brainstorm" -name server-instance-id -print 2>/dev/null | head -1)
 server_id_value=""
 if [[ -n "$server_id_file" ]]; then
   server_id_value="$(tr -d '\r\n' < "$server_id_file")"
@@ -98,7 +99,7 @@ chmod +x "$TEST_DIR/fake-bin/node"
 captured=$(
   PATH="$TEST_DIR/fake-bin:$PATH" \
     MSYSTEM="" \
-    bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" 2>/dev/null || true
+    bash "$START_SCRIPT" --project-dir "$TEST_DIR/project" --run-id "$RUN_ID" 2>/dev/null || true
 )
 
 if echo "$captured" | grep -q "FOREGROUND_MODE=true"; then
