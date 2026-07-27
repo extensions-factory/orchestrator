@@ -12,7 +12,7 @@ Every plan written by the writing-plans skill follows this structure. The struct
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-orchestrator:subagent-driven-development when the harness supports subagents; use superpowers-orchestrator:executing-plans only when the harness has no subagent capability. Steps use checkbox (`- [ ]`) syntax for tracking.
 <!-- riso-tech:orchestrator-split END -->
 
-**Spec:** `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+**Spec:** `docs/superpowers/features/<feature-slug>/design.md`
 
 **Goal:** [One sentence describing what this builds]
 

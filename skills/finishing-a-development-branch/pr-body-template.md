@@ -26,8 +26,8 @@ story was intentionally deferred, list it unchecked with the reason.]
 
 ## Design Docs
 
-- Spec: `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-- Plan: `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+- Spec: `docs/superpowers/features/<feature-slug>/design.md`
+- Plan: `docs/superpowers/features/<feature-slug>/plan.md`
 
 ## Testing
 

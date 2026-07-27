@@ -31,7 +31,7 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 <!-- riso-tech:orchestrator-split START -->
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` following `skills/brainstorming/spec-template.md`, generate the HTML companion, add the feature to the product roadmap (see Documentation), and commit all
+6. **Write design doc** — save to `docs/superpowers/features/<feature-slug>/design.md` following `skills/brainstorming/spec-template.md`, generate `design.html` from `document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
 <!-- riso-tech:orchestrator-split END -->
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
@@ -113,13 +113,13 @@ digraph brainstorming {
 
 **Documentation:**
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design to `docs/superpowers/features/<feature-slug>/design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D9` dispatches the approved design's complete documentation artifact set through `superpowers-orchestrator:dispatch-agent` with the phase-matched role and phase-matched task_type — discovery → `role: business_analyst`, `task_type: discovery_research`; requirements → `role: product_owner`, `task_type: requirements_user_stories`; architecture → `role: tech_lead`, `task_type: architecture_design`; documentation/default → `role: technical_writer`, `task_type: documentation_knowledge_transfer`; the worker writes the spec, HTML companion, and roadmap: a spec `.md` following `skills/brainstorming/spec-template.md`, a self-contained HTML companion at the same path with a `.html` extension, and `docs/superpowers/roadmap.json` plus `docs/superpowers/ROADMAP.html` with one entry per User Story, following `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md` and starting from `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html` verbatim; the orchestrator validates all returned artifacts before presenting or committing them, and runs D9 inline only if the harness has no subagent capability at all.
+**Dispatch:** `D9` dispatches the approved design's spec, HTML companion, and roadmap through `superpowers-orchestrator:dispatch-agent` with the phase-matched role and phase-matched task_type — discovery → `role: business_analyst`, `task_type: discovery_research`; requirements → `role: product_owner`, `task_type: requirements_user_stories`; architecture → `role: tech_lead`, `task_type: architecture_design`; documentation/default → `role: technical_writer`, `task_type: documentation_knowledge_transfer`; the worker writes `docs/superpowers/features/<feature-slug>/design.md` from `spec-template.md`, `design.html` from `document-companion-template.html`, and `docs/superpowers/roadmap.json` conforming to `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.schema.json` plus `docs/superpowers/ROADMAP.html` with one entry per User Story, following `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md` and starting from `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html` verbatim; the orchestrator validates all returned artifacts before presenting or committing them, and runs D9 inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 **Spec Self-Review:**

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://superpowers.local/roadmap.schema.json",
+  "title": "Superpowers product roadmap",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["slug", "epic", "feature", "title", "description", "status", "spec", "plan", "created", "completed"],
+    "properties": {
+      "slug": {"type": "string"},
+      "epic": {"type": "string"},
+      "feature": {"type": "string"},
+      "title": {"type": "string"},
+      "description": {"type": "string"},
+      "status": {"enum": ["open", "dev", "test", "ready", "released"]},
+      "spec": {"type": ["string", "null"]},
+      "plan": {"type": ["string", "null"]},
+      "created": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+      "completed": {
+        "anyOf": [
+          {"type": "null"},
+          {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}
+        ]
+      }
+    },
+    "additionalProperties": false
+  }
+}

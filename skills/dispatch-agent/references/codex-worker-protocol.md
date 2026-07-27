@@ -47,15 +47,14 @@ back to another command.
 
 After a successful review command:
 
-1. Persist stdout verbatim at
-   `.superpowers/<task>/turn-<turn>-review.md`.
-2. Construct `.superpowers/<task>/turn-<turn>-response.json` by copying the
+1. Persist stdout verbatim at `<turn-dir>/review.md`.
+2. Construct `<turn-dir>/response.json` by copying the
    request, setting `message_type: "deliver"`, swapping `from` and `to`, and
    setting `output` exactly to:
 
    ```json
    {
-     "artifacts": [".superpowers/<task>/turn-<turn>-review.md"],
+     "artifacts": ["<turn-dir>/review.md"],
      "status": "done",
      "notes": "Codex review stdout persisted verbatim."
    }

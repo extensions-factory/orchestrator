@@ -27,9 +27,11 @@ while IFS=$'\t' read -r task_type rank; do
 done < <(jq -r '.task_types | to_entries[] | .key as $task | .value.recommended_models[] | select(.provider == "Claude Code") | [$task, .rank] | @tsv' "$ROUTING")
 
 grep -Fq '/antigravity:setup' "$SKILL"
-grep -Fq '/antigravity:rescue --background --fresh --write --model <model> --effort <effort> "<prompt>"' "$SKILL"
-grep -Fq '/antigravity:status' "$SKILL"
-grep -Fq '/antigravity:result' "$SKILL"
+grep -Fq 'node scripts/dispatch-worker.mjs' "$SKILL"
+grep -Fq -- '--provider <codex|antigravity>' "$SKILL"
+grep -Fq 'TERMINAL <status> <path>' "$SKILL"
+grep -Fq '/codex:review --wait --model <model> --base <base_sha>' "$SKILL"
+grep -Fq '/codex:adversarial-review --wait --model <model> --base <base_sha> "<security focus>"' "$SKILL"
 grep -Fq 'permissionMode: bypassPermissions' "$SKILL"
 grep -Fq 'full tool permission' "$WORKERS"
 grep -Fq '/antigravity:rescue --background --fresh --write' "$WORKFLOW"

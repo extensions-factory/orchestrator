@@ -24,7 +24,7 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 ## How to Request
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D14` performs the task review after each `D13` implementation and each `D16` fix: call `superpowers-orchestrator:dispatch-agent` with `role: tech_lead`, `task_type: code_review_quality`, `context.base_sha` set to the exact pre-task commit recorded before the original `D13` dispatch, the task brief, implementer/fix report, task diff package, and `author_agent` from `.superpowers/ledger.jsonl`; enforce provider diversity and require both spec-compliance and code-quality verdicts, sending Critical/Important findings to D16 and re-reviewing at D14 until clean. Missing `base_sha` is malformed and must not dispatch.
+**Dispatch:** `D14` performs the task review after each `D13` implementation and each `D16` fix: call `superpowers-orchestrator:dispatch-agent` with `role: tech_lead`, `task_type: code_review_quality`, `context.base_sha` set to the exact pre-task commit recorded before the original `D13` dispatch, the task brief, implementer/fix report, task diff package, and `author_agent` from the active run's `ledger.jsonl`; enforce provider diversity and require both spec-compliance and code-quality verdicts, sending Critical/Important findings to D16 and re-reviewing at D14 until clean. Missing `base_sha` is malformed and must not dispatch.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->

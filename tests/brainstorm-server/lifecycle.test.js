@@ -17,6 +17,7 @@ const assert = require('assert');
 
 const SERVER = path.join(__dirname, '../../skills/brainstorming/scripts/server.cjs');
 const START = path.join(__dirname, '../../skills/brainstorming/scripts/start-server.sh');
+const RUN_ID = '20260727T141500Z-brainstorm-test';
 const STOP = path.join(__dirname, '../../skills/brainstorming/scripts/stop-server.sh');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -112,11 +113,11 @@ function removeShellPath(p) {
 function newestSessionDir(projectDir) {
   const sessionDir = execFileSync('bash', [
     '-lc',
-    'find "$1/.superpowers/brainstorm" -mindepth 1 -maxdepth 1 -type d -print | sort | tail -1',
+    'find "$1/.superpowers/runs/' + RUN_ID + '/20-design/brainstorm" -mindepth 1 -maxdepth 1 -type d -print | sort | tail -1',
     'bash',
     projectDir
   ], { encoding: 'utf8' }).trim();
-  assert(sessionDir, `expected at least one session dir under ${projectDir}/.superpowers/brainstorm`);
+  assert(sessionDir, `expected a run-scoped brainstorm session under ${projectDir}`);
   return sessionDir;
 }
 
@@ -173,10 +174,10 @@ async function runTests() {
     let sessionDir = null;
     try {
       if (isWindowsLikeShell()) {
-        startProcess = spawn('bash', [START, '--project-dir', dir, '--idle-timeout-minutes', '5']);
+        startProcess = spawn('bash', [START, '--project-dir', dir, '--run-id', RUN_ID, '--idle-timeout-minutes', '5']);
         info = firstServerStarted(await waitForStartedOutput(startProcess));
       } else {
-        const out = execFileSync('bash', [START, '--project-dir', dir, '--idle-timeout-minutes', '5', '--background'], { encoding: 'utf8' });
+        const out = execFileSync('bash', [START, '--project-dir', dir, '--run-id', RUN_ID, '--idle-timeout-minutes', '5', '--background'], { encoding: 'utf8' });
         info = firstServerStarted(out);
       }
       sessionDir = newestSessionDir(dir);

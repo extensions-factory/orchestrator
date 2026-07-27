@@ -7,12 +7,12 @@ check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] $1 missing: $2"; fail=1; }; }
 
 check "$SKILL" "riso-tech:orchestrator-split START"
 check "$SKILL" "riso-tech:orchestrator-split END"
-check "$SKILL" "following \`skills/brainstorming/spec-template.md\`, generate the HTML companion"
+check "$SKILL" "design.md\` from \`spec-template.md\`"
 check "$SKILL" "role: business_analyst"
 check "$SKILL" "role: product_owner"
 check "$SKILL" "role: tech_lead"
 check "$SKILL" "role: technical_writer"
-check "$SKILL" "self-contained HTML companion at the same path with a \`.html\` extension"
+check "$SKILL" "design.html\` from \`document-companion-template.html\`"
 check "$SKILL" "docs/superpowers/roadmap.json"
 check "$SKILL" "docs/superpowers/ROADMAP.html"
 check "$SKILL" '${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md'

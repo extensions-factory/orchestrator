@@ -147,6 +147,56 @@ SUPERPOWERS ORCHESTRATOR
     └── ○ apply approved roadmap changes
 ```
 
+## File Lifecycle Tree
+
+This is the filesystem counterpart to the lifecycle tree. Entries are files
+created or updated by the workflow; `[conditional]` means the file exists only
+when that branch, tool, or stack is selected. Git's internal files are omitted.
+
+```text
+WORKSPACE FILE LIFECYCLE
+│
+├── Durable documents [tracked]
+│   └── docs/superpowers/
+│       ├── project/
+│       │   ├── discovery.md
+│       │   └── scaffold-design.md
+│       ├── features/<feature-slug>/
+│       │   ├── design.md
+│       │   ├── design.html
+│       │   ├── plan.md
+│       │   └── plan.html
+│       ├── roadmap.json
+│       └── ROADMAP.html
+│
+└── Runtime evidence [ignored]
+    └── .superpowers/runs/<workflow-id>/
+        ├── manifest.json
+        ├── README.md
+        ├── ledger.jsonl
+        ├── 10-discovery/
+        │   └── <research-task>/turns/<NNN>-research/
+        ├── 20-design/
+        │   ├── brainstorm/<session-id>/{content,state}/
+        │   └── <task>/turns/<NNN>-documentation/
+        ├── 30-plan/
+        │   ├── plan-refine/findings.md [conditional]
+        │   └── <task>/turns/<NNN>-planning/
+        ├── 40-execution/
+        │   └── tasks/<task>/
+        │       ├── brief.md
+        │       ├── report.md
+        │       ├── reviews/review-<base7>..<head7>.diff
+        │       └── turns/<NNN>-<implement|review|fix>/
+        ├── 50-finish/
+        │   └── pr-body.md [PR path only]
+        └── 60-retrospective/
+            └── retrospective.md
+
+Each turn directory contains only the applicable short filenames:
+request.json, prompt.txt, job.txt, result-raw.txt, review.md, response.json.
+```
+
 ## Dispatch-Agent Subtree
 
 Every `◆ Dn` above enters this subtree.
@@ -174,11 +224,13 @@ Every `◆ Dn` above enters this subtree.
 │       └── exact invocation
 │
 ├── 5. ○ Build request envelope
+│   ├── initialize or reuse workflow ID
+│   ├── resolve lifecycle phase and semantic purpose
 │   ├── assign stable task slug
 │   ├── assign next turn number
 │   ├── set dispatch persona
 │   ├── attach artifacts, acceptance criteria, and constraints
-│   └── write .superpowers/<task>/turn-<turn>-request.json
+│   └── resolve turn directory with scripts/run-paths.mjs and write request.json
 │
 ├── 6. ○ Provider readiness preflight
 │   ├── agent=claude      → Agent tool is ready; spawn with permissionMode=bypassPermissions
@@ -220,11 +272,10 @@ Every `◆ Dn` above enters this subtree.
 │           "<prompt>"
 │
 ├── 8. ○ Receive and validate
-│   ├── Codex/Antigravity rescue → poll status, result, then write turn-<turn>-response.json
-│   ├── Codex review → persist stdout as turn-<turn>-review.md
-│   │                  and construct turn-<turn>-response.json
+│   ├── Codex/Antigravity rescue → poll status, result, then write response.json
+│   ├── Codex review → persist stdout as review.md and construct response.json
 │   ├── run scripts/validate-message.mjs
-│   └── append request/response pair to .superpowers/ledger.jsonl
+│   └── append request/response pair to the run's ledger.jsonl
 │
 └── 9. ○ Route response
     ├── status=done

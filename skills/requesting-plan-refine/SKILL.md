@@ -26,7 +26,7 @@ chooses to execute directly.
 ## How to Request
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D11` — Dispatch the plan reviewer via `superpowers-orchestrator:dispatch-agent` with `role: tech_lead`, `task_type: code_review_quality`, the plan and spec paths, and the plan's `author_agent` from `.superpowers/ledger.jsonl`; fill [plan-reviewer.md](plan-reviewer.md), save the independent plan review findings under `.superpowers/plan-refine/`, enforce provider diversity, and when `superpowers-orchestrator:receiving-plan-refine` requests another refine loop, re-dispatch D11 against the revised plan until the human chooses Execute.
+**Dispatch:** `D11` — Dispatch the plan reviewer via `superpowers-orchestrator:dispatch-agent` with `role: tech_lead`, `task_type: code_review_quality`, the plan and spec paths, and the plan's `author_agent` from the active run's `ledger.jsonl`; fill [plan-reviewer.md](plan-reviewer.md), save the independent plan review findings under the active run's `30-plan/plan-refine/`, enforce provider diversity, and when `superpowers-orchestrator:receiving-plan-refine` requests another refine loop, re-dispatch D11 against the revised plan until the human chooses Execute.
 <!-- riso-tech:orchestrator-split END -->
 
 **1. Locate the plan (and spec, if any):**
@@ -40,9 +40,9 @@ SPEC_FILE=docs/superpowers/specs/<filename>-design.md   # if one exists
 
 ```bash
 root=$(git rev-parse --show-toplevel)
-dir="$root/.superpowers/plan-refine"
+dir=$(node "$CLAUDE_PLUGIN_ROOT/scripts/run-paths.mjs" task \
+  --root "$root" --run "$SUPERPOWERS_RUN_ID" --phase plan --task plan-refine)
 mkdir -p "$dir"
-printf '*\n' > "$dir/.gitignore"
 ```
 
 **3. Dispatch a subagent, filling the template at
@@ -52,7 +52,7 @@ printf '*\n' > "$dir/.gitignore"
 - `{PLAN_FILE}` - path to the plan
 - `{SPEC_FILE}` - path to the spec, or "None — no spec was written for this
   plan" if absent
-- `{FINDINGS_FILE}` - `.superpowers/plan-refine/<plan-basename>-findings.md`
+- `{FINDINGS_FILE}` - `<run>/30-plan/plan-refine/findings.md`
 
 **4. Receive the result:** the subagent returns only the findings file path
 and a one-line summary — never paste findings text into your own context.
@@ -62,7 +62,7 @@ and a one-line summary — never paste findings text into your own context.
 **User Review Gate:**
 After the review, Report to User:
 
-> "Review complete and saved to `.superpowers/plan-refine/<plan-basename>-findings.md`."
+> "Review complete and saved to `<run>/30-plan/plan-refine/findings.md`."
 
 ## Red Flags
 

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://superpowers.local/message-envelope.schema.json",
+  "title": "Superpowers worker message envelope",
+  "type": "object",
+  "required": [
+    "message_type",
+    "from",
+    "to",
+    "run_id",
+    "phase",
+    "purpose",
+    "task",
+    "turn",
+    "task_type",
+    "skill",
+    "context",
+    "dispatch",
+    "output"
+  ],
+  "properties": {
+    "message_type": {"enum": ["request", "deliver", "validate", "reject", "escalate"]},
+    "from": {"type": "string"},
+    "to": {"type": "string"},
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "phase": {
+      "enum": ["discovery", "design", "plan", "execution", "finish", "retrospective"]
+    },
+    "purpose": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "task": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "turn": {"type": "integer", "minimum": 1},
+    "task_type": {"type": "string"},
+    "skill": {"type": "string"},
+    "context": {
+      "type": "object",
+      "required": ["input_artifacts", "acceptance_criteria", "constraints"]
+    },
+    "dispatch": {
+      "type": "object",
+      "required": ["agent", "model", "effort", "persona", "provider_diversity"],
+      "properties": {
+        "agent": {"enum": ["claude", "codex", "antigravity"]},
+        "effort": {"enum": ["low", "medium", "high"]}
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["artifacts", "status", "notes"],
+      "properties": {
+        "status": {"enum": ["done", "blocked", "needs_revision"]},
+        "blocked_ops": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["op", "reason"],
+            "properties": {
+              "op": {"type": "string"},
+              "reason": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

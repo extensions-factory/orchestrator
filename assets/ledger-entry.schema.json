@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://superpowers.local/ledger-entry.schema.json",
+  "title": "Superpowers dispatch ledger entry",
+  "type": "object",
+  "required": [
+    "ts",
+    "run_id",
+    "phase",
+    "purpose",
+    "task",
+    "turn",
+    "request",
+    "response",
+    "author_agent",
+    "author_model"
+  ],
+  "properties": {
+    "ts": {"type": "string", "format": "date-time"},
+    "run_id": {"type": "string"},
+    "phase": {"type": "string"},
+    "purpose": {"type": "string"},
+    "task": {"type": "string"},
+    "turn": {"type": "integer", "minimum": 1},
+    "request": {"$ref": "message-envelope.schema.json"},
+    "response": {"$ref": "message-envelope.schema.json"},
+    "author_agent": {"enum": ["claude", "codex", "antigravity"]},
+    "author_model": {"type": "string"}
+  },
+  "additionalProperties": false
+}

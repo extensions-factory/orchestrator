@@ -24,13 +24,21 @@ strip_orchestrator_override(){ awk '
   }
   { print }
 ' "$1"; }
-same_plan_template(){ diff -q <(strip_upstream_commit "$1" | sed -E 's/superpowers(-orchestrator)?://g') <(strip_orchestrator_override "$2" | sed -E 's/superpowers(-orchestrator)?://g') >/dev/null || { echo "[FAIL] $2 differs from $1 beyond its orchestrator Git override and plugin namespace"; fail=1; }; }
+normalize_doc_paths(){
+  sed -E \
+    -e 's#docs/superpowers/specs/YYYY-MM-DD-<topic>-design\.md#<SPEC_PATH>#g' \
+    -e 's#docs/superpowers/features/<feature-slug>/design\.md#<SPEC_PATH>#g' \
+    -e 's#docs/superpowers/plans/YYYY-MM-DD-<feature-name>\.md#<PLAN_PATH>#g' \
+    -e 's#docs/superpowers/features/<feature-slug>/plan\.md#<PLAN_PATH>#g'
+}
+same_plan_template(){ diff -q <(strip_upstream_commit "$1" | sed -E 's/superpowers(-orchestrator)?://g' | normalize_doc_paths) <(strip_orchestrator_override "$2" | sed -E 's/superpowers(-orchestrator)?://g' | normalize_doc_paths) >/dev/null || { echo "[FAIL] $2 differs from $1 beyond its orchestrator Git override, document paths, and plugin namespace"; fail=1; }; }
+same_pr_template(){ diff -q <(normalize_doc_paths < "$1") <(normalize_doc_paths < "$2") >/dev/null || { echo "[FAIL] $2 differs from $1 beyond document paths"; fail=1; }; }
 
 same "$REF/skills/brainstorming/spec-template.md" "$ROOT/skills/brainstorming/spec-template.md"
 same_namespaced "$REF/skills/brainstorming/roadmap.md" "$ROOT/skills/brainstorming/roadmap.md"
 same_plan_template "$REF/skills/writing-plans/plan-template.md" "$ROOT/skills/writing-plans/plan-template.md"
 check "$ROOT/skills/writing-plans/plan-template.md" "**Orchestrator Git Bookkeeping (not a worker step):**"
-same "$REF/skills/finishing-a-development-branch/pr-body-template.md" "$ROOT/skills/finishing-a-development-branch/pr-body-template.md"
+same_pr_template "$REF/skills/finishing-a-development-branch/pr-body-template.md" "$ROOT/skills/finishing-a-development-branch/pr-body-template.md"
 same "$REF/assets/roadmap.html" "$ROOT/assets/roadmap.html"
 roadmap_feature_parity(){
   diff -u \
@@ -38,7 +46,7 @@ roadmap_feature_parity(){
     <(awk '/<section class="section" data-section>/{section=1; next} section && /<\/section>/{section=0} section && /<h2>/{gsub(/.*<h2>|<\/h2>.*/, ""); print}' "$1" | sort) \
     >/dev/null || { echo "[FAIL] $1 card and section feature names differ"; fail=1; }
 }
-roadmap_feature_parity "$ROOT/assets/roadmap.html"
+roadmap_feature_parity "$ROOT/docs/superpowers/ROADMAP.html"
 check "$ROOT/skills/brainstorming/roadmap.md" "roadmap.json"
 check "$ROOT/assets/roadmap.html" "data-status=\"released\""
 [ "$fail" -eq 0 ] && echo "PASS test-plan-templates"

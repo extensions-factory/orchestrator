@@ -4,8 +4,8 @@
 # through the controller's context.
 #
 # Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
-# Default OUTFILE: <repo-root>/.superpowers/sdd/task-<N>-brief.md
-# (per worktree; concurrent runs in the same working tree share it).
+# Default OUTFILE:
+# <repo-root>/.superpowers/runs/<run>/40-execution/tasks/task-<N>/brief.md
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
@@ -20,8 +20,14 @@ n=$2
 if [ $# -eq 3 ]; then
   out=$3
 else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
-  out="$dir/task-${n}-brief.md"
+  root=$(git rev-parse --show-toplevel)
+  run_id="${SUPERPOWERS_RUN_ID:?SUPERPOWERS_RUN_ID is required}"
+  task_id="${SUPERPOWERS_TASK_ID:?SUPERPOWERS_TASK_ID is required}"
+  plugin_root="$(cd "$(dirname "$0")/../../.." && pwd)"
+  dir="$(node "$plugin_root/scripts/run-paths.mjs" task \
+    --root "$root" --run "$run_id" --phase execution --task "$task_id")"
+  mkdir -p "$dir"
+  out="$dir/brief.md"
 fi
 
 awk -v n="$n" '

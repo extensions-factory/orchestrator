@@ -7,7 +7,7 @@ check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] missing: $2"; fail=1; }; }
 test -f "$SKILL" || { echo "[FAIL] no sprint-retrospective/SKILL.md"; exit 1; }
 check "$SKILL" "name: sprint-retrospective"
 check "$SKILL" "finishing-a-development-branch"
-check "$SKILL" ".superpowers/ledger.jsonl"
+check "$SKILL" ".superpowers/runs/<workflow-id>/ledger.jsonl"
 check "$SKILL" "total dispatches"
 check "$SKILL" "blocked count"
 check "$SKILL" "needs_revision loops"

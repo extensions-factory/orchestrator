@@ -45,12 +45,12 @@ command. Never substitute one command family for another.
 
 Rescue ran `--background`. Poll `/codex:status` until the task completes, then run
 `/codex:result`; its stdout is the response JSON. Persist it as
-`.superpowers/<task>/turn-<turn>-response.json`, then validate and ledger it. If
+`<turn-dir>/response.json`, then validate and ledger it. If
 `/codex:status` reports failed/killed or `/codex:result` is empty/invalid, treat it as
 a bridge failure and continue the degradation ladder.
 
 Review commands return prose rather than a message envelope. Persist stdout
-verbatim as `.superpowers/<task>/turn-<turn>-review.md`, then construct the one
+verbatim as `<turn-dir>/review.md`, then construct the one
 response envelope defined by `codex-worker-protocol.md`, validate it, and ledger
 the pair. Do not alter or summarize the review artifact.
 

@@ -21,11 +21,13 @@ Encodes `SM.request()` + `SM.receive()` from the SDLC orchestration flow. The or
 2. **Look up the model**: run `${CLAUDE_PLUGIN_ROOT}/scripts/model-lookup.sh <task_type>`, backed by `assets/sdlc-model-routing.json`. Select the rank using the rules below, then run `${CLAUDE_PLUGIN_ROOT}/scripts/model-lookup.sh --command <task_type> <rank>` and use its command template exactly, replacing only its named placeholders; never hand-compose a dispatch command.
    - **`agent`** from `provider` via this map: `"Claude Code" → claude`, `"Codex" → codex`, `"Antigravity CLI" → antigravity`.
    - **`effort`** rule: Antigravity encodes it in the model string (e.g. `"Gemini 3.5 Flash (Medium)"` → `medium`) — parse the parenthesized word; Codex takes an explicit `--effort`; Claude has none. When not otherwise determined, default `medium`, or apply the routing JSON's `selection_rules` (High/Thinking → `high`; Low/mini/haiku → `low`).
-   - **Review tasks** (`code_review_quality`, `security_review`): read `author_agent` from `.superpowers/ledger.jsonl` and pick the first recommended model whose mapped `agent` differs (provider diversity). If no other provider is enabled, fall back to a different model on the same agent and note it in the ledger entry.
-3. **Build the request JSON** per `${CLAUDE_PLUGIN_ROOT}/assets/message-protocol.json`. Set `task` and `turn` first — they name the file-based exchange folder `.superpowers/<task>/`:
+   - **Review tasks** (`code_review_quality`, `security_review`): read `author_agent` from the active run's `ledger.jsonl` and pick the first recommended model whose mapped `agent` differs (provider diversity). If no other provider is enabled, fall back to a different model on the same agent and note it in the ledger entry.
+3. **Build the request JSON** per `${CLAUDE_PLUGIN_ROOT}/assets/message-envelope.schema.json`.
+   - At the workflow's first artifact-producing action, initialize the run once with `node ${CLAUDE_PLUGIN_ROOT}/scripts/run-paths.mjs init --root <repo-root> --topic <topic-slug>`. Record the returned `id` as `workflow_id` and reuse it for the entire lifecycle.
+   - Set `phase` from the lifecycle (`discovery`, `design`, `plan`, `execution`, `finish`, or `retrospective`) and set a semantic `purpose` such as `implement`, `review`, `fix`, or `research`.
    - `task`: kebab slug, assigned at the FIRST dispatch for a piece of work and reused unchanged by every related dispatch (review, revision, QA). Plan tasks → `task-<N>-<short-slug>` (e.g. `task-3-add-auth`); unplanned work → a short slug of the request.
-   - `turn`: 1 + the highest existing turn number in `.superpowers/<task>/` (1 if the folder is empty or absent) — derived from the folder so it survives a crashed or resumed session.
-   - Write the request to `.superpowers/<task>/turn-<turn>-request.json` (create the folder if needed).
+   - `turn`: 1 + the highest existing turn directory for that task (1 if none) — derived from disk so it survives a crashed or resumed session.
+   - Resolve the directory with `node ${CLAUDE_PLUGIN_ROOT}/scripts/run-paths.mjs turn --root <repo-root> --run <workflow-id> --phase <phase> --task <task> --turn <turn> --purpose <purpose>`, create it, and write `request.json` there. The generic exchange path is `.superpowers/runs/<workflow-id>/<phase-directory>/<task>/turns/<NNN>-<purpose>/`; execution inserts `tasks/` before `<task>`.
 
    Set `message_type: "request"`. Record the diversity decision in `dispatch.provider_diversity`: for a review task set `{author_agent, author_model, rule: "reviewer_agent != author_agent"}`; otherwise set `provider_diversity: null`.
 
@@ -51,23 +53,63 @@ Before sending, verify the target `agent` is actually reachable — a provider t
 
 If the chosen agent is **not ready**, apply the degradation ladder (walk down `recommended_models[]` to the next entry whose mapped agent is ready) rather than emitting a call that blocks.
 
-4. **Send** via the bridge matching `agent`:
-   - `claude` → the Agent tool with `permissionMode: bypassPermissions`, prompt = `"ROLE: subagent\n" + <request JSON>`. The request contract remains the authority boundary.
-   - If the resolved `agent` is `codex`, `task_type` selects exactly one command:
-     - `code_review_quality` → `/codex:review --wait --model <model> --base <base_sha>`.
-     - `security_review` → `/codex:adversarial-review --wait --model <model> --base <base_sha> "<security focus>"`.
-     - `discovery_research`, `requirements_user_stories`, `backlog_refinement_prioritization`, `sprint_planning`, `architecture_design`, `ui_ux_prototyping`, `implementation_coding`, `debugging_root_cause`, `testing_qa`, `release_deployment`, `workspace_setup`, `monitoring_incident_ops`, `documentation_knowledge_transfer`, `retrospective_process_improvement` → `/codex:rescue --background --fresh --write --model <model> --effort <effort> "<prompt>"`, where `<prompt>` is the filled rescue block from `references/codex-worker-protocol.md` prepended to the request JSON.
-     For the rescue family, `--background` + `/codex:status` + `/codex:result` ARE the routed path (see Receive). Never use `/codex:cancel`, resume, `--profile`, or `/codex:transfer`. Review commands stay foreground (`--wait`); never run them backgrounded. Never substitute one command family for another; a failed review command degrades to the next routed provider, not rescue.
-   - `antigravity` → `/antigravity:rescue --background --fresh --write --model <model> --effort <effort> "<prompt>"`, where `<prompt>` is the filled rescue block from `references/codex-worker-protocol.md` prepended to the request JSON. Every Antigravity dispatch uses `--write`: the bridge supplies the current workspace and full tool permission; the request contract still limits the task. See `references/antigravity-workers.md`.
-5. **Receive** by command family:
-   - Codex **rescue** ran `--background`: poll `/codex:status` until the task reports complete, then run `/codex:result` to get the response JSON; persist it at `.superpowers/<task>/turn-<turn>-response.json`. This poll/fetch is the normal background path, not a degradation hack. Do not resume, cancel, or pin a profile while polling.
-   - Codex **review/security** ran foreground (`--wait`): stdout is the immediate result — no poll/fetch.
-   - Codex review/security stdout is not an envelope. Persist it verbatim at `.superpowers/<task>/turn-<turn>-review.md`, then construct the single response envelope specified in `references/codex-worker-protocol.md`, pointing `output.artifacts` to that Markdown file and setting `output.status: done`.
-   - Antigravity **rescue** ran `--background`: poll `/antigravity:status <job-id>` until complete, then run `/antigravity:result <job-id>` to get the response JSON; persist it at `.superpowers/<task>/turn-<turn>-response.json`. A failed/killed status or empty/invalid result is a bridge failure.
-   - A claude worker writes its response via `superpowers-worker:report-task`.
-6. **Validate** it: `node scripts/validate-message.mjs .superpowers/<task>/turn-<turn>-response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
-7. **Append** the pair to `.superpowers/ledger.jsonl` as one line:
-   `{"ts":"<iso>","task":"<task>","turn":<turn>,"request":{...},"response":{...},"author_agent":"<agent>","author_model":"<model>"}`
+4. **Prepare and send** through one of the paths below.
+
+### Step 4a: Read the provider rescue doc
+
+For a Codex or Antigravity rescue dispatch, read `<plugin-root>/<provider>/<ver>/commands/rescue.md` before building the command. Extract the flag surface, effort enum, model aliases, plugin root, and profile policy. Cache this read once per provider per session.
+
+Ignore the entire "Execution mode" section. It instructs the slash-command forwarder and must not determine whether the companion receives `--background`.
+
+Validate the effort from `model-lookup.sh` against the provider doc: Codex accepts only `none|minimal|low|medium|high|xhigh`; Antigravity accepts only `low|medium|high`. Pass a resolved model alias verbatim, and pass `--profile` only when an existing profile was explicitly selected; never invent a profile.
+
+### Step 4b: Build the literal command string
+
+For Codex or Antigravity rescue work, write the filled rescue contract plus the unchanged request envelope to `<turn-dir>/prompt.txt`, then build:
+
+```text
+node scripts/dispatch-worker.mjs \
+  --provider <codex|antigravity> \
+  --plugin-root <plugin-root> \
+  --request <turn-dir>/request.json \
+  --prompt <turn-dir>/prompt.txt \
+  --model <model> \
+  --effort <effort> \
+  [--profile <existing-profile>]
+```
+
+Do not invoke `/codex:rescue` or `/antigravity:rescue`; those commands re-enter the forwarder path being replaced.
+
+For a claude worker, use the Agent tool with `permissionMode: bypassPermissions`, prompt = `"ROLE: subagent\n" + <request JSON> + "\nFinish by returning TERMINAL <status> <turn-dir>/response.json."`. The request contract remains the authority boundary.
+
+For Codex review work, `task_type` `code_review_quality` uses `/codex:review --wait --model <model> --base <base_sha>`. `task_type` `security_review` uses `/codex:adversarial-review --wait --model <model> --base <base_sha> "<security focus>"`. Both require `context.base_sha`; `security_review` additionally requires `context.security_focus`. A missing `base_sha` is a malformed request which must not be degraded or substituted. Review commands stay foreground and are never backgrounded; they use their existing review-output adapter, not the rescue wrapper.
+
+### Step 4c: Invoke the haiku forwarder
+
+For the literal Codex or Antigravity rescue command, spawn an Agent with `model: haiku` and give it only:
+
+```text
+Run the command given below. Then:
+- Output begins TERMINAL -> return that line verbatim. Stop.
+- Output begins PENDING  -> run the RESUME command printed beneath it. Repeat.
+Return nothing else. Do not read files, summarize, or run any other command.
+
+COMMAND:
+<literal command string>
+```
+
+5. **Receive one terminal line.**
+
+For Codex RESCUE results, Antigravity RESCUE results, and claude worker results, require `TERMINAL <status> <path>`. Read the embedded path from that line. Pass that path unchanged to Step 6 validation.
+
+Codex `code_review_quality` and `security_review` bypass the `TERMINAL` receive entirely; their review-output adapter in `references/codex-worker-protocol.md` persists stdout verbatim to `<turn-dir>/review.md` and constructs `<turn-dir>/response.json` before Step 6 validation.
+
+`TERMINAL malformed <turn-dir>/result-raw.txt` reissues once to the same provider with a format reminder; a second malformed result becomes `blocked`. `TERMINAL failed <status> <reason>` follows the existing degradation ladder.
+
+If haiku returns no `TERMINAL` line, read `<turn-dir>/job.txt` and recover with `node scripts/dispatch-worker.mjs --job $(cat <turn-dir>/job.txt) ...<same flags>`. Reuse every original flag and do not spawn a replacement job.
+6. **Validate** it: `node scripts/validate-message.mjs <turn-dir>/response.json`. On invalid, reissue once with a format reminder; a second failure is treated as `status: blocked`.
+7. **Append** the pair to `.superpowers/runs/<workflow-id>/ledger.jsonl` as one line conforming to `assets/ledger-entry.schema.json`:
+   `{"ts":"<iso>","run_id":"<workflow-id>","phase":"<phase>","purpose":"<purpose>","task":"<task>","turn":<turn>,"request":{...},"response":{...},"author_agent":"<agent>","author_model":"<model>"}`
 8. **Route:** `status: done` → forward to the next step; `needs_revision` → re-request the same role with feedback (same `task`, `turn + 1`); `blocked` → answer from context or escalate to the human, then re-request (same `task`, `turn + 1`).
 
    **Residual ops** — if the response carries `output.blocked_ops` (or `done` work needs committing):
@@ -79,7 +121,7 @@ If the chosen agent is **not ready**, apply the degradation ladder (walk down `r
 **Default:** Dispatch to a worker subagent is the DEFAULT, not conditional; different role = different worker.
 
 1. Chosen entry fails or its agent is not ready → walk down `recommended_models[]` in rank order and dispatch to the next entry whose mapped agent is ready. Never jump straight to claude.
-2. Bridge/quota failure on codex → rely on codex-plugin-cc failover first, then rule 1. Polling `/codex:status` + `/codex:result` for a `--background` rescue is the normal Receive path, NOT a degradation hack. A failure is: a foreground review returning empty/invalid, or a background rescue whose `/codex:status` reports failed/killed or whose `/codex:result` is empty/invalid — treat those as a bridge failure and walk the ladder. Never resume, pin a profile, fabricate a response, or switch Codex command families.
+2. Bridge/quota failure on codex → rely on codex-plugin-cc failover first, then rule 1. The wrapper's `TERMINAL` receive line is the normal Receive path, NOT a degradation hack. A failure is: a foreground review returning empty/invalid, a rescue `TERMINAL failed` result, or a wrapper that cannot produce a `TERMINAL` line — treat those as a bridge failure and walk the ladder. Never resume, pin a profile, fabricate a response, or switch Codex command families.
 3. Antigravity setup or bridge failure → apply rule 1. Never replace it with a human relay.
 4. A claude subagent is the ALWAYS-AVAILABLE worker and LAST RESORT (no external auth) — use it only when every non-claude entry in `recommended_models[]` is exhausted.
 5. Only when the harness has no subagent capability at all → skip `superpowers-orchestrator:dispatch-agent`; the caller runs `superpowers-orchestrator:executing-plans` inline. This is a harness property, NOT a fallback for failed workers.
@@ -122,22 +164,22 @@ The ladder is pre-authorized: never stop mid-ladder to ask the human's permissio
 
 ## Ledger
 
-`.superpowers/ledger.jsonl` is append-only, one pair per line. Create it on first dispatch if absent. It is the source of truth for `author_agent` in provider-diversity lookups.
+The active run's `ledger.jsonl` is append-only, one pair per line. `run-paths.mjs init` creates it. It is the source of truth for `author_agent` in provider-diversity lookups.
 
 ## File layout
 
-All per-dispatch exchange files live under one folder per task — never flat in `.superpowers/` (flat fixed names collide under parallel dispatch):
+All per-dispatch exchange files live under the active run, lifecycle phase, task, and semantic turn:
 
 ```
-.superpowers/
-├─ ledger.jsonl                    # global, append-only, cross-task
-└─ <task>/                         # e.g. task-3-add-auth
-   ├─ turn-1-request.json          # implement
-   ├─ turn-1-response.json
-   ├─ turn-2-request.json          # review
-   ├─ turn-2-response.json
-   ├─ turn-3-request.json          # revision
-   └─ turn-3-response.json
+.superpowers/runs/<workflow-id>/
+├─ manifest.json
+├─ README.md
+├─ ledger.jsonl
+└─ 40-execution/tasks/<task>/turns/
+   ├─ 001-implement/{request.json,response.json}
+   ├─ 002-review/{request.json,review.md,response.json}
+   └─ 003-fix/{request.json,response.json}
 ```
 
-One monotonic turn counter per task; every dispatch (implement, review, revision, QA) takes the next turn. What kind of dispatch a turn was is read from `task_type`/`dispatch.persona` inside the envelope, not from the filename. Subsystem folders (`sdd/`, `plan-refine/`, `brainstorm/`) are unaffected.
+One monotonic turn counter per task; every dispatch takes the next turn. The
+purpose suffix is human-readable and the envelope remains authoritative.

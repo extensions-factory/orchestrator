@@ -131,6 +131,12 @@
             <li>Post-land knowledge graph refresh</li>
           </ul>
         </div>
+        <div class="card">
+          <h3>Dispatch Observation</h3>
+          <ul>
+            <li>Single observation path for worker dispatch</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
@@ -172,10 +178,56 @@
     </div>
   </section>
 
+  <!-- DETAIL SECTION 3 — Single observation path for worker dispatch -->
+  <section class="section" data-section>
+    <div class="wrap">
+      <p class="eyebrow">Dispatch Observation</p>
+      <h2>Single observation path for worker dispatch</h2>
+      <p class="lead">Replace the slash-command forwarder path with a wrapper script and haiku subagent that give the orchestrator exactly one signal per dispatch: a TERMINAL line when the job reaches a definitive state.</p>
+      <div class="grid">
+        <div class="item" data-status="planned">
+          <a href="specs/2026-07-26-dispatch-observation-design.md" class="t">Pre-dispatch rescue-doc read</a>
+          <div class="d">Orchestrator reads the provider's rescue doc (flag surface, effort enum, model aliases, plugin root, profile policy) before building the command string; caches per provider per session.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="planned">
+          <a href="specs/2026-07-26-dispatch-observation-design.md" class="t">dispatch-worker.mjs wrapper and stdout contract</a>
+          <div class="d">Node.js wrapper script owns the spawn-wait-classify-extract cycle and prints exactly one TERMINAL or PENDING line; always exits 0; supports --job resume flag.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="planned">
+          <a href="specs/2026-07-26-dispatch-observation-design.md" class="t">Haiku forwarder subagent</a>
+          <div class="d">Thin haiku subagent with four-line instruction: run the given command, return TERMINAL verbatim, re-run RESUME on PENDING. Composes no flags and reads no files.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="planned">
+          <a href="specs/2026-07-26-dispatch-observation-design.md" class="t">Crash safety via turn-N-job.txt</a>
+          <div class="d">Script writes turn-N-job.txt immediately after job-id is returned from task --background and before any status --wait call, enabling recovery after session death.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="planned">
+          <a href="specs/2026-07-26-dispatch-observation-design.md" class="t">Script-bounded PENDING loop</a>
+          <div class="d">Script enforces a maximum wall-clock limit (default 60 minutes, flag-overridable) by comparing elapsed time against job createdAt; emits TERMINAL failed timeout instead of another PENDING when exceeded.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="planned">
+          <a href="specs/2026-07-26-dispatch-observation-design.md" class="t">Dispatch-agent Steps 4–5 rewrite</a>
+          <div class="d">Step 4 gains sub-steps 4a (read rescue doc), 4b (build command string), 4c (invoke haiku). Step 5 receive collapses to reading the path in the TERMINAL line with no status/result slash-command calls.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="planned">
+          <a href="specs/2026-07-26-dispatch-observation-design.md" class="t">Claude worker TERMINAL alignment</a>
+          <div class="d">One line added to the claude dispatch prompt so workers finish by returning TERMINAL &lt;status&gt; &lt;path&gt;, making the orchestrator's receive logic identical across Codex, Antigravity, and claude.</div>
+          <span class="badge open">Open</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div class="wrap"><p class="empty-note hide" id="emptyNote">No items match this status.</p></div>
 
   <footer>
-    <div class="wrap">Superpowers Orchestrator · Product Roadmap · generated 2026-07-25 · source: docs/superpowers/roadmap.json</div>
+    <div class="wrap">Superpowers Orchestrator · Product Roadmap · generated 2026-07-26 · source: docs/superpowers/roadmap.json</div>
   </footer>
 
 <script>
