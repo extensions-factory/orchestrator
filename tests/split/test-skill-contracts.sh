@@ -59,7 +59,7 @@ SDD="$ROOT/skills/subagent-driven-development/SKILL.md"
 DA="$ROOT/skills/dispatch-agent/SKILL.md"
 for skill in "$WP" "$SDD" "$DA"; do git_contract "$skill"; done
 reject "$WP" '- [ ] **Step 5: Commit**' "writing-plans still assigns a commit step to the worker"
-PLAN_TEMPLATE="$ROOT/skills/writing-plans/plan-template.md"
+PLAN_TEMPLATE="$ROOT/skills/writing-plans/templates/plan-template.md"
 reject "$PLAN_TEMPLATE" '- [ ] **Step 5: Commit**' "plan-template still assigns a commit step to the worker"
 for plan_contract in "$WP" "$PLAN_TEMPLATE"; do
   check "$plan_contract" 'After a successful worker response or successful inline task execution' \
@@ -67,7 +67,7 @@ for plan_contract in "$WP" "$PLAN_TEMPLATE"; do
 done
 reject "$SDD" 'Implementer subagent implements, tests, commits' "subagent-driven-development still tells implementers to commit"
 reject "$SDD" 'returns only status, commits' "subagent-driven-development still expects implementer commits"
-IMPLEMENTER="$ROOT/skills/subagent-driven-development/implementer-prompt.md"
+IMPLEMENTER="$ROOT/skills/subagent-driven-development/prompts/implementer-prompt.md"
 reject "$IMPLEMENTER" 'Commit your work' "implementer-prompt still instructs the worker to commit"
 reject "$IMPLEMENTER" 'full suite once before committing' "implementer-prompt still schedules the full suite around a worker commit"
 reject "$IMPLEMENTER" 'Commits created' "implementer-prompt still requires worker commit SHAs"

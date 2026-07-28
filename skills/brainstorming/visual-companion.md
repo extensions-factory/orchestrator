@@ -288,5 +288,5 @@ If the session used `--project-dir`, mockup files persist under the active run f
 
 ## Reference
 
-- Frame template (CSS reference): `scripts/frame-template.html`
+- Frame template (CSS reference): `templates/frame-template.html`
 - Helper script (client-side): `scripts/helper.js`

@@ -21,7 +21,8 @@
 ### Artifacts
 
 - `scripts/run-paths.mjs` owns validated run paths.
-- `assets/*schema.json` and `skills/*/*template*` define artifact contracts.
+- `assets/*schema.json`, `skills/*/templates/`, and `skills/*/prompts/` define
+  artifact and dispatch contracts.
 - Dispatch, SDD, brainstorm, hooks, and workflow skills use run-scoped paths.
 - `docs/orchestrator-workflow.md` documents the implemented structure.
 
@@ -90,12 +91,12 @@ Expected: initialization, tracing, isolation, idempotence, and rejection tests p
 - Create: `assets/message-envelope.schema.json`
 - Create: `assets/ledger-entry.schema.json`
 - Create: `assets/roadmap.schema.json`
-- Create: `skills/project-kickoff/discovery-template.md`
-- Create: `skills/brainstorming/document-companion-template.html`
-- Create: `skills/subagent-driven-development/task-report-template.md`
-- Create: `skills/sprint-retrospective/retrospective-template.md`
-- Create: `skills/project-kickoff/constitution-template.md`
-- Create: `skills/project-kickoff/tool-instruction-template.md`
+- Create: `skills/project-kickoff/templates/discovery-template.md`
+- Create: `skills/brainstorming/templates/document-companion-template.html`
+- Create: `skills/subagent-driven-development/templates/task-report-template.md`
+- Create: `skills/sprint-retrospective/templates/retrospective-template.md`
+- Create: `skills/project-kickoff/templates/constitution-template.md`
+- Create: `skills/project-kickoff/templates/tool-instruction-template.md`
 - Modify: `scripts/validate-message.mjs`
 - Modify: `tests/split/test-validate-message.mjs`
 

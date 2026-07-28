@@ -76,8 +76,8 @@ function writeFragment(dir) {
 
 function createPackagedServerFixture(version) {
   const root = fs.mkdtempSync(path.join('/tmp', 'superpowers-packaged-server-'));
-  const scriptDir = path.join(root, 'skills/brainstorming/scripts');
-  fs.cpSync(path.join(REPO_ROOT, 'skills/brainstorming/scripts'), scriptDir, { recursive: true });
+  const skillDir = path.join(root, 'skills/brainstorming');
+  fs.cpSync(path.join(REPO_ROOT, 'skills/brainstorming'), skillDir, { recursive: true });
   fs.mkdirSync(path.join(root, '.codex-plugin'), { recursive: true });
   fs.writeFileSync(
     path.join(root, '.codex-plugin/plugin.json'),
@@ -85,7 +85,7 @@ function createPackagedServerFixture(version) {
   );
   return {
     root,
-    serverPath: path.join(scriptDir, 'server.cjs')
+    serverPath: path.join(skillDir, 'scripts/server.cjs')
   };
 }
 

@@ -34,11 +34,11 @@ normalize_doc_paths(){
 same_plan_template(){ diff -q <(strip_upstream_commit "$1" | sed -E 's/superpowers(-orchestrator)?://g' | normalize_doc_paths) <(strip_orchestrator_override "$2" | sed -E 's/superpowers(-orchestrator)?://g' | normalize_doc_paths) >/dev/null || { echo "[FAIL] $2 differs from $1 beyond its orchestrator Git override, document paths, and plugin namespace"; fail=1; }; }
 same_pr_template(){ diff -q <(normalize_doc_paths < "$1") <(normalize_doc_paths < "$2") >/dev/null || { echo "[FAIL] $2 differs from $1 beyond document paths"; fail=1; }; }
 
-same "$REF/skills/brainstorming/spec-template.md" "$ROOT/skills/brainstorming/spec-template.md"
+same "$REF/skills/brainstorming/spec-template.md" "$ROOT/skills/brainstorming/templates/spec-template.md"
 same_namespaced "$REF/skills/brainstorming/roadmap.md" "$ROOT/skills/brainstorming/roadmap.md"
-same_plan_template "$REF/skills/writing-plans/plan-template.md" "$ROOT/skills/writing-plans/plan-template.md"
-check "$ROOT/skills/writing-plans/plan-template.md" "**Orchestrator Git Bookkeeping (not a worker step):**"
-same_pr_template "$REF/skills/finishing-a-development-branch/pr-body-template.md" "$ROOT/skills/finishing-a-development-branch/pr-body-template.md"
+same_plan_template "$REF/skills/writing-plans/plan-template.md" "$ROOT/skills/writing-plans/templates/plan-template.md"
+check "$ROOT/skills/writing-plans/templates/plan-template.md" "**Orchestrator Git Bookkeeping (not a worker step):**"
+same_pr_template "$REF/skills/finishing-a-development-branch/pr-body-template.md" "$ROOT/skills/finishing-a-development-branch/templates/pr-body-template.md"
 same "$REF/assets/roadmap.html" "$ROOT/assets/roadmap.html"
 roadmap_feature_parity(){
   diff -u \

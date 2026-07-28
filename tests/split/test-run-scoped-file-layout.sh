@@ -76,25 +76,25 @@ present "$ROOT/skills/brainstorming/SKILL.md" \
   'assets/roadmap.schema.json' \
   'roadmap uses its schema'
 present "$ROOT/skills/writing-plans/SKILL.md" \
-  'document-companion-template.html' \
+  'templates/document-companion-template.html' \
   'plan companion uses the shared template'
 present "$ROOT/skills/project-kickoff/SKILL.md" \
-  'discovery-template.md' \
+  'templates/discovery-template.md' \
   'discovery uses its template'
 present "$ROOT/skills/project-kickoff/SKILL.md" \
-  'constitution-template.md' \
+  'templates/constitution-template.md' \
   'constitution uses its template'
 present "$ROOT/skills/project-kickoff/SKILL.md" \
-  'tool-instruction-template.md' \
+  'templates/tool-instruction-template.md' \
   'tool instructions use their template'
 present "$ROOT/skills/subagent-driven-development/SKILL.md" \
-  'task-report-template.md' \
+  'templates/task-report-template.md' \
   'task reports use their template'
 present "$ROOT/skills/finishing-a-development-branch/SKILL.md" \
   'run-paths.mjs phase --root <repo-root> --run <workflow-id> --phase finish' \
   'PR body uses the run finish phase'
 present "$ROOT/skills/sprint-retrospective/SKILL.md" \
-  'retrospective-template.md' \
+  'templates/retrospective-template.md' \
   'retrospective uses its template'
 
 [[ "$fail" -eq 0 ]] || exit 1

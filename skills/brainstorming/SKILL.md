@@ -31,7 +31,7 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 <!-- riso-tech:orchestrator-split START -->
-6. **Write design doc** — save to `docs/superpowers/features/<feature-slug>/design.md` following `skills/brainstorming/spec-template.md`, generate `design.html` from `document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
+6. **Write design doc** — save to `docs/superpowers/features/<feature-slug>/design.md` following `skills/brainstorming/templates/spec-template.md`, generate `design.html` from `templates/document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
 <!-- riso-tech:orchestrator-split END -->
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written spec** — ask user to review the spec file before proceeding
@@ -119,7 +119,7 @@ digraph brainstorming {
 - Commit the design document to git
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D9` dispatches the approved design's spec, HTML companion, and roadmap through `superpowers-orchestrator:dispatch-agent` with the phase-matched role and phase-matched task_type — discovery → `role: business_analyst`, `task_type: discovery_research`; requirements → `role: product_owner`, `task_type: requirements_user_stories`; architecture → `role: tech_lead`, `task_type: architecture_design`; documentation/default → `role: technical_writer`, `task_type: documentation_knowledge_transfer`; the worker writes `docs/superpowers/features/<feature-slug>/design.md` from `spec-template.md`, `design.html` from `document-companion-template.html`, and `docs/superpowers/roadmap.json` conforming to `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.schema.json` plus `docs/superpowers/ROADMAP.html` with one entry per User Story, following `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md` and starting from `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html` verbatim; the orchestrator validates all returned artifacts before presenting or committing them, and runs D9 inline only if the harness has no subagent capability at all.
+**Dispatch:** `D9` dispatches the approved design's spec, HTML companion, and roadmap through `superpowers-orchestrator:dispatch-agent` with the phase-matched role and phase-matched task_type — discovery → `role: business_analyst`, `task_type: discovery_research`; requirements → `role: product_owner`, `task_type: requirements_user_stories`; architecture → `role: tech_lead`, `task_type: architecture_design`; documentation/default → `role: technical_writer`, `task_type: documentation_knowledge_transfer`; the worker writes `docs/superpowers/features/<feature-slug>/design.md` from `templates/spec-template.md`, `design.html` from `templates/document-companion-template.html`, and `docs/superpowers/roadmap.json` conforming to `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.schema.json` plus `docs/superpowers/ROADMAP.html` with one entry per User Story, following `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md` and starting from `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html` verbatim; the orchestrator validates all returned artifacts before presenting or committing them, and runs D9 inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 **Spec Self-Review:**
@@ -130,7 +130,7 @@ After writing the spec document, look at it with fresh eyes:
 3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
 <!-- riso-tech:orchestrator-split START -->
-5. **Template check:** Does the spec follow `skills/brainstorming/spec-template.md`? All "always" sections present, user stories numbered `US-n` with GIVEN/WHEN/THEN acceptance criteria, alternatives recorded, success criteria measurable.
+5. **Template check:** Does the spec follow `skills/brainstorming/templates/spec-template.md`? All "always" sections present, user stories numbered `US-n` with GIVEN/WHEN/THEN acceptance criteria, alternatives recorded, success criteria measurable.
 <!-- riso-tech:orchestrator-split END -->
 
 Fix any issues inline. No need to re-review — just fix and move on.

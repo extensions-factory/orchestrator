@@ -16,7 +16,7 @@ Run this workflow after `superpowers-orchestrator:finishing-a-development-branch
 **Dispatch:** `D21` sends the process review through `superpowers-orchestrator:dispatch-agent` with `role: agile_coach` and `task_type: retrospective_process_improvement`, placing the computed metrics and supporting ledger excerpt in `context.input_artifacts`; the worker recommends evidence-backed process improvements without implementing them, and when there is no worker provider selected or ready, `superpowers-orchestrator:dispatch-agent` degrades to the always-available claude subagent.
 <!-- riso-tech:orchestrator-split END -->
 
-3. **Validate with the human.** The Scrum Master presents the recommendations and their evidence to the human, then writes the approved result to `<run>/60-retrospective/retrospective.md` using [retrospective-template.md](retrospective-template.md).
+3. **Validate with the human.** The Scrum Master presents the recommendations and their evidence to the human, then writes the approved result to `<run>/60-retrospective/retrospective.md` using [retrospective-template.md](templates/retrospective-template.md).
 4. **Route approved improvements.** Send each approved skill or workflow improvement into `superpowers-orchestrator:writing-skills`; never edit skills directly from this retrospective.
 
 ## Degraded Mode

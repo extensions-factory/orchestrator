@@ -558,7 +558,7 @@ async function runTests() {
 
     await test('frame template has required structure', () => {
       const template = fs.readFileSync(
-        path.join(__dirname, '../../skills/brainstorming/scripts/frame-template.html'), 'utf-8'
+        path.join(__dirname, '../../skills/brainstorming/templates/frame-template.html'), 'utf-8'
       );
       assert(template.includes('<div class="header">'), 'Should have top header markup');
       assert(!template.includes('indicator-bar'), 'Should not have footer chrome');

@@ -199,7 +199,7 @@ location.replace('/');
 </html>`;
 }
 
-const frameTemplate = fs.readFileSync(path.join(__dirname, 'frame-template.html'), 'utf-8');
+const frameTemplate = fs.readFileSync(path.join(__dirname, '../templates/frame-template.html'), 'utf-8');
 const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8');
 const helperInjection = '<script>\n' + helperScript + '\n</script>';
 

@@ -57,7 +57,7 @@ Do not reconstruct a task's base after implementation from commit messages or hi
 
 **2. Prepare the reviewer prompt:**
 
-Fill the template at [code-reviewer.md](code-reviewer.md); the D14 or D17 block above supplies its dispatch scope.
+Fill the template at [code-reviewer.md](prompts/code-reviewer.md); the D14 or D17 block above supplies its dispatch scope.
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
@@ -133,4 +133,4 @@ You: [Dispatch D16 fix subagent with the Important finding; record the Minor for
 - Show code/tests that prove it works
 - Request clarification
 
-See template at: [code-reviewer.md](code-reviewer.md)
+See template at: [code-reviewer.md](prompts/code-reviewer.md)

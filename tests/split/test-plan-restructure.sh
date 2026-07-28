@@ -7,7 +7,7 @@ check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] $1 missing: $2"; fail=1; }; }
 
 check "$SKILL" "riso-tech:orchestrator-split START"
 check "$SKILL" "riso-tech:orchestrator-split END"
-check "$SKILL" "skills/writing-plans/plan-template.md"
+check "$SKILL" "skills/writing-plans/templates/plan-template.md"
 check "$SKILL" "rendering checkboxes as a readable checklist"
 check "$SKILL" "## Organize Tasks Under User Stories"
 check "$SKILL" "complete vertical slice"

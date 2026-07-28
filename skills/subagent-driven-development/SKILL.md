@@ -52,12 +52,12 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
+        "Dispatch implementer subagent (prompts/implementer-prompt.md)" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer subagent implements, tests, self-reviews, reports" [shape=box];
         "Orchestrator commits successful worker changes" [shape=box];
-        "Generate review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [shape=box];
+        "Generate review package, dispatch task reviewer subagent (prompts/task-reviewer-prompt.md)" [shape=box];
         "Task reviewer reports spec ✅ and quality approved?" [shape=diamond];
         "Dispatch fix subagent for Critical/Important findings" [shape=box];
         "Mark task complete in todo list and progress ledger" [shape=box];
@@ -65,36 +65,36 @@ digraph process {
 
     "Read plan, note context and global constraints, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [shape=box];
+    "Dispatch final code reviewer subagent (../requesting-code-review/prompts/code-reviewer.md)" [shape=box];
     "Final reviewer reports clean?" [shape=diamond];
     "Dispatch one final fix subagent" [shape=box];
     "Orchestrator commits successful final-fix changes" [shape=box];
     "Use superpowers-orchestrator:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
+    "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (prompts/implementer-prompt.md)";
+    "Dispatch implementer subagent (prompts/implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Answer questions, provide context" -> "Dispatch implementer subagent (prompts/implementer-prompt.md)";
     "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, self-reviews, reports" [label="no"];
     "Implementer subagent implements, tests, self-reviews, reports" -> "Orchestrator commits successful worker changes";
-    "Orchestrator commits successful worker changes" -> "Generate review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)";
-    "Generate review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅ and quality approved?";
+    "Orchestrator commits successful worker changes" -> "Generate review package, dispatch task reviewer subagent (prompts/task-reviewer-prompt.md)";
+    "Generate review package, dispatch task reviewer subagent (prompts/task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅ and quality approved?";
     "Task reviewer reports spec ✅ and quality approved?" -> "Dispatch fix subagent for Critical/Important findings" [label="no"];
     "Dispatch fix subagent for Critical/Important findings" -> "Orchestrator commits successful worker changes" [label="successful fix"];
     "Task reviewer reports spec ✅ and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="no"];
-    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Final reviewer reports clean?";
+    "More tasks remain?" -> "Dispatch implementer subagent (prompts/implementer-prompt.md)" [label="yes"];
+    "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/prompts/code-reviewer.md)" [label="no"];
+    "Dispatch final code reviewer subagent (../requesting-code-review/prompts/code-reviewer.md)" -> "Final reviewer reports clean?";
     "Final reviewer reports clean?" -> "Use superpowers-orchestrator:finishing-a-development-branch" [label="yes"];
     "Final reviewer reports clean?" -> "Dispatch one final fix subagent" [label="no"];
     "Dispatch one final fix subagent" -> "Orchestrator commits successful final-fix changes";
-    "Orchestrator commits successful final-fix changes" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="regenerate package"];
+    "Orchestrator commits successful final-fix changes" -> "Dispatch final code reviewer subagent (../requesting-code-review/prompts/code-reviewer.md)" [label="regenerate package"];
 }
 ```
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D13` runs for every plan task in sequence: call `superpowers-orchestrator:dispatch-agent` with `role: software_engineer` and the plan task's task_type, paste `implementer-prompt.md` into the prompt body, and provide the task brief, global constraints, required prior-task interfaces, and report path so the worker can implement and test that task; after a successful response, the orchestrator performs Git bookkeeping inline, generates the task review package from the recorded pre-task SHA through the new commit, and sends the task to `D14`, repeating D13–D16 for every plan task before `D17`.
+**Dispatch:** `D13` runs for every plan task in sequence: call `superpowers-orchestrator:dispatch-agent` with `role: software_engineer` and the plan task's task_type, paste `prompts/implementer-prompt.md` into the prompt body, and provide the task brief, global constraints, required prior-task interfaces, and report path so the worker can implement and test that task; after a successful response, the orchestrator performs Git bookkeeping inline, generates the task review package from the recorded pre-task SHA through the new commit, and sends the task to `D14`, repeating D13–D16 for every plan task before `D17`.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
@@ -265,7 +265,7 @@ same run-scoped task directory.
   report contract. Exact values (numbers, magic strings, signatures, test
   cases) appear only in the brief.
 - **Report file:** use `<run>/40-execution/tasks/<task>/report.md` from
-  [task-report-template.md](task-report-template.md) and put it in the
+  [task-report-template.md](templates/task-report-template.md) and put it in the
   dispatch prompt. The implementer writes the full report there and
   returns only status, files changed, a one-line test summary, and concerns.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
@@ -288,9 +288,9 @@ Conversation memory does not survive compaction. Use the active run's
 
 ## Prompt Templates
 
-- [implementer-prompt.md](implementer-prompt.md) - Dispatch implementer subagent
-- [task-reviewer-prompt.md](task-reviewer-prompt.md) - Dispatch task reviewer subagent (spec compliance + code quality)
-- Final whole-branch review: use superpowers-orchestrator:requesting-code-review's [code-reviewer.md](../requesting-code-review/code-reviewer.md)
+- [implementer-prompt.md](prompts/implementer-prompt.md) - Dispatch implementer subagent
+- [task-reviewer-prompt.md](prompts/task-reviewer-prompt.md) - Dispatch task reviewer subagent (spec compliance + code quality)
+- Final whole-branch review: use superpowers-orchestrator:requesting-code-review's [code-reviewer.md](../requesting-code-review/prompts/code-reviewer.md)
 
 ## Example Workflow
 

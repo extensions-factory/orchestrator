@@ -21,7 +21,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - (User preferences for plan location override this default)
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D10` dispatches plan authoring through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: sprint_planning`; from the approved spec, the worker writes the plan and HTML companion, using `skills/writing-plans/plan-template.md` for the plan and `skills/brainstorming/document-companion-template.html` for the HTML, rendering checkboxes as a readable checklist and regenerating the companion whenever the plan changes, then returns both for the orchestrator's Self-Review before the Execute-or-Refine choice; write them inline only if the harness has no subagent capability at all.
+**Dispatch:** `D10` dispatches plan authoring through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: sprint_planning`; from the approved spec, the worker writes the plan and HTML companion, using `skills/writing-plans/templates/plan-template.md` for the plan and `skills/brainstorming/templates/document-companion-template.html` for the HTML, rendering checkboxes as a readable checklist and regenerating the companion whenever the plan changes, then returns both for the orchestrator's Self-Review before the Execute-or-Refine choice; write them inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Scope Check
@@ -50,7 +50,7 @@ right here saves a round trip.
 - Close every US section with a `**US-N Checkpoint:**` block: the exact
   command or user action demonstrating that story end-to-end, with expected
   observable output covering each GIVEN/WHEN/THEN acceptance criterion from
-  the spec (see `plan-template.md`).
+  the spec (see `templates/plan-template.md`).
 <!-- riso-tech:orchestrator-split END -->
 
 ## Foundation Section (Optional)
@@ -228,7 +228,7 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
 <!-- riso-tech:orchestrator-split START -->
-**4. Template check:** Does the plan follow `skills/writing-plans/plan-template.md`? `**Spec:**` line, Expected Outcome section, `**Depends on:**` on every task, a Checkpoint closing every US section.
+**4. Template check:** Does the plan follow `skills/writing-plans/templates/plan-template.md`? `**Spec:**` line, Expected Outcome section, `**Depends on:**` on every task, a Checkpoint closing every US section.
 
 **5. Traceability check:** Every spec `US-n` has a matching plan `US-n` section; every US Checkpoint covers that story's GIVEN/WHEN/THEN acceptance criteria; every "Working behavior" bullet in Expected Outcome traces to a US.
 <!-- riso-tech:orchestrator-split END -->

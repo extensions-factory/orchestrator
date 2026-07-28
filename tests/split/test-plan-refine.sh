@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 REQUEST="$ROOT/skills/requesting-plan-refine/SKILL.md"
 RECEIVE="$ROOT/skills/receiving-plan-refine/SKILL.md"
-TEMPLATE="$ROOT/skills/requesting-plan-refine/plan-reviewer.md"
+TEMPLATE="$ROOT/skills/requesting-plan-refine/prompts/plan-reviewer.md"
 REF="$ROOT/../active/skills/requesting-plan-refine/plan-reviewer.md"
 fail=0
 check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] $1 missing: $2"; fail=1; }; }
@@ -18,7 +18,7 @@ check "$REQUEST" "role: tech_lead"
 check "$REQUEST" "task_type: code_review_quality"
 check "$REQUEST" "active run's \`ledger.jsonl\`"
 check "$REQUEST" "provider diversity"
-check "$REQUEST" "[plan-reviewer.md](plan-reviewer.md)"
+check "$REQUEST" "[plan-reviewer.md](prompts/plan-reviewer.md)"
 absent "$REQUEST" "START SDLC: code_review_quality"
 absent "$REQUEST" "DISPATCH: role=Plan Reviewer"
 check "$RECEIVE" "riso-tech:orchestrator-split — new skill, no upstream counterpart"

@@ -152,7 +152,7 @@ git push -u origin <feature-branch>
 ```
 
 <!-- riso-tech:orchestrator-split START -->
-Then create the draft PR with a body following `skills/finishing-a-development-branch/pr-body-template.md` — read it before writing. Fill every section from the spec, plan, and this session's actual test results, preserving the template's exact section headings; resolve the active run's finish directory with `node scripts/run-paths.mjs phase --root <repo-root> --run <workflow-id> --phase finish` and write the body to `pr-body.md` there.
+Then create the draft PR with a body following `skills/finishing-a-development-branch/templates/pr-body-template.md` — read it before writing. Fill every section from the spec, plan, and this session's actual test results, preserving the template's exact section headings; resolve the active run's finish directory with `node scripts/run-paths.mjs phase --root <repo-root> --run <workflow-id> --phase finish` and write the body to `pr-body.md` there.
 
 Validate the completed body before creating the draft PR. Compare it against the template line by line, reject placeholders or invented results, and run these minimum traceability checks (when no spec/plan exists, omit the Design Docs and US-ID checks as the template permits):
 

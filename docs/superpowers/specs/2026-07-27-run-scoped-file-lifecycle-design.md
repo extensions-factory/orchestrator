@@ -135,9 +135,9 @@ docs/superpowers/
 - `assets/message-envelope.schema.json`: dispatch envelope contract including
   `run_id`, `phase`, and `purpose`.
 - `assets/ledger-entry.schema.json`: append-only dispatch-pair contract.
-- Markdown/HTML templates: contracts for discovery, document companions,
-  task reports, retrospectives, constitutions, tool instruction pointers, and
-  generated run indexes.
+- `skills/*/templates/`: output contracts for discovery, document companions,
+  task reports, retrospectives, constitutions, and tool instruction pointers.
+- `skills/*/prompts/`: reusable worker and reviewer instructions.
 
 ### Data Model & Flow
 

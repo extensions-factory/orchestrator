@@ -7,12 +7,12 @@ check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] $1 missing: $2"; fail=1; }; }
 
 check "$SKILL" "riso-tech:orchestrator-split START"
 check "$SKILL" "riso-tech:orchestrator-split END"
-check "$SKILL" "design.md\` from \`spec-template.md\`"
+check "$SKILL" "design.md\` from \`templates/spec-template.md\`"
 check "$SKILL" "role: business_analyst"
 check "$SKILL" "role: product_owner"
 check "$SKILL" "role: tech_lead"
 check "$SKILL" "role: technical_writer"
-check "$SKILL" "design.html\` from \`document-companion-template.html\`"
+check "$SKILL" "design.html\` from \`templates/document-companion-template.html\`"
 check "$SKILL" "docs/superpowers/roadmap.json"
 check "$SKILL" "docs/superpowers/ROADMAP.html"
 check "$SKILL" '${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md'
@@ -25,7 +25,7 @@ check "$RELEASE" "riso-tech:orchestrator-split START"
 check "$RELEASE" "riso-tech:orchestrator-split END"
 check "$RELEASE" "role: devops_engineer"
 check "$RELEASE" "task_type: release_deployment"
-check "$RELEASE" "pr-body-template.md"
+check "$RELEASE" "templates/pr-body-template.md"
 check "$RELEASE" "gh pr create --draft --body-file"
 check "$RELEASE" "### Step 5b: Update Product Roadmap"
 check "$RELEASE" 'Runs for the `merge` and `pr` actions only'
