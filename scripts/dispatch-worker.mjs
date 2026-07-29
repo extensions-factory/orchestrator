@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -47,6 +47,7 @@ function statusFrom(stdout) {
   if (start >= 0 && end > start) {
     const value = JSON.parse(stdout.slice(start, end + 1));
     if (typeof value.status === "string") return value;
+    if (typeof value.job?.status === "string") return value.job;
   }
   const match = stdout.match(/\bstatus\s*[:=]\s*([A-Za-z0-9_-]+)/i);
   if (!match) throw new Error("companion returned no status");
@@ -111,7 +112,7 @@ export function main(argv) {
       writeFileSync(jobPath, `${jobId}\n`);
     }
 
-    const state = statusFrom(runCompanion(companion, ["status", jobId, "--wait", "--timeout-ms", WAIT_TIMEOUT_MS]));
+    const state = statusFrom(runCompanion(companion, ["status", jobId, "--wait", "--timeout-ms", WAIT_TIMEOUT_MS, "--json"]));
     if (ACTIVE.has(state.status)) {
       const createdAt = Date.parse(state.createdAt);
       if (!Number.isFinite(createdAt)) {
@@ -132,12 +133,12 @@ export function main(argv) {
 
     const result = runCompanion(companion, ["result", jobId]);
     const envelope = responseEnvelope(result);
-    if (!envelope) {
+    if (envelope) writeFileSync(responsePath, `${JSON.stringify(envelope, null, 2)}\n`);
+    else if (!existsSync(responsePath)) {
       writeFileSync(rawPath, `${result}\n`);
       console.log(`TERMINAL malformed ${displayRaw}`);
       return;
     }
-    writeFileSync(responsePath, `${JSON.stringify(envelope, null, 2)}\n`);
     console.log(`TERMINAL completed ${displayResponse}`);
   } catch (error) {
     console.log(`TERMINAL failed wrapper ${String(error.message ?? error).replace(/\s+/g, "-")}`);

@@ -42,16 +42,23 @@ if (command === "task") {
   }
   const mode = process.env.FAKE_CASE;
   const status =
-    mode === "long" || mode === "runaway" || mode === "no-created-at" ? "running" :
+    mode === "long" || mode === "wait-elapsed" || mode === "runaway" || mode === "no-created-at" ? "running" :
     mode === "killed" ? "killed" :
     mode === "future" ? "archived" :
     "completed";
   const createdAt = mode === "runaway" ? "1970-01-01T00:00:00.000Z" : new Date().toISOString();
-  const state = {id: "task-fixture-1", status, phase: status, createdAt};
-  if (mode === "no-created-at") delete state.createdAt;
-  console.log(JSON.stringify(state));
+  const job = {id: "task-fixture-1", status, phase: status, createdAt};
+  if (mode === "no-created-at") delete job.createdAt;
+  // Mirrors the real companion: `status --json` prints the nested snapshot,
+  // otherwise a markdown report that carries no machine-readable status.
+  if (args.includes("--json"))
+    console.log(JSON.stringify({workspaceRoot: process.cwd(), job, waitTimedOut: status === "running", timeoutMs: 570000}, null, 2));
+  else
+    console.log(`# Codex Job Status\n\n- ${job.id} | ${status} | Codex Task\n  Phase: ${status}\n  Log: /tmp/${job.id}.log`);
 } else if (command === "result") {
   if (process.env.FAKE_CASE === "malformed") console.log("worker returned prose");
+  else if (process.env.FAKE_CASE === "terminal-line")
+    console.log(`TERMINAL done ${process.env.FAKE_RESPONSE_PATH}\n\nCodex session ID: 019f-fixture`);
   else console.log('worker prose\n```json\n{"message_type":"deliver","output":{"status":"done"}}\n```');
 }
 FAKE
@@ -133,6 +140,31 @@ assert_contains "$output" "TERMINAL failed wrapper invalid---job-task-fixture-1;
 
 output="$(run_case future)"
 assert_contains "$output" "TERMINAL failed archived"
+
+# An elapsed `status --wait` on a still-running job is not a failure: the wrapper
+# must read the status the companion actually prints and keep the job PENDING.
+WAIT_TRACE="$TMP/wait-elapsed.trace"
+output="$(FAKE_TRACE="$WAIT_TRACE" run_case wait-elapsed)"
+[[ "$output" != *"TERMINAL failed"* ]] || fail "elapsed wait reported a failure: $output"
+assert_contains "$output" $'PENDING task-fixture-1\nRESUME node scripts/dispatch-worker.mjs --job \'task-fixture-1\''
+grep -q -- '--wait --timeout-ms 570000' "$WAIT_TRACE" || fail "wait flags not forwarded: $(cat "$WAIT_TRACE")"
+
+# A worker that writes its own response.json and returns only a TERMINAL line
+# has succeeded; stdout carrying no inline envelope is not a malformed result.
+work="$(case_dir terminal-line)"
+mkdir -p "$work"
+printf '{}\n' > "$work/request.json"
+printf 'bounded prompt\n' > "$work/prompt.txt"
+printf '{"message_type":"deliver","output":{"status":"done"}}\n' > "$work/response.json"
+output="$(FAKE_CASE=terminal-line FAKE_RESPONSE_PATH="$work/response.json" node "$SCRIPT" \
+  --provider codex \
+  --plugin-root "$PLUGIN" \
+  --request "$work/request.json" \
+  --prompt "$work/prompt.txt" \
+  --model gpt-5.6-sol \
+  --effort high)"
+[[ "$output" == "TERMINAL completed $work/response.json" ]] || fail "terminal-line output: $output"
+[[ ! -e "$work/result-raw.txt" ]] || fail "terminal-line result was treated as malformed"
 
 check 'Step 4c: Invoke the haiku forwarder'
 check 'Run the command given below. Then:'
