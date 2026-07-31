@@ -46,5 +46,29 @@
     "plan": null,
     "created": "2026-07-31",
     "completed": null
+  },
+  {
+    "slug": "designing-ui-skill--brainstorming-injection",
+    "epic": "Superpowers Skills",
+    "feature": "designing-ui skill",
+    "title": "Brainstorming injection point",
+    "description": "Detect a user-facing surface after Architecture approval in brainstorming and invoke designing-ui as a sub-flow; brainstorming then calls writing-plans once with both spec paths.",
+    "status": "open",
+    "spec": "features/designing-ui-skill/design.md",
+    "plan": null,
+    "created": "2026-07-31",
+    "completed": null
+  },
+  {
+    "slug": "designing-ui-skill--project-kickoff-injection",
+    "epic": "Superpowers Skills",
+    "feature": "designing-ui skill",
+    "title": "Project-kickoff injection point",
+    "description": "Detect a FrontEnd stack from Phase 2 Stack answer in project-kickoff and invoke designing-ui as a sub-flow for the initial UI shell; project-kickoff then calls writing-plans once with both spec paths.",
+    "status": "open",
+    "spec": "features/designing-ui-skill/design.md",
+    "plan": null,
+    "created": "2026-07-31",
+    "completed": null
   }
 ]

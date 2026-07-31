@@ -50,7 +50,7 @@
   <li>Does not handle native mobile or non-web-Electron-TS platforms.</li>
   <li>Does not carry forward any licensing/asset-extraction guard logic from the superseded proposal.</li>
   <li>Does not replace or modify the existing <code>reui</code> or <code>figma-design-to-code</code> skills.</li>
-  <li>Does not auto-chain from <code>brainstorming</code>.</li>
+  <li>Does not auto-chain from <code>brainstorming</code>; the user or orchestrator invokes it directly (direct-invoke mode). In sub-flow mode it is called BY <code>brainstorming</code> or <code>project-kickoff</code> — see section 5a.</li>
 </ul>
 
 <h2>4. User Stories</h2>
@@ -93,12 +93,53 @@
   <li>GIVEN <code>design.md</code> has been written WHEN the HTML companion step runs THEN <code>design.html</code> is generated from <code>document-companion-template.html</code>.</li>
   <li>GIVEN <code>design.md</code> has been written WHEN the roadmap step runs THEN one entry per User Story is written to <code>roadmap.json</code> and <code>ROADMAP.html</code> is regenerated.</li>
   <li>GIVEN all output files have been written WHEN the spec self-review step runs THEN the agent scans for TBD/placeholder text and confirms internal consistency and template conformance.</li>
-  <li>GIVEN the user has reviewed and accepted the spec WHEN the skill ends THEN the agent invokes <code>superpowers-orchestrator:writing-plans</code> and no other skill.</li>
+  <li>GIVEN the user has reviewed and accepted the spec AND the skill was invoked in direct mode WHEN the skill ends THEN the agent invokes <code>superpowers-orchestrator:writing-plans</code> and no other skill.</li>
+  <li>GIVEN the user has reviewed and accepted the spec AND the skill was invoked in sub-flow mode (by <code>brainstorming</code> or <code>project-kickoff</code>) WHEN the skill ends THEN control returns to the calling skill; the calling skill is responsible for invoking <code>writing-plans</code> exactly once after its own flow completes.</li>
 </ul>
+
+<h3>US-5: Brainstorming injection point (Priority: P2)</h3>
+<p>As an agent running <code>superpowers-orchestrator:brainstorming</code>, I want to detect when a feature has a user-facing surface right after the Architecture sub-section of "Present design" is approved, so that UI design work happens through <code>designing-ui</code> instead of being improvised inline.</p>
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN the Architecture sub-section of Present design has just been approved by the human WHEN the agent evaluates that approved content THEN it judges, from the Architecture content alone (no separate question), whether the feature has a user-facing surface (FrontEnd).</li>
+  <li>GIVEN the agent judges the feature has a FrontEnd WHEN the judgment is made THEN the agent invokes <code>designing-ui</code> as a sub-flow with the human now, before continuing to the remaining Present-design sections (data flow, error handling, testing).</li>
+  <li>GIVEN <code>designing-ui</code> sub-flow completes and produces its own <code>design.md</code> under the same feature slug WHEN brainstorming resumes THEN brainstorming continues its own remaining sections and later writes its own <code>design.md</code> as normal (two separate spec files: brainstorming's business/architecture spec, designing-ui's UI spec, same feature slug directory).</li>
+  <li>GIVEN brainstorming reaches its terminal step WHEN <code>designing-ui</code> ran during this session THEN brainstorming invokes <code>superpowers-orchestrator:writing-plans</code> exactly ONCE, referencing BOTH spec paths.</li>
+  <li>GIVEN brainstorming reaches its terminal step WHEN <code>designing-ui</code> did NOT run during this session (no FrontEnd judged) THEN brainstorming invokes <code>writing-plans</code> on its own spec alone (unchanged behavior).</li>
+</ul>
+<blockquote><strong>Eval-evidence requirement (implementation gate):</strong> Editing <code>skills/brainstorming/SKILL.md</code> to implement this injection point requires adversarial pressure testing and before/after eval evidence via <code>superpowers-orchestrator:writing-skills</code> before merge — as mandated by this repo's CLAUDE.md ("Skill Changes Require Evaluation"). This is a requirement for the IMPLEMENTATION PLAN to satisfy, not something resolved by this design document.</blockquote>
+
+<h3>US-6: Project-kickoff injection point (Priority: P2)</h3>
+<p>As an agent running <code>superpowers-orchestrator:project-kickoff</code>, I want to detect a FrontEnd stack from the Phase 2 "Stack" answer and route the initial UI shell through <code>designing-ui</code>, so that greenfield frontend projects get the same UI-design discipline as existing-project features.</p>
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN the human has answered the Phase 2 "Stack" question (language, framework/library, package manager, test runner) WHEN Phase 3 (Scaffold spec) begins THEN the agent classifies the chosen framework/library using the same <code>web-electron-ts</code> vs <code>other</code> classification <code>designing-ui</code> Step 2 uses — no new question is asked, this reuses the existing Stack answer.</li>
+  <li>GIVEN the classification is <code>web-electron-ts</code> (FrontEnd) WHEN the scaffold spec is being written THEN the scaffold spec ALSO includes an initial UI-shell/skeleton-page task, and <code>designing-ui</code> runs as a sub-flow on that shell (same dual-mode contract as the brainstorming injection: sub-flow mode, does not call <code>writing-plans</code> itself), producing its own spec file.</li>
+  <li>GIVEN the classification is <code>other</code> (no FrontEnd, e.g. CLI/library/IaC) WHEN Phase 3 runs THEN the scaffold spec is written as today — tooling only, no UI-shell task, no <code>designing-ui</code> invocation.</li>
+  <li>GIVEN Phase 4 (Handoff) runs and the FrontEnd path was taken WHEN the agent hands off THEN it invokes <code>writing-plans</code> exactly ONCE, referencing BOTH <code>docs/superpowers/project/scaffold-design.md</code> and the designing-ui shell spec.</li>
+  <li>GIVEN Phase 4 runs and no FrontEnd was detected WHEN the agent hands off THEN behavior is unchanged — <code>writing-plans</code> on <code>scaffold-design.md</code> alone.</li>
+</ul>
+<blockquote><strong>Eval-evidence requirement (implementation gate):</strong> Editing <code>skills/project-kickoff/SKILL.md</code> to implement this injection point requires adversarial pressure testing and before/after eval evidence via <code>superpowers-orchestrator:writing-skills</code> before merge — same gate as US-5. This is a requirement for the IMPLEMENTATION PLAN to satisfy, not something resolved by this design document.</blockquote>
 
 <h2>5. Approach</h2>
 <p>The skill is implemented as a <strong>full sibling skill</strong> — a standalone <code>SKILL.md</code> file under <code>skills/designing-ui/</code> that loads <code>reui</code> as a peer and calls Figma MCP tools directly. It does not wrap or extend <code>brainstorming</code>, and it does not modify any existing skill file.</p>
 <p>This approach was chosen because it keeps the new skill's checklist self-contained and independently evolvable, follows the existing layering pattern (peer loading) without creating fragile edits to auto-regenerated skill files, gives it the same terminal-state contract as <code>brainstorming</code> with no change to downstream tooling, and avoids the brittleness of delegating to <code>brainstorming</code> and intercepting its output mid-flow.</p>
+
+<h2>5a. Invocation Modes</h2>
+<p>The skill operates in two distinct invocation modes that share Steps 1–9 identically; only the terminal action (Step 10) differs:</p>
+
+<h3>Direct invoke (human calls <code>designing-ui</code> explicitly)</h3>
+<p>The full 10-step checklist runs as specified. Step 10 is terminal: the agent invokes <code>superpowers-orchestrator:writing-plans</code> directly, referencing the <code>design.md</code> it produced, and does not invoke any other skill.</p>
+
+<h3>Sub-flow invoke (called BY <code>brainstorming</code> or <code>project-kickoff</code>)</h3>
+<p>Steps 1–9 are identical — human-in-the-loop approval of the layout mapping (Step 6) and the written spec (Step 9) remain required in both modes. Step 10 changes: the agent does <strong>NOT</strong> invoke <code>writing-plans</code> itself. Instead it returns control to the calling skill. The calling skill is then responsible for invoking <code>writing-plans</code> exactly once after its own flow completes, passing both its own spec path and the <code>designing-ui</code> spec path. This prevents a double <code>writing-plans</code> invocation when the UI spec is just one part of a larger design session.</p>
+<table>
+  <thead><tr><th>Step</th><th>Direct invoke</th><th>Sub-flow invoke</th></tr></thead>
+  <tbody>
+    <tr><td>1–9</td><td>Identical</td><td>Identical</td></tr>
+    <tr><td>10</td><td>Agent calls <code>writing-plans</code> on own spec</td><td>Returns control to caller; caller calls <code>writing-plans</code> once on both specs</td></tr>
+  </tbody>
+</table>
 
 <h3>Alternatives considered</h3>
 <table>
@@ -205,7 +246,8 @@
   <li>SC-2: The written <code>design.md</code> passes the spec self-review scan (zero TBD/TODO/placeholder occurrences) and conforms to <code>spec-template.md</code> structure.</li>
   <li>SC-3: <code>roadmap.json</code> validates against <code>assets/roadmap.schema.json</code> with one entry per User Story, status <code>open</code>, <code>completed: null</code>.</li>
   <li>SC-4: Invoking the skill on a non-<code>web-electron-ts</code> project terminates cleanly with a redirect message to <code>brainstorming</code> and produces no output files.</li>
-  <li>SC-5: The skill's terminal state is always <code>superpowers-orchestrator:writing-plans</code> — no other skill is invoked on successful completion.</li>
+  <li>SC-5 (direct mode): The skill's terminal state in direct-invoke mode is always <code>superpowers-orchestrator:writing-plans</code> — no other skill is invoked on successful completion.</li>
+  <li>SC-6 (sub-flow mode): In sub-flow mode the skill does NOT invoke <code>writing-plans</code>; it returns control to the calling skill, which invokes <code>writing-plans</code> exactly once referencing both specs.</li>
 </ul>
 </main>
 </body>
