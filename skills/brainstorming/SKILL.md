@@ -94,6 +94,7 @@ digraph brainstorming {
 - Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
+- After the Architecture section is approved, judge from that approved content alone whether the feature has a user-facing surface. If it does, invoke `superpowers-orchestrator:designing-ui` as a sub-flow with the human before continuing to the remaining sections.
 - Be ready to go back and clarify if something doesn't make sense
 
 **Design for isolation and clarity:**
@@ -144,8 +145,8 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 **Implementation:**
 
-- Invoke `superpowers-orchestrator:writing-plans` to create a detailed implementation plan
-- Do NOT invoke any other skill. `superpowers-orchestrator:writing-plans` is the next step.
+- If `superpowers-orchestrator:designing-ui` ran during this session, invoke `superpowers-orchestrator:writing-plans` exactly once, referencing both this skill's `design.md` and the `designing-ui` spec. Otherwise, invoke it on this skill's `design.md` alone to create a detailed implementation plan.
+- Do NOT invoke any other skill at this point. `superpowers-orchestrator:writing-plans` is the next step.
 
 ## Key Principles
 
