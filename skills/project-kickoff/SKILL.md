@@ -64,7 +64,7 @@ Discovery (+ backlog) → Setup → Scaffold spec → Handoff. Each phase is def
 
 Ask questions **one at a time**, multiple-choice where possible (same discipline as `superpowers-orchestrator:brainstorming`), informed by the discovery doc.
 
-1. **Stack** — language, framework/library, package manager, test runner.
+1. **Stack** — language, framework/library, package manager, test runner. Use this answer in Phase 3 to classify a React or Electron TypeScript frontend as `web-electron-ts`; otherwise it is `other`, matching `superpowers-orchestrator:designing-ui`.
 2. **Standards** — formatter/linter, naming conventions, commit convention, test-file convention.
 3. **AI tools** — multi-select: "Which AI coding tools do you use?" (Claude Code, Codex, Gemini CLI, Copilot, other/none). This drives which per-tool instruction files the scaffold spec will create.
 
@@ -101,12 +101,13 @@ Write `docs/superpowers/project/scaffold-design.md` using the standard `superpow
 - Write enforceable config (`.eslintrc`/`.prettierrc`/`pyproject.toml`/…) matching the constitution.
 - Write a minimal CI stub (lint + test) for the developer's git host. See `templates/ci-stub-templates.md`.
 - Walking-skeleton verification: run build/dev/test and the linter once; confirm a green baseline before the branch is finished.
+- If the Stack answer is `web-electron-ts`, also include an initial UI-shell/skeleton-page task, then run `superpowers-orchestrator:designing-ui` as a sub-flow on that shell. It returns its shell spec path and does not invoke `superpowers-orchestrator:writing-plans`; for `other`, keep this scaffold spec unchanged.
 
 Initialize the product roadmap during `D8` from the **confirmed backlog** (Phase 1 step 5): write `docs/superpowers/roadmap.json` with one entry per confirmed User Story and generate `docs/superpowers/ROADMAP.html`, following `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md` and starting from `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html` verbatim. Follow that file's level mapping exactly: **Epic → summary card**, **Feature → exactly one detail section** (dedup by feature — never emit two sections for the same feature), **User Story → one `.item`**. Every seeded US is `status: open` with `spec` and `plan` set to `null`; kickoff creates no spec but Scaffold, so no roadmap entry points at a spec yet. `superpowers-orchestrator:brainstorming` attaches specs and adds later User Stories per feature as it designs them. Write nothing that wasn't in the human-confirmed backlog; if the backlog is empty, write `[]`.
 
 ## Phase 4 — Handoff
 
-Invoke `superpowers-orchestrator:writing-plans` on the scaffold spec. From there the existing pipeline runs unmodified. After the scaffold branch is finished, `superpowers-orchestrator:brainstorming` designs the first real feature — now against a tested repo with market context in hand.
+If the `web-electron-ts` FrontEnd path ran, invoke `superpowers-orchestrator:writing-plans` exactly once with both `docs/superpowers/project/scaffold-design.md` and the shell spec path returned by `superpowers-orchestrator:designing-ui`; otherwise invoke it on `docs/superpowers/project/scaffold-design.md` alone. From there the existing pipeline runs unmodified. After the scaffold branch is finished, `superpowers-orchestrator:brainstorming` designs the first real feature — now against a tested repo with market context in hand.
 
 **This is the terminal state.** Do NOT invoke any other implementation skill; `superpowers-orchestrator:writing-plans` is the next step.
 
