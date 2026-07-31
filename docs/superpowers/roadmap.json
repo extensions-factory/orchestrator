@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "designing-ui-skill--platform-detection",
+    "epic": "Superpowers Skills",
+    "feature": "designing-ui skill",
+    "title": "Platform detection",
+    "description": "Auto-detect the target platform (web-electron-ts vs other) from project files, scaffold-design.md, or human input before any UI design steps run.",
+    "status": "open",
+    "spec": "features/designing-ui-skill/design.md",
+    "plan": null,
+    "created": "2026-07-31",
+    "completed": null
+  },
+  {
+    "slug": "designing-ui-skill--figma-layout-capture",
+    "epic": "Superpowers Skills",
+    "feature": "designing-ui skill",
+    "title": "Layout capture via Figma reference",
+    "description": "Read a Figma file or node via get_metadata and get_screenshot to capture structural layout and visual reference for component mapping.",
+    "status": "open",
+    "spec": "features/designing-ui-skill/design.md",
+    "plan": null,
+    "created": "2026-07-31",
+    "completed": null
+  },
+  {
+    "slug": "designing-ui-skill--reui-component-mapping",
+    "epic": "Superpowers Skills",
+    "feature": "designing-ui skill",
+    "title": "ReUI component mapping",
+    "description": "Map each layout section to a free-tier ReUI component via the ReUI MCP search tool; flag unmatched sections as gaps without silent substitution.",
+    "status": "open",
+    "spec": "features/designing-ui-skill/design.md",
+    "plan": null,
+    "created": "2026-07-31",
+    "completed": null
+  },
+  {
+    "slug": "designing-ui-skill--design-doc-and-roadmap-output",
+    "epic": "Superpowers Skills",
+    "feature": "designing-ui skill",
+    "title": "Design doc and roadmap output",
+    "description": "Write design.md, design.html companion, roadmap.json entries, and ROADMAP.html after approval; hand off to writing-plans as the terminal state.",
+    "status": "open",
+    "spec": "features/designing-ui-skill/design.md",
+    "plan": null,
+    "created": "2026-07-31",
+    "completed": null
+  }
+]

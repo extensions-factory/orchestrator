@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>superpowers-orchestrator:designing-ui — Design Spec</title>
+<style>
+  :root { color-scheme: dark; --bg:#0e1015; --panel:#171a22; --text:#edf1f7; --muted:#9ca7b7; --line:#2b3240; }
+  * { box-sizing: border-box; }
+  body { max-width: 960px; margin: auto; padding: 48px 24px; color: var(--text); background: var(--bg); font: 16px/1.65 system-ui, sans-serif; }
+  main { padding: 32px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+  h1, h2, h3 { line-height: 1.2; }
+  a { color: #70d6ff; }
+  code, pre { font-family: ui-monospace, monospace; }
+  pre { overflow: auto; padding: 16px; border-radius: 9px; background: #0a0c10; }
+  blockquote { margin-left: 0; padding-left: 16px; border-left: 3px solid var(--muted); color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>superpowers-orchestrator:designing-ui — Design Spec</h1>
+<p><strong>Status:</strong> draft &nbsp;|&nbsp; <strong>Date:</strong> 2026-07-31</p>
+
+<h2>1. Overview</h2>
+<p>Agents working on UI currently fall back to the general <code>superpowers-orchestrator:brainstorming</code> skill for every design task, which lacks platform detection, visual layout capture, and component-library mapping steps. This skill — <code>superpowers-orchestrator:designing-ui</code> — is a dedicated UI/visual-design sibling of <code>brainstorming</code> that an agent invokes directly when starting any UI work (new screen, component, or redesign) on a web/Electron/TypeScript project. It detects the target platform, captures the layout via Figma or a text description, maps each layout section to free-tier ReUI components, flags gaps, and produces a component-mapped design doc that feeds <code>superpowers-orchestrator:writing-plans</code> exactly as <code>brainstorming</code> does.</p>
+
+<h2>2. Context &amp; Assumptions</h2>
+<ul>
+  <li>The orchestrator plugin already has <code>superpowers-orchestrator:brainstorming</code> and <code>superpowers-orchestrator:writing-plans</code>. This skill is a peer of <code>brainstorming</code>, not a replacement.</li>
+  <li>The superseded <code>docs/UI-desgin.md</code> proposed a narrower <code>metronic-free-build</code> skill. That proposal is replaced by this skill; licensing/tier guard logic is dropped.</li>
+  <li>Assumption: the Figma MCP server exposes <code>get_metadata</code> and <code>get_screenshot</code> tools. If unavailable the skill degrades to a text-description path.</li>
+  <li>Assumption: the ReUI MCP server exposes a <code>search</code> tool. If unavailable the agent notes the gap and asks the user to describe components manually.</li>
+  <li>Assumption: platform detection is limited to <code>web-electron-ts</code> vs <code>other</code>. Native mobile and non-TS stacks are explicitly out of scope.</li>
+  <li>No open questions remain; the scope and workflow were approved section by section in the brainstorming session.</li>
+</ul>
+
+<h2>3. Scope</h2>
+<h3>Goals</h3>
+<ul>
+  <li>Provide a dedicated skill trigger for UI design work, separate from <code>brainstorming</code>.</li>
+  <li>Auto-detect the target platform from project files, scaffold-design doc, or human input.</li>
+  <li>Accept a Figma file/node link or text description as the layout source.</li>
+  <li>Map each layout section to free-tier ReUI components; flag sections with no match.</li>
+  <li>Produce a <code>design.md</code> spec, <code>design.html</code> companion, and roadmap entries, then hand off to <code>writing-plans</code>.</li>
+  <li>Maintain the same terminal-state contract as <code>brainstorming</code> so downstream tooling is identical.</li>
+</ul>
+<h3>Non-Goals</h3>
+<ul>
+  <li>Does not generate code from Figma directly (no <code>figma-design-to-code</code>, no <code>get_design_context</code> call).</li>
+  <li>Does not handle native mobile or non-web-Electron-TS platforms.</li>
+  <li>Does not carry forward any licensing/asset-extraction guard logic from the superseded proposal.</li>
+  <li>Does not replace or modify the existing <code>reui</code> or <code>figma-design-to-code</code> skills.</li>
+  <li>Does not auto-chain from <code>brainstorming</code>.</li>
+</ul>
+
+<h2>4. User Stories</h2>
+
+<h3>US-1: Platform detection (Priority: P1)</h3>
+<p>As an agent running the <code>designing-ui</code> skill, I want to detect the project's target platform automatically, so that I can apply the correct design workflow without asking the user for information already in the project files.</p>
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN a project with <code>package.json</code>, <code>tsconfig.json</code>, or electron config files WHEN the skill starts THEN the platform is classified as <code>web-electron-ts</code> without prompting the user.</li>
+  <li>GIVEN a project with <code>docs/superpowers/project/scaffold-design.md</code> (but no installed project files yet) WHEN the skill starts THEN the platform is read from that doc without prompting.</li>
+  <li>GIVEN neither project files nor scaffold-design.md exist WHEN the skill starts THEN the agent asks the user one question: "What stack/platform is this project?"</li>
+  <li>GIVEN the detected or declared platform is not <code>web-electron-ts</code> WHEN the skill processes the detection result THEN the skill stops, tells the user this branch is not yet designed, and suggests <code>superpowers-orchestrator:brainstorming</code> instead.</li>
+</ul>
+
+<h3>US-2: Layout capture via Figma reference (Priority: P1)</h3>
+<p>As an agent running the <code>designing-ui</code> skill, I want to read a Figma file or node when the user provides a link, so that I can capture the structural layout and visual reference for mapping to components.</p>
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN the user provides a Figma file/node URL WHEN the skill processes the layout step THEN the agent calls <code>get_metadata</code> and <code>get_screenshot</code> via the Figma MCP directly.</li>
+  <li>GIVEN the Figma reference resolves successfully WHEN the metadata is returned THEN the agent extracts section names, layout hierarchy, spacing, and component slots.</li>
+  <li>GIVEN the Figma reference is inaccessible or returns an error WHEN <code>get_metadata</code> is called THEN the agent tells the user and asks for another reference or a text description.</li>
+  <li>GIVEN no Figma link is provided WHEN the agent asks for the layout THEN the agent accepts a plain text description as a valid alternative input.</li>
+</ul>
+
+<h3>US-3: ReUI component mapping (Priority: P1)</h3>
+<p>As an agent running the <code>designing-ui</code> skill, I want to map each layout section to a free-tier ReUI component, so that the design doc records concrete component choices before implementation begins.</p>
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN layout sections have been identified WHEN the mapping step runs THEN the agent calls the ReUI MCP <code>search</code> tool once per section.</li>
+  <li>GIVEN a ReUI search returns one or more free-tier matches WHEN results are evaluated THEN the agent records the best-matching component for that section.</li>
+  <li>GIVEN a ReUI search returns no free-tier match WHEN results are evaluated THEN the agent flags the section as a gap and tells the user explicitly.</li>
+  <li>GIVEN all sections have been evaluated WHEN the mapping step is complete THEN the agent presents a summary table and seeks approval per section.</li>
+</ul>
+
+<h3>US-4: Design doc and roadmap output (Priority: P1)</h3>
+<p>As an agent running the <code>designing-ui</code> skill, I want to write the approved design to a <code>design.md</code> spec, a <code>design.html</code> companion, and roadmap entries, so that the output is a durable, human-readable record that feeds the standard <code>writing-plans</code> workflow.</p>
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN the user has approved the design WHEN the write step runs THEN <code>docs/superpowers/features/&lt;slug&gt;/design.md</code> is created from <code>spec-template.md</code> with an additional "Platform &amp; Layout Source" block.</li>
+  <li>GIVEN <code>design.md</code> has been written WHEN the HTML companion step runs THEN <code>design.html</code> is generated from <code>document-companion-template.html</code>.</li>
+  <li>GIVEN <code>design.md</code> has been written WHEN the roadmap step runs THEN one entry per User Story is written to <code>roadmap.json</code> and <code>ROADMAP.html</code> is regenerated.</li>
+  <li>GIVEN all output files have been written WHEN the spec self-review step runs THEN the agent scans for TBD/placeholder text and confirms internal consistency and template conformance.</li>
+  <li>GIVEN the user has reviewed and accepted the spec WHEN the skill ends THEN the agent invokes <code>superpowers-orchestrator:writing-plans</code> and no other skill.</li>
+</ul>
+
+<h2>5. Approach</h2>
+<p>The skill is implemented as a <strong>full sibling skill</strong> — a standalone <code>SKILL.md</code> file under <code>skills/designing-ui/</code> that loads <code>reui</code> as a peer and calls Figma MCP tools directly. It does not wrap or extend <code>brainstorming</code>, and it does not modify any existing skill file.</p>
+<p>This approach was chosen because it keeps the new skill's checklist self-contained and independently evolvable, follows the existing layering pattern (peer loading) without creating fragile edits to auto-regenerated skill files, gives it the same terminal-state contract as <code>brainstorming</code> with no change to downstream tooling, and avoids the brittleness of delegating to <code>brainstorming</code> and intercepting its output mid-flow.</p>
+
+<h3>Alternatives considered</h3>
+<table>
+  <thead><tr><th>Option</th><th>Why rejected</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>B: Thin wrapper around <code>brainstorming</code></strong> — invoke <code>brainstorming</code> and intercept or post-process its output to add platform detection and component mapping</td>
+      <td><code>brainstorming</code> has no hook/extension points; the wrapper would duplicate or shadow large parts of its checklist, creating a maintenance coupling risk every time <code>brainstorming</code> evolves.</td>
+    </tr>
+    <tr>
+      <td><strong>C: Extend the shared <code>spec-template.md</code></strong> — add a conditional "UI variant" section to the existing template that any skill can optionally activate</td>
+      <td>The template is a document structure specification, not a skill workflow. Adding control-flow conditions there would blur its purpose. Platform-detection and component-mapping steps belong in a skill, not a document template.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>6. Design</h2>
+
+<h3>Architecture</h3>
+<pre><code>superpowers-orchestrator:designing-ui  (new SKILL.md — future work)
+  │
+  ├── reads  .ua/knowledge-graph.json or .understand-anything/knowledge-graph.json
+  ├── reads  docs/superpowers/project/scaffold-design.md
+  ├── calls  Figma MCP: get_metadata, get_screenshot
+  ├── loads  skill: reui  →  calls ReUI MCP: search
+  │
+  ├── writes docs/superpowers/features/&lt;slug&gt;/design.md
+  ├── writes docs/superpowers/features/&lt;slug&gt;/design.html
+  ├── writes docs/superpowers/roadmap.json
+  ├── writes docs/superpowers/ROADMAP.html
+  │
+  └── invokes superpowers-orchestrator:writing-plans</code></pre>
+
+<h3>Platform &amp; Layout Source</h3>
+<ul>
+  <li><strong>Detected platform:</strong> <code>web-electron-ts</code> (the in-scope branch for this skill).</li>
+  <li><strong>Detection method:</strong> project file inspection → scaffold-design.md → direct human question (first source that resolves wins).</li>
+  <li><strong>Layout source:</strong> Figma file/node URL or human text description (first provided wins; Figma is preferred).</li>
+  <li><strong>Figma MCP tools used:</strong> <code>get_metadata</code> (hierarchy + spacing), <code>get_screenshot</code> (visual reference). No code-generation tools are called.</li>
+</ul>
+
+<h3>Components &amp; Interfaces</h3>
+<table>
+  <thead><tr><th>Component</th><th>Role</th><th>Depends on</th></tr></thead>
+  <tbody>
+    <tr><td><code>designing-ui</code> SKILL.md</td><td>Orchestrates the 10-step checklist</td><td>Figma MCP, ReUI MCP, <code>reui</code> skill</td></tr>
+    <tr><td>Figma MCP</td><td>Provides <code>get_metadata</code> and <code>get_screenshot</code></td><td>External Figma API</td></tr>
+    <tr><td>ReUI MCP</td><td>Provides <code>search</code> for free-tier component lookup</td><td>External ReUI registry</td></tr>
+    <tr><td><code>reui</code> skill</td><td>Peer-loaded for <code>adapting.md</code> reuse-first rules</td><td>ReUI MCP</td></tr>
+    <tr><td><code>spec-template.md</code></td><td>Document structure for <code>design.md</code> output</td><td>—</td></tr>
+    <tr><td><code>document-companion-template.html</code></td><td>HTML wrapper for <code>design.html</code> output</td><td>—</td></tr>
+    <tr><td><code>roadmap.json</code> / <code>ROADMAP.html</code></td><td>Persistent roadmap updated per feature spec</td><td><code>roadmap.schema.json</code>, <code>assets/roadmap.html</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Data Model &amp; Flow</h3>
+<pre><code>Human input (Figma URL or text description)
+  ↓
+[Step 1] knowledge-graph read  →  project context (best-effort)
+[Step 2] platform detection    →  "web-electron-ts" | STOP (other)
+[Step 3] layout question       →  Figma URL | text description
+[Step 4] Figma MCP calls       →  section list + screenshot (if Figma)
+[Step 5] ReUI search (per §)   →  component mapping table + gap list
+[Step 6] approval loop         →  human-approved mapping
+[Step 7] write design.md       →  spec file on disk
+         write design.html     →  HTML companion on disk
+         write roadmap.json    →  one entry per US
+         write ROADMAP.html    →  regenerated HTML roadmap
+[Step 8] spec self-review      →  agent-verified: no TBD, consistent, in-template
+[Step 9] user review           →  human approval of written spec
+[Step 10] invoke writing-plans →  terminal state</code></pre>
+
+<h3>Error Handling</h3>
+<table>
+  <thead><tr><th>Failure</th><th>Behaviour</th></tr></thead>
+  <tbody>
+    <tr><td>Figma MCP unavailable</td><td>Degrade to text-description path; tell the user</td></tr>
+    <tr><td>Figma reference not accessible</td><td>Tell user; ask for another reference or text description</td></tr>
+    <tr><td>ReUI MCP unavailable</td><td>Tell user; ask them to describe components manually; record gaps</td></tr>
+    <tr><td>Platform not detectable</td><td>Ask user one question before continuing</td></tr>
+    <tr><td>Platform is <code>other</code></td><td>Stop; redirect to <code>brainstorming</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Edge Cases</h3>
+<ul>
+  <li>Figma link accessible but node resolves to empty frame: treat as not accessible; ask for more specific node or text description.</li>
+  <li>Project files and scaffold-design.md conflict on stack: prefer installed project files (ground truth over pre-init plans).</li>
+  <li>ReUI search returns only premium-tier results: treat as a gap; flag to user; do not record a premium result.</li>
+</ul>
+
+<h2>7. Testing Strategy</h2>
+<ul>
+  <li><strong>US-1 (Platform detection):</strong> Execute the skill against (a) a repo with <code>package.json</code> + <code>tsconfig.json</code>, (b) a bare repo with only <code>scaffold-design.md</code>, (c) an empty repo, (d) a native-mobile repo. Confirm the correct branch is taken in each case.</li>
+  <li><strong>US-2 (Figma capture):</strong> Provide (a) a valid Figma URL, (b) an invalid/private URL, (c) no URL. Confirm <code>get_metadata</code> + <code>get_screenshot</code> are called only in case (a).</li>
+  <li><strong>US-3 (ReUI mapping):</strong> Supply a layout with three sections — one with a clear free-tier match, one with no match, one ambiguous. Confirm the mapping table records the match, flags the gap, and prompts approval.</li>
+  <li><strong>US-4 (Output files):</strong> After a complete skill run, verify <code>design.md</code> conforms to <code>spec-template.md</code>, <code>design.html</code> is valid HTML from the companion template, <code>roadmap.json</code> validates against <code>assets/roadmap.schema.json</code>, and <code>ROADMAP.html</code> is generated from <code>assets/roadmap.html</code>.</li>
+  <li><strong>Spec self-review (Step 8):</strong> Search the written <code>design.md</code> for the strings "TBD", "TODO", and "placeholder"; confirm zero matches.</li>
+</ul>
+
+<h2>8. Success Criteria</h2>
+<ul>
+  <li>SC-1: An agent invoking <code>superpowers-orchestrator:designing-ui</code> on a <code>web-electron-ts</code> project completes the full 10-step workflow and produces all four output files without manual intervention beyond the two required approval steps.</li>
+  <li>SC-2: The written <code>design.md</code> passes the spec self-review scan (zero TBD/TODO/placeholder occurrences) and conforms to <code>spec-template.md</code> structure.</li>
+  <li>SC-3: <code>roadmap.json</code> validates against <code>assets/roadmap.schema.json</code> with one entry per User Story, status <code>open</code>, <code>completed: null</code>.</li>
+  <li>SC-4: Invoking the skill on a non-<code>web-electron-ts</code> project terminates cleanly with a redirect message to <code>brainstorming</code> and produces no output files.</li>
+  <li>SC-5: The skill's terminal state is always <code>superpowers-orchestrator:writing-plans</code> — no other skill is invoked on successful completion.</li>
+</ul>
+</main>
+</body>
+</html>
