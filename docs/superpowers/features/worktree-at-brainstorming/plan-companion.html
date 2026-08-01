@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Branch/worktree per feature, created at brainstorming start — Implementation Plan</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f4f6f8;
+    --panel: #ffffff;
+    --panel-soft: #f8fafc;
+    --text: #1f2933;
+    --muted: #52606d;
+    --line: #d9e0e7;
+    --accent: #0759c7;
+    --accent-soft: #e8f1ff;
+    --success: #147d4f;
+    --code: #eef2f6;
+    --shadow: 0 18px 45px rgba(31, 41, 51, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1116;
+      --panel: #171b22;
+      --panel-soft: #1e242d;
+      --text: #edf2f7;
+      --muted: #aeb9c6;
+      --line: #343c48;
+      --accent: #78b7ff;
+      --accent-soft: #162b46;
+      --success: #60d394;
+      --code: #0b0e13;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 6rem; }
+  body { margin: 0; color: var(--text); background: var(--bg); font: 16px/1.65 system-ui, sans-serif; }
+  a { color: var(--accent); }
+  a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  .skip-link {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.55rem 0.8rem;
+    transform: translateY(-150%);
+    color: var(--panel);
+    background: var(--text);
+    border-radius: 6px;
+  }
+  .skip-link:focus { transform: translateY(0); }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    min-height: 4.5rem;
+    padding: 0.75rem max(1.25rem, calc((100vw - 1280px) / 2));
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .document-label { min-width: 0; }
+  .eyebrow { display: block; margin-bottom: 0.1rem; color: var(--muted); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; }
+  .document-title { display: block; overflow: hidden; font-size: 0.95rem; text-overflow: ellipsis; white-space: nowrap; }
+
+  .progress { width: min(19rem, 35vw); }
+  #plan-progress { display: block; margin-bottom: 0.35rem; color: var(--muted); font-size: 0.78rem; text-align: right; }
+  .progress-track { height: 5px; overflow: hidden; border-radius: 999px; background: var(--line); }
+  .progress-track span { display: block; width: 0; height: 100%; background: var(--success); }
+
+  .layout { display: grid; grid-template-columns: 15rem minmax(0, 82ch); gap: 2.5rem; max-width: 1280px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+  .outline { align-self: start; position: sticky; top: 7rem; max-height: calc(100vh - 9rem); overflow: auto; padding-right: 1rem; }
+  .outline-title { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .outline nav { display: grid; gap: 0.2rem; }
+  .outline a { padding: 0.4rem 0.55rem; border-left: 2px solid transparent; color: var(--muted); font-size: 0.85rem; line-height: 1.35; text-decoration: none; }
+  .outline a:hover { border-left-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+  .outline a.depth-3 { padding-left: 1.3rem; font-size: 0.8rem; }
+  .mobile-outline { display: none; }
+
+  main {
+    min-width: 0;
+    padding: clamp(1.5rem, 4vw, 3.5rem);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+  }
+  h1, h2, h3 { line-height: 1.25; text-wrap: balance; }
+  h1 { margin: 0 0 1.5rem; font-size: clamp(2rem, 5vw, 3.25rem); letter-spacing: -0.035em; }
+  h2 { margin: 3.5rem 0 1.25rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: clamp(1.5rem, 3vw, 2rem); }
+  h3 { margin: 2rem 0 0.75rem; font-size: 1.15rem; }
+  p, li { max-width: 72ch; }
+  li + li { margin-top: 0.35rem; }
+  hr { margin: 3rem 0; border: 0; border-top: 1px solid var(--line); }
+
+  blockquote {
+    margin: 1.5rem 0;
+    padding: 1rem 1.15rem;
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    color: var(--muted);
+    background: var(--accent-soft);
+  }
+  blockquote p { margin: 0; }
+  .plan-fact { margin: 0.45rem 0; padding: 0.65rem 0.85rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-soft); }
+
+  .task-card {
+    margin: 1.5rem 0 2rem;
+    padding: 0 1.25rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel-soft);
+  }
+  .task-card > h3 { margin: 0 -1.25rem 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; background: var(--accent-soft); }
+  .task-card pre { background: var(--code); }
+
+  input[type="checkbox"] { width: 1.05rem; height: 1.05rem; margin: 0 0.45rem 0 0; accent-color: var(--success); vertical-align: -0.15rem; }
+  input[type="checkbox"]:disabled { opacity: 1; }
+  .checkpoint { margin: 1.5rem 0; padding: 1rem 1.15rem; border: 1px solid var(--success); border-radius: 9px; background: color-mix(in srgb, var(--success) 9%, var(--panel)); }
+  .sample-note { margin: 0 0 2rem; padding: 0.8rem 1rem; border: 1px dashed var(--accent); border-radius: 8px; color: var(--muted); background: var(--accent-soft); }
+
+  code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+  :not(pre) > code { padding: 0.12em 0.35em; border-radius: 4px; background: var(--code); overflow-wrap: anywhere; }
+  pre { overflow: auto; padding: 1rem; border: 1px solid var(--line); border-radius: 9px; background: var(--code); font-size: 0.88rem; line-height: 1.55; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { padding: 0.7rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  @media (max-width: 900px) {
+    .layout { display: block; padding: 1rem; }
+    .outline { display: none; }
+    .mobile-outline { display: block; max-width: 82ch; margin: 0 auto 1rem; padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+    .mobile-outline summary { cursor: pointer; font-weight: 650; }
+    .mobile-outline nav { display: grid; gap: 0.4rem; margin-top: 0.75rem; }
+    .mobile-outline a { color: var(--muted); text-decoration: none; }
+    main { margin: auto; }
+  }
+  @media (max-width: 600px) {
+    .topbar { gap: 1rem; min-height: 4rem; padding: 0.65rem 1rem; }
+    .progress { width: 8rem; }
+    #plan-progress { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    main { padding: 1.25rem; border-radius: 10px; }
+    .task-card { padding: 0 0.85rem 0.85rem; }
+    .task-card > h3 { margin-right: -0.85rem; margin-left: -0.85rem; padding: 0.85rem; }
+  }
+  @media print {
+    :root { --bg: #fff; --panel: #fff; --panel-soft: #fff; --text: #000; --muted: #333; --line: #bbb; --accent: #000; --code: #f4f4f4; }
+    body { font-size: 10.5pt; }
+    .topbar, .outline, .mobile-outline, .skip-link { display: none; }
+    .layout { display: block; max-width: none; padding: 0; }
+    main { max-width: none; padding: 0; border: 0; box-shadow: none; }
+    h2, h3, blockquote, .checkpoint, pre { break-after: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to plan</a>
+
+<header class="topbar">
+  <div class="document-label">
+    <span class="eyebrow">Implementation plan</span>
+    <strong class="document-title">Branch/worktree per feature, created at brainstorming start</strong>
+  </div>
+  <div class="progress" aria-live="polite">
+    <span id="plan-progress">Plan ready for review</span>
+    <div class="progress-track" id="progress-track" role="progressbar" aria-label="Plan completion" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+      <span id="progress-bar"></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="outline" aria-label="Plan outline">
+    <p class="outline-title">On this page</p>
+    <nav id="outline-nav"></nav>
+  </aside>
+
+  <details class="mobile-outline">
+    <summary>Plan outline</summary>
+    <nav id="mobile-nav" aria-label="Plan outline"></nav>
+  </details>
+
+  <main id="main-content" tabindex="-1" data-plan-content>
+    <article aria-label="Branch/worktree per feature, created at brainstorming start implementation plan">
+      <h1>Branch/worktree per feature, created at brainstorming start Implementation Plan</h1>
+      <blockquote><p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers-orchestrator:subagent-driven-development when the harness supports subagents; use superpowers-orchestrator:executing-plans only when the harness has no subagent capability. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p></blockquote>
+      <p><strong>Spec:</strong> <code>docs/superpowers/features/worktree-at-brainstorming/design.md</code></p>
+      <p><strong>Goal:</strong> Create or resume each feature's isolated branch and worktree at brainstorming start so its spec, plan, and implementation stay together off <code>main</code>.</p>
+      <p><strong>Architecture:</strong> <code>brainstorming</code> derives a short feature slug and invokes <code>using-git-worktrees</code> after context exploration and scope decomposition but before clarifying questions; <code>using-git-worktrees</code> reuses an unmerged matching feature workspace when it is safe to do so. The planning and execution skills retain their current calls and behavior, with wording corrected to reflect that isolation now begins during brainstorming.</p>
+      <p><strong>Tech Stack:</strong> Markdown skill definitions, Git branches and worktrees, Graphviz DOT process diagrams, and the existing <code>evals/</code> skill-behavior harness.</p>
+      <h2>Expected Outcome</h2>
+      <p>After completing this plan, the developer will have:</p>
+      <h3>Working behavior</h3>
+      <ul>
+      <li>US-1: an orchestrator can begin a suitably scoped feature in <code>feature/&lt;slug&gt;</code> before asking clarifying questions, while preserving consent, decomposition, rename-on-material-drift, and same-session no-op behavior.</li>
+      <li>US-2: an orchestrator starting from the main checkout can resume an unmerged matching feature workspace, reject merged matches, ask about ambiguous matches, or create a new workspace when no match exists.</li>
+      </ul>
+      <h3>Artifacts</h3>
+      <ul>
+      <li><code>skills/brainstorming/SKILL.md</code> owns the new workspace-creation checklist step and revised process flow.</li>
+      <li><code>skills/using-git-worktrees/SKILL.md</code> owns fresh-session resume lookup and match classification.</li>
+      <li><code>skills/writing-plans/SKILL.md</code> states that plan writing continues in the workspace created during brainstorming.</li>
+      <li><code>skills/executing-plans/SKILL.md</code> and <code>skills/subagent-driven-development/SKILL.md</code> describe verification and continuation of the brainstorming-created workspace.</li>
+      <li>Before/after pressure-test evidence records the behavior change for each edited skill.</li>
+      </ul>
+      <h3>How to see it working</h3>
+      <ul>
+      <li>Run the approved spec's US-1 and US-2 walkthroughs through <code>superpowers-orchestrator:writing-skills</code>: observe workspace creation before the first clarifying question, design and plan work remaining on <code>feature/&lt;slug&gt;</code>, same-session execution avoiding duplicates, and fresh sessions producing reuse, fresh creation, or an explicit ambiguity question according to branch state.</li>
+      </ul>
+      <h2>Global Constraints</h2>
+      <ul>
+      <li>No change to <code>finishing-a-development-branch</code>'s merge, pull-request, keep, discard, or cleanup behavior.</li>
+      <li>No change to <code>project-kickoff</code> for greenfield projects without an existing repository or <code>main</code> branch.</li>
+      <li>No change to the <code>using-git-worktrees</code> consent prompt or its directory-selection priority.</li>
+      <li>No new automated test framework for skill content. Verification uses manual walkthroughs plus the existing <code>evals/</code> harness through <code>superpowers-orchestrator:writing-skills</code> during implementation.</li>
+      </ul>
+      <hr>
+      <h2>Foundation</h2>
+      <h3>Task 1: Correct the plan-writing workspace context</h3>
+      <p><strong>Depends on:</strong> none</p>
+      <p><strong>Files:</strong></p>
+      <ul>
+      <li>Modify: <code>skills/writing-plans/SKILL.md:16</code></li>
+      <li>Test: No automated test file; use <code>superpowers-orchestrator:writing-skills</code> pressure testing and record before/after eval evidence.</li>
+      </ul>
+      <p><strong>Interfaces:</strong></p>
+      <ul>
+      <li>Consumes: the workspace created or deliberately declined during <code>superpowers-orchestrator:brainstorming</code>.</li>
+      <li>Produces: an exact Context statement telling plan writers to continue in that same workspace.</li>
+      </ul>
+      <p><strong>task_type:</strong> implementation_coding</p>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 1: Replace the stale Context line</strong></p>
+      <p>Before (exact current text):</p>
+      <pre><code class="language-diff">-**Context:** If working in an isolated worktree, it should have been created via the `superpowers-orchestrator:using-git-worktrees` skill at execution time.</code></pre>
+      <p>After (exact replacement):</p>
+      <pre><code class="language-diff">+**Context:** If working in an isolated worktree, it should have been created via the `superpowers-orchestrator:using-git-worktrees` skill during brainstorming; continue writing the plan in that same workspace.</code></pre>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 2: Run pressure testing and record the behavior change</strong></p>
+      <p>Run the edited skill through <code>superpowers-orchestrator:writing-skills</code>' pressure-testing process and record the before/after behavior difference.</p>
+      <p>Expected: before the edit, a plan-writing scenario says isolation was created at execution time; after the edit, it recognizes the brainstorming-created workspace and continues there without creating or requesting a second workspace.</p>
+      <p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+      <p>After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:</p>
+      <pre><code class="language-bash">git add skills/writing-plans/SKILL.md
+git commit -m &quot;docs: correct plan workspace context&quot;</code></pre>
+      <p>The worker never runs these commands.</p>
+      <h3>Task 2: Correct the executing-plans worktree wording</h3>
+      <p><strong>Depends on:</strong> none</p>
+      <p><strong>Files:</strong></p>
+      <ul>
+      <li>Modify: <code>skills/executing-plans/SKILL.md:72</code></li>
+      <li>Test: No automated test file; use <code>superpowers-orchestrator:writing-skills</code> pressure testing and record before/after eval evidence.</li>
+      </ul>
+      <p><strong>Interfaces:</strong></p>
+      <ul>
+      <li>Consumes: <code>using-git-worktrees</code> Step 0's existing-isolation detection.</li>
+      <li>Produces: execution guidance that verifies and continues the workspace created during brainstorming without changing the call.</li>
+      </ul>
+      <p><strong>task_type:</strong> implementation_coding</p>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 1: Replace the using-git-worktrees integration line</strong></p>
+      <p>Before (exact current text):</p>
+      <pre><code class="language-diff">-- **superpowers-orchestrator:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)</code></pre>
+      <p>After (exact replacement):</p>
+      <pre><code class="language-diff">+- **superpowers-orchestrator:using-git-worktrees** - Verifies and continues the isolated workspace created during brainstorming; its existing-isolation check prevents duplicate creation</code></pre>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 2: Run pressure testing and record the behavior change</strong></p>
+      <p>Run the edited skill through <code>superpowers-orchestrator:writing-skills</code>' pressure-testing process and record the before/after behavior difference.</p>
+      <p>Expected: before the edit, an execution scenario describes worktree creation as an execution-time responsibility; after the edit, it still calls <code>using-git-worktrees</code> but treats Step 0 as verification and continues the existing brainstorming-created workspace.</p>
+      <p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+      <p>After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:</p>
+      <pre><code class="language-bash">git add skills/executing-plans/SKILL.md
+git commit -m &quot;docs: clarify execution workspace verification&quot;</code></pre>
+      <p>The worker never runs these commands.</p>
+      <h3>Task 3: Correct the subagent workflow's worktree wording</h3>
+      <p><strong>Depends on:</strong> none</p>
+      <p><strong>Files:</strong></p>
+      <ul>
+      <li>Modify: <code>skills/subagent-driven-development/SKILL.md:436</code></li>
+      <li>Test: No automated test file; use <code>superpowers-orchestrator:writing-skills</code> pressure testing and record before/after eval evidence.</li>
+      </ul>
+      <p><strong>Interfaces:</strong></p>
+      <ul>
+      <li>Consumes: <code>using-git-worktrees</code> Step 0's existing-isolation detection.</li>
+      <li>Produces: subagent-driven execution guidance that verifies and continues the workspace created during brainstorming without changing the call.</li>
+      </ul>
+      <p><strong>task_type:</strong> implementation_coding</p>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 1: Replace the using-git-worktrees integration line</strong></p>
+      <p>Before (exact current text):</p>
+      <pre><code class="language-diff">-- **superpowers-orchestrator:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)</code></pre>
+      <p>After (exact replacement):</p>
+      <pre><code class="language-diff">+- **superpowers-orchestrator:using-git-worktrees** - Verifies and continues the isolated workspace created during brainstorming; its existing-isolation check prevents duplicate creation</code></pre>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 2: Run pressure testing and record the behavior change</strong></p>
+      <p>Run the edited skill through <code>superpowers-orchestrator:writing-skills</code>' pressure-testing process and record the before/after behavior difference.</p>
+      <p>Expected: before the edit, a subagent-driven execution scenario describes worktree creation as an execution-time responsibility; after the edit, it still calls <code>using-git-worktrees</code> but treats Step 0 as verification and continues the existing brainstorming-created workspace.</p>
+      <p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+      <p>After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:</p>
+      <pre><code class="language-bash">git add skills/subagent-driven-development/SKILL.md
+git commit -m &quot;docs: clarify subagent workspace verification&quot;</code></pre>
+      <p>The worker never runs these commands.</p>
+      <h2>US-1: Branch/worktree created at brainstorming start</h2>
+      <h3>Task 4: Add isolated workspace creation to brainstorming</h3>
+      <p><strong>Depends on:</strong> Foundation</p>
+      <p><strong>Files:</strong></p>
+      <ul>
+      <li>Modify: <code>skills/brainstorming/SKILL.md:24-65</code></li>
+      <li>Test: No automated test file; use <code>superpowers-orchestrator:writing-skills</code> pressure testing and record before/after eval evidence.</li>
+      </ul>
+      <p><strong>Interfaces:</strong></p>
+      <ul>
+      <li>Consumes: the user's initial request text, the existing brainstorming scope check, and <code>superpowers-orchestrator:using-git-worktrees</code>' consent and existing-isolation behavior.</li>
+      <li>Produces: a kebab-case slug of approximately five words, a <code>feature/&lt;slug&gt;</code> workspace before clarifying questions, and material-name-drift rename guidance before <code>design.md</code> is written.</li>
+      </ul>
+      <p><strong>task_type:</strong> implementation_coding</p>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 1: Replace the checklist with the workspace-aware sequence</strong></p>
+      <p>Before (exact current text):</p>
+      <pre><code class="language-diff">-1. **Explore project context** — check files, docs, recent commits, then collect graph context inline and best-effort before normal file exploration:
+-   - Resolve the graph path read-only: use `.ua/knowledge-graph.json` when present; otherwise use `.understand-anything/knowledge-graph.json` only when `.understand-anything/` exists. If neither graph exists, note `Knowledge graph missing or stale; continuing with file exploration.` and continue.
+-   - Compare `project.gitCommitHash` with `git log -1 --format=%H -- .`. If the graph is malformed, `git log` fails, or the hashes differ, note `Knowledge graph missing or stale; continuing with file exploration.` and continue.
+-   - When the graph is fresh, `grep_search` the graph for the feature keywords and seed context from matching node names, summaries, and edge targets. If there are no matches, continue normal file exploration without error.
+-   - Never call `/understand`, dispatch a worker, write the graph, or block normal file exploration from this collect step.
+-2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
+-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
+-5. **Present design** — in sections scaled to their complexity, get user approval after each section
+-&lt;!-- riso-tech:orchestrator-split START --&gt;
+-6. **Write design doc** — save to `docs/superpowers/features/&lt;feature-slug&gt;/design.md` following `skills/brainstorming/templates/spec-template.md`, generate `design.html` from `templates/document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
+-&lt;!-- riso-tech:orchestrator-split END --&gt;
+-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+-8. **User reviews written spec** — ask user to review the spec file before proceeding
+-9. **Transition to implementation** — invoke `superpowers-orchestrator:writing-plans` to create implementation plan</code></pre>
+      <p>After (exact replacement):</p>
+      <pre><code class="language-diff">+1. **Explore project context** — check files, docs, recent commits, then collect graph context inline and best-effort before normal file exploration:
++   - Resolve the graph path read-only: use `.ua/knowledge-graph.json` when present; otherwise use `.understand-anything/knowledge-graph.json` only when `.understand-anything/` exists. If neither graph exists, note `Knowledge graph missing or stale; continuing with file exploration.` and continue.
++   - Compare `project.gitCommitHash` with `git log -1 --format=%H -- .`. If the graph is malformed, `git log` fails, or the hashes differ, note `Knowledge graph missing or stale; continuing with file exploration.` and continue.
++   - When the graph is fresh, `grep_search` the graph for the feature keywords and seed context from matching node names, summaries, and edge targets. If there are no matches, continue normal file exploration without error.
++   - Never call `/understand`, dispatch a worker, write the graph, or block normal file exploration from this collect step.
++2. **Create isolated workspace** — after the scope check confirms one appropriately-sized feature and before asking any clarifying question:
++   - Kebab-slugify approximately five words from the user's initial request and use the branch name `feature/&lt;slug&gt;`.
++   - Invoke `superpowers-orchestrator:using-git-worktrees` with `&lt;slug&gt;` and continue in the workspace state it reports: created, reused, or working in place after declined consent or sandbox fallback.
++   - If the request requires decomposition, create no workspace for the umbrella request. Start this step separately when brainstorming begins for each sub-project.
++   - Before writing the design document, compare the settled feature name with `&lt;slug&gt;`. If it changed materially, rename the branch with `git branch -m feature/&lt;old-slug&gt; feature/&lt;new-slug&gt;` and move or rename the worktree directory to match; ignore cosmetic or minor wording drift. Surface any unrelated branch collision and do not overwrite it.
++3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
++4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
++5. **Propose 2-3 approaches** — with trade-offs and your recommendation
++6. **Present design** — in sections scaled to their complexity, get user approval after each section
++&lt;!-- riso-tech:orchestrator-split START --&gt;
++7. **Write design doc** — save to `docs/superpowers/features/&lt;feature-slug&gt;/design.md` following `skills/brainstorming/templates/spec-template.md`, generate `design.html` from `templates/document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
++&lt;!-- riso-tech:orchestrator-split END --&gt;
++8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
++9. **User reviews written spec** — ask user to review the spec file before proceeding
++10. **Transition to implementation** — invoke `superpowers-orchestrator:writing-plans` to create implementation plan</code></pre>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 2: Replace the Process Flow DOT diagram</strong></p>
+      <p>Before (exact current text):</p>
+      <pre><code class="language-diff">-```dot
+-digraph brainstorming {
+-    &quot;Explore project context&quot; [shape=box];
+-    &quot;Ask clarifying questions&quot; [shape=box];
+-    &quot;Propose 2-3 approaches&quot; [shape=box];
+-    &quot;Present design sections&quot; [shape=box];
+-    &quot;User approves design?&quot; [shape=diamond];
+-    &quot;Write design doc&quot; [shape=box];
+-    &quot;Spec self-review\n(fix inline)&quot; [shape=box];
+-    &quot;User reviews spec?&quot; [shape=diamond];
+-    &quot;Invoke superpowers-orchestrator:writing-plans&quot; [shape=doublecircle];
+-
+-    &quot;Explore project context&quot; -&gt; &quot;Ask clarifying questions&quot;;
+-    &quot;Ask clarifying questions&quot; -&gt; &quot;Propose 2-3 approaches&quot;;
+-    &quot;Propose 2-3 approaches&quot; -&gt; &quot;Present design sections&quot;;
+-    &quot;Present design sections&quot; -&gt; &quot;User approves design?&quot;;
+-    &quot;User approves design?&quot; -&gt; &quot;Present design sections&quot; [label=&quot;no, revise&quot;];
+-    &quot;User approves design?&quot; -&gt; &quot;Write design doc&quot; [label=&quot;yes&quot;];
+-    &quot;Write design doc&quot; -&gt; &quot;Spec self-review\n(fix inline)&quot;;
+-    &quot;Spec self-review\n(fix inline)&quot; -&gt; &quot;User reviews spec?&quot;;
+-    &quot;User reviews spec?&quot; -&gt; &quot;Write design doc&quot; [label=&quot;changes requested&quot;];
+-    &quot;User reviews spec?&quot; -&gt; &quot;Invoke superpowers-orchestrator:writing-plans&quot; [label=&quot;approved&quot;];
+-}
+-```</code></pre>
+      <p>After (exact replacement):</p>
+      <pre><code class="language-diff">+```dot
++digraph brainstorming {
++    &quot;Explore project context&quot; [shape=box];
++    &quot;One appropriately-sized feature?&quot; [shape=diamond];
++    &quot;Decompose into sub-projects&quot; [shape=box];
++    &quot;Create isolated workspace&quot; [shape=box];
++    &quot;Ask clarifying questions&quot; [shape=box];
++    &quot;Propose 2-3 approaches&quot; [shape=box];
++    &quot;Present design sections&quot; [shape=box];
++    &quot;User approves design?&quot; [shape=diamond];
++    &quot;Feature name changed materially?&quot; [shape=diamond];
++    &quot;Rename branch and worktree&quot; [shape=box];
++    &quot;Write design doc&quot; [shape=box];
++    &quot;Spec self-review\n(fix inline)&quot; [shape=box];
++    &quot;User reviews spec?&quot; [shape=diamond];
++    &quot;Invoke superpowers-orchestrator:writing-plans&quot; [shape=doublecircle];
++
++    &quot;Explore project context&quot; -&gt; &quot;One appropriately-sized feature?&quot;;
++    &quot;One appropriately-sized feature?&quot; -&gt; &quot;Create isolated workspace&quot; [label=&quot;yes&quot;];
++    &quot;One appropriately-sized feature?&quot; -&gt; &quot;Decompose into sub-projects&quot; [label=&quot;no&quot;];
++    &quot;Decompose into sub-projects&quot; -&gt; &quot;Explore project context&quot; [label=&quot;begin first sub-project&quot;];
++    &quot;Create isolated workspace&quot; -&gt; &quot;Ask clarifying questions&quot;;
++    &quot;Ask clarifying questions&quot; -&gt; &quot;Propose 2-3 approaches&quot;;
++    &quot;Propose 2-3 approaches&quot; -&gt; &quot;Present design sections&quot;;
++    &quot;Present design sections&quot; -&gt; &quot;User approves design?&quot;;
++    &quot;User approves design?&quot; -&gt; &quot;Present design sections&quot; [label=&quot;no, revise&quot;];
++    &quot;User approves design?&quot; -&gt; &quot;Feature name changed materially?&quot; [label=&quot;yes&quot;];
++    &quot;Feature name changed materially?&quot; -&gt; &quot;Rename branch and worktree&quot; [label=&quot;yes&quot;];
++    &quot;Feature name changed materially?&quot; -&gt; &quot;Write design doc&quot; [label=&quot;no&quot;];
++    &quot;Rename branch and worktree&quot; -&gt; &quot;Write design doc&quot;;
++    &quot;Write design doc&quot; -&gt; &quot;Spec self-review\n(fix inline)&quot;;
++    &quot;Spec self-review\n(fix inline)&quot; -&gt; &quot;User reviews spec?&quot;;
++    &quot;User reviews spec?&quot; -&gt; &quot;Write design doc&quot; [label=&quot;changes requested&quot;];
++    &quot;User reviews spec?&quot; -&gt; &quot;Invoke superpowers-orchestrator:writing-plans&quot; [label=&quot;approved&quot;];
++}
++```</code></pre>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 3: Run pressure testing and record the behavior change</strong></p>
+      <p>Run the edited skill through <code>superpowers-orchestrator:writing-skills</code>' pressure-testing process and record the before/after behavior difference.</p>
+      <p>Expected: before the edit, brainstorming reaches clarifying questions without workspace isolation; after the edit, a single scoped feature invokes <code>using-git-worktrees</code> with an approximately five-word slug first, a decomposed umbrella creates no workspace, declined consent continues in place, material name drift renames safely, cosmetic drift does not rename, and later workflow skills see existing isolation.</p>
+      <p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+      <p>After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:</p>
+      <pre><code class="language-bash">git add skills/brainstorming/SKILL.md
+git commit -m &quot;feat: create worktree during brainstorming&quot;</code></pre>
+      <p>The worker never runs these commands.</p>
+      <p><strong>US-1 Checkpoint:</strong></p>
+      <p>Run: Through <code>superpowers-orchestrator:writing-skills</code>, run separate brainstorming walkthroughs for a single feature with consent granted, consent declined, an umbrella request requiring decomposition, material and cosmetic feature-name drift, and continuation into writing-plans and both execution workflows.</p>
+      <p>Expected:</p>
+      <ul>
+      <li>GIVEN a new feature idea and a single appropriately-sized project whose scope check did not require decomposition WHEN brainstorming reaches the new step after project-context exploration THEN <code>using-git-worktrees</code> is invoked with a slug auto-slugified from the user's initial request before any clarifying question is asked.</li>
+      <li>GIVEN the user declines the worktree consent prompt WHEN brainstorming continues THEN work proceeds in place on the current branch exactly as it does today.</li>
+      <li>GIVEN the request describes multiple independent subsystems that require decomposition WHEN brainstorming performs the scope check THEN no branch is created for the umbrella request, and each sub-project creates its own branch only when that sub-project's brainstorming begins.</li>
+      <li>GIVEN the feature's real name changes materially during brainstorming before the design document is written WHEN the design is about to be written THEN the branch and worktree directory are renamed to match the new slug, while cosmetic or minor wording drift does not trigger a rename.</li>
+      <li>GIVEN the branch and worktree already exist for this session WHEN <code>writing-plans</code> or an execution-phase skill runs afterward THEN no duplicate worktree is created because <code>using-git-worktrees</code> Step 0 detects the existing isolation and skips creation.</li>
+      </ul>
+      <h2>US-2: Resume an in-progress feature branch in a fresh session</h2>
+      <h3>Task 5: Add fresh-session resume lookup</h3>
+      <p><strong>Depends on:</strong> Foundation</p>
+      <p><strong>Files:</strong></p>
+      <ul>
+      <li>Modify: <code>skills/using-git-worktrees/SKILL.md:45-53</code></li>
+      <li>Test: No automated test file; use <code>superpowers-orchestrator:writing-skills</code> pressure testing and record before/after eval evidence.</li>
+      </ul>
+      <p><strong>Interfaces:</strong></p>
+      <ul>
+      <li>Consumes: <code>&lt;slug&gt;</code> from brainstorming, <code>git worktree list</code>, <code>git branch --list feature/&lt;slug&gt;*</code>, branch merge state, and <code>docs/superpowers/features/&lt;slug&gt;/design.md</code> presence on a matched branch.</li>
+      <li>Produces: one of four explicit outcomes before existing creation logic: reuse the matching feature workspace, treat a merged match as stale and create fresh, ask the user to resolve ambiguity, or proceed with normal creation when no match exists.</li>
+      </ul>
+      <p><strong>task_type:</strong> implementation_coding</p>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 1: Insert resume lookup before existing Step 1 and narrow D12 to unresolved workspaces</strong></p>
+      <p>Before (exact current text):</p>
+      <pre><code class="language-diff">-Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
+-
+-&lt;!-- riso-tech:orchestrator-split START --&gt;
+-**Dispatch:** `D12` runs only when Step 0 confirms isolation is needed and the human or standing instructions consent: dispatch worktree creation through `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; require `output.artifacts` to contain the created worktree path, verify it exists, then `cd` exactly once and continue with setup and baseline tests, otherwise treat the response as blocked; create it inline only if the harness has no subagent capability at all.
+-&lt;!-- riso-tech:orchestrator-split END --&gt;
+-
+-## Step 1: Create Isolated Workspace
+-
+-**You have two mechanisms. Try them in this order.**</code></pre>
+      <p>After (exact replacement):</p>
+      <pre><code class="language-diff">+Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
++
++## Step 0.5: Resume an Existing Feature Workspace
++
++After Step 0 determines that this is a normal checkout and the user consents, if the caller supplied `&lt;slug&gt;`, inspect existing worktrees and matching feature branches before creating anything:
++
++```bash
++git worktree list
++git branch --list &quot;feature/&lt;slug&gt;*&quot;
++```
++
++Classify every match before continuing:
++
++- If a matching branch is already merged into `main`, report it as stale or finished, do not reuse it, and continue to Step 1's fresh-creation path.
++- If exactly one matching branch is unmerged and contains `docs/superpowers/features/&lt;slug&gt;/design.md`, reuse it. If `git worktree list` shows it already attached, enter that worktree. If only the branch remains because its worktree was deleted or pruned, recreate a worktree at that branch: prefer a native worktree tool; otherwise follow Step 1b's directory selection and safety verification, then run `git worktree add &quot;$path&quot; &quot;$MATCHED_BRANCH&quot;` without `-b`.
++- If exactly one matching branch is unmerged but lacks `docs/superpowers/features/&lt;slug&gt;/design.md` or otherwise looks unrelated, report the match and ask the user to choose resume or create-new. Never silently reuse it.
++- If multiple unmerged branches match, report every match and ask the user which one to resume or whether to create new. Never guess.
++- If no branch or worktree matches, continue to Step 1 unchanged.
++
++&lt;!-- riso-tech:orchestrator-split START --&gt;
++**Dispatch:** `D12` runs only when Step 0 confirms isolation is needed, the human or standing instructions consent, and Step 0.5 did not enter an existing worktree: dispatch worktree reuse or creation through `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; require `output.artifacts` to contain the resolved worktree path, verify it exists, then `cd` exactly once and continue with setup and baseline tests, otherwise treat the response as blocked; resolve it inline only if the harness has no subagent capability at all.
++&lt;!-- riso-tech:orchestrator-split END --&gt;
++
++## Step 1: Create Isolated Workspace
++
++**You have two mechanisms. Try them in this order.**</code></pre>
+      <p class="check-step"><input type="checkbox" disabled> <strong>Step 2: Run pressure testing and record the behavior change</strong></p>
+      <p>Run the edited skill through <code>superpowers-orchestrator:writing-skills</code>' pressure-testing process and record the before/after behavior difference.</p>
+      <p>Expected: before the edit, a fresh main-root session proceeds directly to creation; after the edit, a matching unmerged branch with its design document is reused, a merged match follows fresh creation, an unmerged match without the design document and multiple matches trigger an explicit choice, a pruned worktree is recreated at its existing branch, and no match preserves existing creation behavior.</p>
+      <p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+      <p>After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:</p>
+      <pre><code class="language-bash">git add skills/using-git-worktrees/SKILL.md
+git commit -m &quot;feat: resume brainstorming worktree&quot;</code></pre>
+      <p>The worker never runs these commands.</p>
+      <p><strong>US-2 Checkpoint:</strong></p>
+      <p>Run: Through <code>superpowers-orchestrator:writing-skills</code>, start fresh CLI sessions at the main repository root for an unmerged matching branch with its design document, a merged matching branch, an ambiguous unmerged branch without its design document, and no matching branch or worktree.</p>
+      <p>Expected:</p>
+      <ul>
+      <li>GIVEN an unmerged branch <code>feature/&lt;slug&gt;</code> already exists from an earlier session and <code>docs/superpowers/features/&lt;slug&gt;/design.md</code> is present on that branch WHEN <code>using-git-worktrees</code> is invoked again with the same slug THEN it reuses that branch and worktree instead of creating a new one.</li>
+      <li>GIVEN a branch matching the slug exists but has already been merged into <code>main</code> WHEN <code>using-git-worktrees</code> is invoked with that slug THEN it treats the branch as stale or finished and creates a fresh branch instead of reusing it.</li>
+      <li>GIVEN a branch matching the slug exists and is unmerged but has no matching <code>docs/superpowers/features/&lt;slug&gt;/design.md</code> WHEN <code>using-git-worktrees</code> is invoked THEN it reports the ambiguous match and asks the user to confirm resume versus create-new rather than silently reusing it.</li>
+      <li>GIVEN no branch or worktree matches the slug WHEN <code>using-git-worktrees</code> is invoked THEN it creates a new one exactly as it does today.</li>
+      </ul>
+    </article>
+  </main>
+</div>
+
+<script>
+(() => {
+  const main = document.querySelector("[data-plan-content]");
+
+  for (const paragraph of main.querySelectorAll(":scope > p")) {
+    const label = paragraph.querySelector(":scope > strong:first-child")?.textContent.trim();
+    if (["Spec:", "Goal:", "Architecture:", "Tech Stack:"].includes(label)) paragraph.classList.add("plan-fact");
+  }
+
+  const taskHeadings = [...main.querySelectorAll("h3")].filter((heading) => /^Task\s+\d+:/i.test(heading.textContent.trim()));
+  for (const heading of taskHeadings) {
+    const card = document.createElement("section");
+    card.className = "task-card";
+    heading.before(card);
+    let node = heading;
+    while (node && !(node !== heading && node.nodeType === 1 && /H[23]/.test(node.tagName))) {
+      const next = node.nextSibling;
+      card.append(node);
+      node = next;
+    }
+  }
+
+  for (const label of main.querySelectorAll("strong")) {
+    if (/^US-\d+ Checkpoint:$/i.test(label.textContent.trim())) {
+      const start = label.closest("p") || label.parentElement;
+      const checkpoint = document.createElement("section");
+      checkpoint.classList.add("checkpoint");
+      start.before(checkpoint);
+      let node = start;
+      while (node && !(node.nodeType === 1 && node.tagName === "H2")) {
+        const next = node.nextSibling;
+        checkpoint.append(node);
+        node = next;
+      }
+    }
+  }
+
+  const usedIds = new Set([...document.querySelectorAll("[id]")].map((element) => element.id));
+  const headings = [...main.querySelectorAll("h2, h3")];
+  for (const heading of headings) {
+    if (!heading.id) {
+      const base = heading.textContent.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "section";
+      let id = base;
+      let suffix = 2;
+      while (usedIds.has(id)) id = `${base}-${suffix++}`;
+      heading.id = id;
+      usedIds.add(id);
+    }
+  }
+
+  for (const nav of [document.getElementById("outline-nav"), document.getElementById("mobile-nav")]) {
+    for (const heading of headings) {
+      const link = document.createElement("a");
+      link.href = `#${heading.id}`;
+      link.className = `depth-${heading.tagName.slice(1)}`;
+      link.textContent = heading.textContent;
+      nav.append(link);
+    }
+  }
+
+  const checks = [...main.querySelectorAll('input[type="checkbox"]')];
+  const complete = checks.filter((check) => check.checked).length;
+  const progressText = document.getElementById("plan-progress");
+  const progressTrack = document.getElementById("progress-track");
+  const progressBar = document.getElementById("progress-bar");
+  if (checks.length) {
+    progressText.textContent = `${complete} of ${checks.length} steps complete`;
+    progressTrack.setAttribute("aria-valuemax", String(checks.length));
+    progressTrack.setAttribute("aria-valuenow", String(complete));
+    progressBar.style.width = `${Math.round((complete / checks.length) * 100)}%`;
+  } else {
+    progressTrack.hidden = true;
+  }
+})();
+</script>
+</body>
+</html>
+
