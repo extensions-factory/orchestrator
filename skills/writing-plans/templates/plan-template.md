@@ -79,6 +79,9 @@ US-1. Every US in the spec must appear as a section here.]
 - Produces: [what later tasks rely on — exact function names, parameter
   and return types. A task's implementer sees only their own task; this
   block is how they learn the names and types neighboring tasks use.]
+<!-- riso-tech:orchestrator-split START -->
+**task_type:** [one of the 16 values in `sdlc-model-routing.json` — e.g. `implementation_coding`, `code_review_quality`, `testing_qa`, `debugging_root_cause`, `architecture_design`]
+<!-- riso-tech:orchestrator-split END -->
 
 - [ ] **Step 1: Write the failing test**
 

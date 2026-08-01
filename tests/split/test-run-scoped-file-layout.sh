@@ -76,8 +76,8 @@ present "$ROOT/skills/brainstorming/SKILL.md" \
   'assets/roadmap.schema.json' \
   'roadmap uses its schema'
 present "$ROOT/skills/writing-plans/SKILL.md" \
-  'templates/document-companion-template.html' \
-  'plan companion uses the shared template'
+  'templates/plan-companion-template.html' \
+  'plan companion uses the plan review template'
 present "$ROOT/skills/project-kickoff/SKILL.md" \
   'templates/discovery-template.md' \
   'discovery uses its template'

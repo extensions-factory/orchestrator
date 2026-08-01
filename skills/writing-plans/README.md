@@ -65,7 +65,7 @@ WRITING PLANS
 ├── use-file
 │   ├── read: approved design.md
 │   ├── read: templates/plan-template.md
-│   ├── read: brainstorming/templates/document-companion-template.html
+│   ├── read: templates/plan-companion-template.html
 │   └── create/update: plan.md + plan.html
 │
 └── ◇ Human chooses next action
@@ -88,11 +88,8 @@ PLAN FILES
 │       ├── prompts/
 │       │   └── plan-document-reviewer-prompt.md
 │       └── templates/
-│           └── plan-template.md
-│
-├── Shared HTML template [tracked, read]
-│   └── skills/brainstorming/templates/
-│       └── document-companion-template.html
+│           ├── plan-template.md
+│           └── plan-companion-template.html
 │
 ├── Specification [tracked, read]
 │   └── docs/superpowers/features/<feature-slug>/

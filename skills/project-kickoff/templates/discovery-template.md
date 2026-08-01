@@ -1,8 +1,21 @@
 # <Project> — Discovery
 
-## Question
+## Review at a glance
 
-<What decision this research supports.>
+- **Status:** Draft for review
+- **Decision needed:** <The decision this research supports.>
+- **Recommendation:** <The recommended direction in one sentence.>
+- **Confidence:** <High, medium, or low — and why.>
+- **Main risk:** <The most important risk to understand before deciding.>
+
+## Recommendation
+
+<State the recommended direction and the outcome it should create.>
+
+### Why this direction
+
+- <Strongest reason, tied to evidence below.>
+- <Important trade-off the team accepts.>
 
 ## Evidence
 
@@ -10,21 +23,19 @@
 |--------|---------|------------|
 | <source> | <finding> | <high/medium/low> |
 
-## Research Domains
+## Findings by research domain
 
 ### 1. <Domain>
 
 <Findings and implications. Repeat for all four approved domains.>
 
-## Risks
+## Risks and mitigations
 
-- <Risk, evidence, mitigation>
+| Risk | Evidence | Mitigation |
+|------|----------|------------|
+| <risk> | <why it is credible> | <how the project will reduce or monitor it> |
 
-## Synthesis
-
-<What the combined evidence means for the project.>
-
-## Proposed Backlog
+## Proposed backlog
 
 - Epic: <name>
   - Feature: <name>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saved Filters — Design Spec</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --text: #202124;
+    --muted: #5f6368;
+    --line: #d8dce3;
+    --accent: #0759c7;
+    --code: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1015;
+      --panel: #171a22;
+      --text: #edf1f7;
+      --muted: #aeb7c5;
+      --line: #343b49;
+      --accent: #70d6ff;
+      --code: #0a0c10;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; padding: 48px 24px; color: var(--text); background: var(--bg); font: 17px/1.65 system-ui, sans-serif; }
+  main { max-width: 75ch; margin: auto; padding: clamp(24px, 5vw, 48px); border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+  h1, h2, h3 { line-height: 1.2; text-wrap: balance; }
+  h1 { margin-top: 0; font-size: clamp(2rem, 6vw, 3rem); }
+  h2 { margin-top: 2.5rem; padding-top: 0.5rem; border-top: 1px solid var(--line); }
+  p, li { max-width: 70ch; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  .skip-link { position: fixed; top: 8px; left: 8px; z-index: 10; padding: 8px 12px; transform: translateY(-150%); color: var(--panel); background: var(--text); }
+  .skip-link:focus { transform: translateY(0); }
+  code, pre { font-family: ui-monospace, monospace; }
+  :not(pre) > code { padding: 0.1em 0.3em; border-radius: 4px; background: var(--code); }
+  pre { overflow: auto; padding: 16px; border-radius: 9px; background: var(--code); }
+  blockquote { margin-left: 0; padding-left: 16px; border-left: 3px solid var(--muted); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+  th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { font-weight: 650; }
+  @media (max-width: 600px) { body { padding: 0; } main { border: 0; border-radius: 0; } }
+  @media print {
+    :root { --bg: #fff; --panel: #fff; --text: #000; --muted: #444; --line: #bbb; }
+    body { padding: 0; font-size: 11pt; }
+    main { max-width: none; padding: 0; border: 0; }
+    .skip-link { display: none; }
+    a { color: inherit; }
+    pre, blockquote { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<main id="main-content" tabindex="-1">
+  <h1>Saved Filters — Design Spec</h1>
+
+  <blockquote>
+    <p><strong>Status:</strong> Draft for human review · <strong>Date:</strong> 2026-08-01</p>
+  </blockquote>
+
+  <h2>1. Overview</h2>
+  <p>Support agents repeatedly rebuild the same ticket filters during every shift. Saved Filters lets each agent name a useful filter and restore it in one action, reducing setup time without changing the existing search model.</p>
+
+  <h2>2. Context &amp; Assumptions</h2>
+  <ul>
+    <li>The current filter state already serializes to URL query parameters.</li>
+    <li>Saved filters are private to an account in the first release.</li>
+    <li>Existing ticket search permissions remain authoritative.</li>
+  </ul>
+
+  <h2>3. Scope</h2>
+  <h3>Goals</h3>
+  <ul>
+    <li>Save the current ticket filter with a unique name.</li>
+    <li>Apply or delete a saved filter from the ticket list.</li>
+    <li>Keep saved filters synchronized across the user’s sessions.</li>
+  </ul>
+
+  <h3>Non-goals</h3>
+  <ul>
+    <li>Shared team filters—the permission and ownership model needs separate design.</li>
+    <li>Automatic filter suggestions—there is no measured need yet.</li>
+  </ul>
+
+  <h2>4. User Stories</h2>
+  <h3>US-1: Save and restore a ticket filter (Priority: P1)</h3>
+  <p>As a support agent, I want to save my current ticket filter so that I can return to the same work queue immediately.</p>
+  <p><strong>Acceptance criteria:</strong></p>
+  <ul>
+    <li>GIVEN an unsaved filter WHEN the agent provides a unique name THEN the filter appears in Saved Filters.</li>
+    <li>GIVEN a saved filter WHEN the agent selects it THEN the ticket list restores every saved condition.</li>
+  </ul>
+
+  <h3>US-2: Remove a saved filter (Priority: P1)</h3>
+  <p>As a support agent, I want to delete filters I no longer use so that the list stays relevant.</p>
+  <p><strong>Acceptance criteria:</strong></p>
+  <ul>
+    <li>GIVEN a saved filter WHEN the agent confirms deletion THEN it disappears without changing the active ticket results.</li>
+  </ul>
+
+  <h2>5. Approach</h2>
+  <p>Persist each saved filter as a name plus the existing canonical query string. Reuse the current query parser when applying a filter, keeping one source of truth for filter behavior.</p>
+
+  <h3>Alternatives considered</h3>
+  <table>
+    <thead><tr><th>Option</th><th>Why rejected</th></tr></thead>
+    <tbody>
+      <tr><td>Store a second filter JSON schema</td><td>Duplicates query parsing and creates migration work.</td></tr>
+      <tr><td>Browser-only local storage</td><td>Does not synchronize across sessions or devices.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>6. Design</h2>
+  <h3>Architecture</h3>
+  <p>The ticket page calls the Saved Filters API. The API validates ownership and stores the canonical query string. Applying a filter sends that string through the existing ticket-query parser.</p>
+
+  <h3>Data model</h3>
+  <pre><code>SavedFilter {
+  id: string
+  userId: string
+  name: string
+  query: string
+  createdAt: timestamp
+}</code></pre>
+
+  <h3>Error handling</h3>
+  <ul>
+    <li>Duplicate names return a field-level validation error.</li>
+    <li>Invalid legacy query strings remain visible but cannot be applied.</li>
+    <li>Network failures leave the current ticket results unchanged.</li>
+  </ul>
+
+  <h2>7. Testing Strategy</h2>
+  <ul>
+    <li>API tests cover ownership, duplicate names, persistence, and deletion.</li>
+    <li>UI tests cover save, apply, delete confirmation, and network failure.</li>
+    <li>An end-to-end checkpoint restores a multi-condition filter in a new session.</li>
+  </ul>
+
+  <h2>8. Success Criteria</h2>
+  <ul>
+    <li>SC-1: An agent restores a five-condition queue in two interactions or fewer.</li>
+    <li>SC-2: Saved-filter operations introduce no new ticket-query implementation.</li>
+  </ul>
+</main>
+</body>
+</html>

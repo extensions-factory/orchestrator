@@ -1,33 +1,40 @@
 # Project Constitution
 
-## Stack
+> The canonical source for project-wide commands, standards, and quality gates.
+> Tool-specific instruction files point here instead of repeating these rules.
 
-- Language/runtime:
-- Framework:
-- Package manager:
-- Test runner:
+## Project at a glance
 
-## Required Commands
+- **Language/runtime:** <name and version>
+- **Framework:** <name and version, or none>
+- **Package manager:** <name and version>
+- **Test runner:** <name>
 
-- Install:
-- Format:
-- Lint:
-- Test:
-- Build:
+## Required commands
+
+| Task | Command | When to run |
+|------|---------|-------------|
+| Install | `<exact command>` | After checkout or dependency changes |
+| Format | `<exact command>` | Before committing |
+| Lint | `<exact command>` | Before committing |
+| Test | `<exact command>` | Before committing and integration |
+| Build | `<exact command>` | Before integration |
 
 ## Standards
 
-- Naming:
-- Formatting:
-- Test files:
-- Commit convention:
+- **Naming:** <project convention>
+- **Formatting:** <project convention>
+- **Test files:** <location and naming convention>
+- **Commit convention:** <project convention>
 
-## Quality Gates
+## Quality gates
 
-- <Observable gate required before integration>
+- <Observable condition required before integration, with its command or evidence.>
 
-## Decision Authority
+## Decision authority
 
-- Product scope:
-- Architecture:
-- Release:
+| Decision | Owner | Escalate when |
+|----------|-------|---------------|
+| Product scope | <role or person> | <condition> |
+| Architecture | <role or person> | <condition> |
+| Release | <role or person> | <condition> |

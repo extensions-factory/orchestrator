@@ -14,7 +14,7 @@ strip_upstream_commit(){ awk '
 ' "$1"; }
 strip_orchestrator_override(){ awk '
   $0 == "<!-- riso-tech:orchestrator-split START -->" {
-    if ((getline line) > 0 && (line == "**Orchestrator Git Bookkeeping (not a worker step):**" || line ~ /^> \*\*For agentic workers:\*\* REQUIRED SUB-SKILL:/)) {
+    if ((getline line) > 0 && (line == "**Orchestrator Git Bookkeeping (not a worker step):**" || line ~ /^> \*\*For agentic workers:\*\* REQUIRED SUB-SKILL:/ || line ~ /^\*\*task_type:\*\*/)) {
       while ((getline) > 0 && $0 != "<!-- riso-tech:orchestrator-split END -->") {}
       next
     }

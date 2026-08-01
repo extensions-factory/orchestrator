@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saved Filters — Implementation Plan</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f4f6f8;
+    --panel: #ffffff;
+    --panel-soft: #f8fafc;
+    --text: #1f2933;
+    --muted: #52606d;
+    --line: #d9e0e7;
+    --accent: #0759c7;
+    --accent-soft: #e8f1ff;
+    --success: #147d4f;
+    --code: #eef2f6;
+    --shadow: 0 18px 45px rgba(31, 41, 51, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1116;
+      --panel: #171b22;
+      --panel-soft: #1e242d;
+      --text: #edf2f7;
+      --muted: #aeb9c6;
+      --line: #343c48;
+      --accent: #78b7ff;
+      --accent-soft: #162b46;
+      --success: #60d394;
+      --code: #0b0e13;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 6rem; }
+  body { margin: 0; color: var(--text); background: var(--bg); font: 16px/1.65 system-ui, sans-serif; }
+  a { color: var(--accent); }
+  a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+  .skip-link { position: fixed; top: 0.5rem; left: 0.5rem; z-index: 100; padding: 0.55rem 0.8rem; transform: translateY(-150%); color: var(--panel); background: var(--text); border-radius: 6px; }
+  .skip-link:focus { transform: translateY(0); }
+  .topbar { position: sticky; top: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; gap: 2rem; min-height: 4.5rem; padding: 0.75rem max(1.25rem, calc((100vw - 1280px) / 2)); border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 92%, transparent); backdrop-filter: blur(12px); }
+  .document-label { min-width: 0; }
+  .eyebrow { display: block; margin-bottom: 0.1rem; color: var(--muted); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; }
+  .document-title { display: block; overflow: hidden; font-size: 0.95rem; text-overflow: ellipsis; white-space: nowrap; }
+  .progress { width: min(19rem, 35vw); }
+  #plan-progress { display: block; margin-bottom: 0.35rem; color: var(--muted); font-size: 0.78rem; text-align: right; }
+  .progress-track { height: 5px; overflow: hidden; border-radius: 999px; background: var(--line); }
+  .progress-track span { display: block; width: 0; height: 100%; background: var(--success); }
+  .layout { display: grid; grid-template-columns: 15rem minmax(0, 82ch); gap: 2.5rem; max-width: 1280px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+  .outline { align-self: start; position: sticky; top: 7rem; max-height: calc(100vh - 9rem); overflow: auto; padding-right: 1rem; }
+  .outline-title { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .outline nav { display: grid; gap: 0.2rem; }
+  .outline a { padding: 0.4rem 0.55rem; border-left: 2px solid transparent; color: var(--muted); font-size: 0.85rem; line-height: 1.35; text-decoration: none; }
+  .outline a:hover { border-left-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+  .outline a.depth-3 { padding-left: 1.3rem; font-size: 0.8rem; }
+  .mobile-outline { display: none; }
+  main { min-width: 0; padding: clamp(1.5rem, 4vw, 3.5rem); border: 1px solid var(--line); border-radius: 16px; background: var(--panel); box-shadow: var(--shadow); }
+  h1, h2, h3 { line-height: 1.25; text-wrap: balance; }
+  h1 { margin: 0 0 1.5rem; font-size: clamp(2rem, 5vw, 3.25rem); letter-spacing: -0.035em; }
+  h2 { margin: 3.5rem 0 1.25rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: clamp(1.5rem, 3vw, 2rem); }
+  h3 { margin: 2rem 0 0.75rem; font-size: 1.15rem; }
+  p, li { max-width: 72ch; }
+  li + li { margin-top: 0.35rem; }
+  hr { margin: 3rem 0; border: 0; border-top: 1px solid var(--line); }
+  blockquote { margin: 1.5rem 0; padding: 1rem 1.15rem; border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; color: var(--muted); background: var(--accent-soft); }
+  blockquote p { margin: 0; }
+  .plan-fact { margin: 0.45rem 0; padding: 0.65rem 0.85rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-soft); }
+  .task-card { margin: 1.5rem 0 2rem; padding: 0 1.25rem 1.25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-soft); }
+  .task-card > h3 { margin: 0 -1.25rem 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; background: var(--accent-soft); }
+  .task-card pre { background: var(--code); }
+  input[type="checkbox"] { width: 1.05rem; height: 1.05rem; margin: 0 0.45rem 0 0; accent-color: var(--success); vertical-align: -0.15rem; }
+  input[type="checkbox"]:disabled { opacity: 1; }
+  .checkpoint { margin: 1.5rem 0; padding: 1rem 1.15rem; border: 1px solid var(--success); border-radius: 9px; background: color-mix(in srgb, var(--success) 9%, var(--panel)); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+  :not(pre) > code { padding: 0.12em 0.35em; border-radius: 4px; background: var(--code); overflow-wrap: anywhere; }
+  pre { overflow: auto; padding: 1rem; border: 1px solid var(--line); border-radius: 9px; background: var(--code); font-size: 0.88rem; line-height: 1.55; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { padding: 0.7rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  @media (max-width: 900px) {
+    .layout { display: block; padding: 1rem; }
+    .outline { display: none; }
+    .mobile-outline { display: block; max-width: 82ch; margin: 0 auto 1rem; padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+    .mobile-outline summary { cursor: pointer; font-weight: 650; }
+    .mobile-outline nav { display: grid; gap: 0.4rem; margin-top: 0.75rem; }
+    .mobile-outline a { color: var(--muted); text-decoration: none; }
+    main { margin: auto; }
+  }
+  @media (max-width: 600px) {
+    .topbar { gap: 1rem; min-height: 4rem; padding: 0.65rem 1rem; }
+    .progress { width: 8rem; }
+    #plan-progress { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    main { padding: 1.25rem; border-radius: 10px; }
+    .task-card { padding: 0 0.85rem 0.85rem; }
+    .task-card > h3 { margin-right: -0.85rem; margin-left: -0.85rem; padding: 0.85rem; }
+  }
+  @media print {
+    :root { --bg: #fff; --panel: #fff; --panel-soft: #fff; --text: #000; --muted: #333; --line: #bbb; --accent: #000; --code: #f4f4f4; }
+    body { font-size: 10.5pt; }
+    .topbar, .outline, .mobile-outline, .skip-link { display: none; }
+    .layout { display: block; max-width: none; padding: 0; }
+    main { max-width: none; padding: 0; border: 0; box-shadow: none; }
+    h2, h3, blockquote, .checkpoint, pre { break-after: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to plan</a>
+<header class="topbar">
+  <div class="document-label">
+    <span class="eyebrow">Implementation plan</span>
+    <strong class="document-title">Saved Filters</strong>
+  </div>
+  <div class="progress" aria-live="polite">
+    <span id="plan-progress">Plan ready for review</span>
+    <div class="progress-track" id="progress-track" role="progressbar" aria-label="Plan completion" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><span id="progress-bar"></span></div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="outline" aria-label="Plan outline">
+    <p class="outline-title">On this page</p>
+    <nav id="outline-nav"></nav>
+  </aside>
+  <details class="mobile-outline">
+    <summary>Plan outline</summary>
+    <nav id="mobile-nav" aria-label="Plan outline"></nav>
+  </details>
+
+  <main id="main-content" tabindex="-1" data-plan-content>
+    <h1>Saved Filters Implementation Plan</h1>
+    <blockquote><p><strong>For agentic workers:</strong> Execute each task with TDD and stop at every User Story checkpoint.</p></blockquote>
+    <p><strong>Spec:</strong> <code>docs/superpowers/features/saved-filters/design.md</code></p>
+    <p><strong>Goal:</strong> Let support agents save, restore, and delete personal ticket filters.</p>
+    <p><strong>Architecture:</strong> Persist canonical ticket-query strings behind a small ownership-checked API, then reuse the existing query parser when applying them.</p>
+    <p><strong>Tech Stack:</strong> TypeScript, React, PostgreSQL, Vitest, Playwright</p>
+
+    <h2>Expected Outcome</h2>
+    <h3>Working behavior</h3>
+    <ul>
+      <li>US-1: agents can save and restore a multi-condition ticket filter.</li>
+      <li>US-2: agents can delete a saved filter without changing active results.</li>
+    </ul>
+    <h3>Artifacts</h3>
+    <ul>
+      <li><code>saved-filters.ts</code> owns persistence and validation.</li>
+      <li><code>SavedFiltersMenu.tsx</code> provides save, apply, and delete controls.</li>
+    </ul>
+    <h3>How to see it working</h3>
+    <p>Run <code>npm run test:e2e -- saved-filters</code>; observe a saved five-condition queue restored in a fresh browser session.</p>
+
+    <h2>Global Constraints</h2>
+    <ul>
+      <li>No new runtime dependencies.</li>
+      <li>The existing ticket-query parser remains the single source of truth.</li>
+      <li>Every API operation enforces account ownership.</li>
+    </ul>
+
+    <h2>Foundation</h2>
+    <h3>Task 1: Add the saved-filter persistence boundary</h3>
+    <p><strong>Depends on:</strong> none</p>
+    <p><strong>Files:</strong></p>
+    <ul>
+      <li>Create: <code>src/server/saved-filters.ts</code></li>
+      <li>Modify: <code>src/server/schema.sql</code></li>
+      <li>Test: <code>tests/server/saved-filters.test.ts</code></li>
+    </ul>
+    <p><strong>Interfaces:</strong></p>
+    <ul><li>Produces: <code>saveFilter(userId, name, query)</code>, <code>listFilters(userId)</code>, and <code>deleteFilter(userId, id)</code>.</li></ul>
+    <p><strong>task_type:</strong> implementation_coding</p>
+    <ol>
+      <li><input type="checkbox" checked disabled><strong>Step 1: Write the failing persistence test</strong></li>
+      <li><input type="checkbox" checked disabled><strong>Step 2: Run it and verify the missing-table failure</strong></li>
+      <li><input type="checkbox" disabled><strong>Step 3: Add the table and minimal repository functions</strong></li>
+      <li><input type="checkbox" disabled><strong>Step 4: Run <code>npm test -- saved-filters.test.ts</code></strong></li>
+    </ol>
+    <pre><code>export async function saveFilter(
+  userId: string,
+  name: string,
+  query: string,
+): Promise&lt;SavedFilter&gt; {
+  return db.savedFilter.create({ userId, name, query });
+}</code></pre>
+
+    <h2>US-1: Save and restore a ticket filter</h2>
+    <h3>Task 2: Add save and apply actions to the ticket list</h3>
+    <p><strong>Depends on:</strong> Task 1</p>
+    <p><strong>Files:</strong></p>
+    <ul>
+      <li>Create: <code>src/tickets/SavedFiltersMenu.tsx</code></li>
+      <li>Modify: <code>src/tickets/TicketList.tsx</code></li>
+      <li>Test: <code>tests/tickets/SavedFiltersMenu.test.tsx</code></li>
+    </ul>
+    <p><strong>Interfaces:</strong></p>
+    <ul>
+      <li>Consumes: the Task 1 persistence API and existing <code>applyTicketQuery(query)</code>.</li>
+      <li>Produces: an accessible Saved Filters menu with save and apply actions.</li>
+    </ul>
+    <p><strong>task_type:</strong> implementation_coding</p>
+    <ol>
+      <li><input type="checkbox" disabled><strong>Step 1: Write the failing save-and-apply component test</strong></li>
+      <li><input type="checkbox" disabled><strong>Step 2: Verify the missing-menu failure</strong></li>
+      <li><input type="checkbox" disabled><strong>Step 3: Implement the minimal menu</strong></li>
+      <li><input type="checkbox" disabled><strong>Step 4: Run the focused component test</strong></li>
+    </ol>
+    <p><strong>US-1 Checkpoint:</strong></p>
+    <p>Run <code>npm run test:e2e -- saved-filters --grep "restore"</code>.</p>
+    <p>Expected: the saved queue is available after signing in from a fresh browser session, and all five filter conditions are active.</p>
+
+    <h2>US-2: Remove a saved filter</h2>
+    <h3>Task 3: Add confirmed filter deletion</h3>
+    <p><strong>Depends on:</strong> Task 2</p>
+    <p><strong>Files:</strong></p>
+    <ul>
+      <li>Modify: <code>src/tickets/SavedFiltersMenu.tsx</code></li>
+      <li>Test: <code>tests/tickets/SavedFiltersMenu.test.tsx</code></li>
+    </ul>
+    <p><strong>Interfaces:</strong></p>
+    <ul><li>Consumes: <code>deleteFilter(userId, id)</code> from Task 1.</li></ul>
+    <p><strong>task_type:</strong> implementation_coding</p>
+    <ol>
+      <li><input type="checkbox" disabled><strong>Step 1: Write the failing confirmed-delete test</strong></li>
+      <li><input type="checkbox" disabled><strong>Step 2: Verify deletion is not yet available</strong></li>
+      <li><input type="checkbox" disabled><strong>Step 3: Add the confirmation and delete action</strong></li>
+      <li><input type="checkbox" disabled><strong>Step 4: Run the component and API suites</strong></li>
+    </ol>
+    <p><strong>US-2 Checkpoint:</strong></p>
+    <p>Delete a saved filter while its query is active.</p>
+    <p>Expected: the saved entry disappears, while the current ticket results and URL remain unchanged.</p>
+  </main>
+</div>
+
+<script>
+(() => {
+  const main = document.querySelector("[data-plan-content]");
+  for (const paragraph of main.querySelectorAll(":scope > p")) {
+    const label = paragraph.querySelector(":scope > strong:first-child")?.textContent.trim();
+    if (["Spec:", "Goal:", "Architecture:", "Tech Stack:"].includes(label)) paragraph.classList.add("plan-fact");
+  }
+  const taskHeadings = [...main.querySelectorAll("h3")].filter((heading) => /^Task\s+\d+:/i.test(heading.textContent.trim()));
+  for (const heading of taskHeadings) {
+    const card = document.createElement("section");
+    card.className = "task-card";
+    heading.before(card);
+    let node = heading;
+    while (node && !(node !== heading && node.nodeType === 1 && /H[23]/.test(node.tagName))) {
+      const next = node.nextSibling;
+      card.append(node);
+      node = next;
+    }
+  }
+  for (const label of main.querySelectorAll("strong")) {
+    if (/^US-\d+ Checkpoint:$/i.test(label.textContent.trim())) {
+      const start = label.closest("p") || label.parentElement;
+      const checkpoint = document.createElement("section");
+      checkpoint.classList.add("checkpoint");
+      start.before(checkpoint);
+      let node = start;
+      while (node && !(node.nodeType === 1 && node.tagName === "H2")) {
+        const next = node.nextSibling;
+        checkpoint.append(node);
+        node = next;
+      }
+    }
+  }
+  const usedIds = new Set([...document.querySelectorAll("[id]")].map((element) => element.id));
+  const headings = [...main.querySelectorAll("h2, h3")];
+  for (const heading of headings) {
+    if (!heading.id) {
+      const base = heading.textContent.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "section";
+      let id = base;
+      let suffix = 2;
+      while (usedIds.has(id)) id = `${base}-${suffix++}`;
+      heading.id = id;
+      usedIds.add(id);
+    }
+  }
+  for (const nav of [document.getElementById("outline-nav"), document.getElementById("mobile-nav")]) {
+    for (const heading of headings) {
+      const link = document.createElement("a");
+      link.href = `#${heading.id}`;
+      link.className = `depth-${heading.tagName.slice(1)}`;
+      link.textContent = heading.textContent;
+      nav.append(link);
+    }
+  }
+  const checks = [...main.querySelectorAll('input[type="checkbox"]')];
+  const complete = checks.filter((check) => check.checked).length;
+  const progressText = document.getElementById("plan-progress");
+  const progressTrack = document.getElementById("progress-track");
+  const progressBar = document.getElementById("progress-bar");
+  if (checks.length) {
+    progressText.textContent = `${complete} of ${checks.length} steps complete`;
+    progressTrack.setAttribute("aria-valuemax", String(checks.length));
+    progressTrack.setAttribute("aria-valuenow", String(complete));
+    progressBar.style.width = `${Math.round((complete / checks.length) * 100)}%`;
+  } else {
+    progressTrack.hidden = true;
+  }
+})();
+</script>
+</body>
+</html>

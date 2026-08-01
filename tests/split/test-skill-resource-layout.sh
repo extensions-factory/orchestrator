@@ -26,6 +26,7 @@ templates=(
   skills/sprint-retrospective/templates/retrospective-template.md
   skills/subagent-driven-development/templates/task-report-template.md
   skills/writing-plans/templates/plan-template.md
+  skills/writing-plans/templates/plan-companion-template.html
 )
 
 prompts=(

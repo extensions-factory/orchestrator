@@ -1,25 +1,35 @@
 # <Workflow> — Sprint Retrospective
 
-## Measured Outcomes
+## Review at a glance
+
+- **Status:** <Awaiting approval or approved>
+- **Decision needed:** <Approve, revise, or acknowledge the actions below.>
+- **Outcome:** <One sentence describing whether the workflow achieved its goal.>
+- **Biggest win:** <Most valuable evidence-backed result.>
+- **Biggest constraint:** <Most important obstacle or cost.>
+
+## Approved actions
+
+| Action | Owner | Due or trigger | Success measure | Status |
+|--------|-------|----------------|-----------------|--------|
+| <action> | <owner> | <date or event> | <observable result> | Open |
+
+## Findings
+
+### What helped
+
+- <Observation linked to evidence below.>
+
+### What hurt
+
+- <Observation linked to evidence below.>
+
+## Measured outcomes
 
 | Metric | Value | Evidence |
 |--------|-------|----------|
 | Dispatches | <count> | `<ledger reference>` |
 
-## What Helped
-
-- <Evidence-backed observation>
-
-## What Hurt
-
-- <Evidence-backed observation>
-
-## Approved Actions
-
-| Action | Owner | Due / Trigger | Status |
-|--------|-------|---------------|--------|
-| <action> | <owner> | <date or event> | open |
-
-## Rejected or Deferred Proposals
+## Rejected or deferred proposals
 
 - <Proposal and reason>

@@ -21,7 +21,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - (User preferences for plan location override this default)
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D10` dispatches plan authoring through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: sprint_planning`; from the approved spec, the worker writes the plan and HTML companion, using `skills/writing-plans/templates/plan-template.md` for the plan and `skills/brainstorming/templates/document-companion-template.html` for the HTML, rendering checkboxes as a readable checklist and regenerating the companion whenever the plan changes, then returns both for the orchestrator's Self-Review before the Execute-or-Refine choice; write them inline only if the harness has no subagent capability at all.
+**Dispatch:** `D10` dispatches plan authoring through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: sprint_planning`; from the approved spec, the worker writes the plan and HTML companion, using `skills/writing-plans/templates/plan-template.md` for the plan and `skills/writing-plans/templates/plan-companion-template.html` for the HTML; remove the sample plan block, replace `{{TITLE}}` and `{{CONTENT}}` with the plan title and complete rendered plan, rendering checkboxes as a readable checklist and regenerating the companion whenever the plan changes, then returning both for the orchestrator's Self-Review before the Execute-or-Refine choice; write them inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Scope Check
@@ -140,62 +140,14 @@ include this section.]
 
 ## Task Structure
 
-````markdown
-### Task N: [Component Name]
-
-**Depends on:** [Task M | Foundation | none]
-
-**Files:**
-- Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
-
-**Interfaces:**
-- Consumes: [what this task uses from earlier tasks — exact signatures]
-- Produces: [what later tasks rely on — exact function names, parameter
-  and return types. A task's implementer sees only their own task; this
-  block is how they learn the names and types neighboring tasks use.]
-
-<!-- riso-tech:orchestrator-split START -->
-**task_type:** [one of the 16 values in `sdlc-model-routing.json` — e.g. `implementation_coding`, `code_review_quality`, `testing_qa`, `debugging_root_cause`, `architecture_design`]. `superpowers-orchestrator:dispatch-agent` reads this at runtime to resolve the model/provider. Every task MUST carry it.
-<!-- riso-tech:orchestrator-split END -->
-
-- [ ] **Step 1: Write the failing test**
-
-```python
-def test_specific_behavior():
-    result = function(input)
-    assert result == expected
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: FAIL with "function not defined"
-
-- [ ] **Step 3: Write minimal implementation**
-
-```python
-def function(input):
-    return expected
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: PASS
-
-**Orchestrator Git Bookkeeping (not a worker step):**
-
-After a successful worker response or successful inline task execution with passing tests, the orchestrator runs this before generating the task review package:
-
-```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
-```
-
-The worker never runs these commands.
-````
+`skills/writing-plans/templates/plan-template.md` is the single source of
+truth for the exact task schema. Copy its complete `Task N` block for every
+task; do not recreate or simplify it. Every task MUST carry a valid
+`task_type` from `sdlc-model-routing.json` so
+`superpowers-orchestrator:dispatch-agent` can resolve its model/provider.
+After a successful worker response or successful inline task execution with
+passing tests, the orchestrator performs the template's Git bookkeeping before
+review; the worker never commits.
 
 ## No Placeholders
 

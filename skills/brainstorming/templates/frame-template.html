@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Superpowers Brainstorming</title>
   <style>
     /*
@@ -26,8 +27,8 @@
       --bg-tertiary: #e5e5e7;
       --border: #d1d1d6;
       --text-primary: #1d1d1f;
-      --text-secondary: #86868b;
-      --text-tertiary: #aeaeb2;
+      --text-secondary: #5f6368;
+      --text-tertiary: #74777c;
       --accent: #0071e3;
       --accent-hover: #0077ed;
       --success: #34c759;
@@ -44,8 +45,8 @@
         --bg-tertiary: #3d3d3f;
         --border: #424245;
         --text-primary: #f5f5f7;
-        --text-secondary: #86868b;
-        --text-tertiary: #636366;
+        --text-secondary: #b0b0b5;
+        --text-tertiary: #8e8e93;
         --accent: #0a84ff;
         --accent-hover: #409cff;
         --selected-bg: rgba(10, 132, 255, 0.15);
@@ -62,7 +63,33 @@
       line-height: 1.5;
     }
 
+    .skip-link {
+      position: fixed;
+      top: 0.5rem;
+      left: 0.5rem;
+      z-index: 100;
+      padding: 0.5rem 0.75rem;
+      transform: translateY(-150%);
+      border-radius: 6px;
+      background: var(--text-primary);
+      color: var(--bg-primary);
+    }
+    .skip-link:focus { transform: translateY(0); }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     /* ===== FRAME STRUCTURE ===== */
+    .status-region { flex-shrink: 0; }
     .brand { display: flex; align-items: center; min-width: 0; overflow: hidden; color: var(--text-secondary); line-height: 1; }
     .brand a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; min-width: 0; max-width: 100%; line-height: 1; }
     .brand-copy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; transform: translateY(-1px); }
@@ -74,7 +101,8 @@
     .status::before { content: ''; width: 6px; height: 6px; background: var(--status-color, var(--success)); border-radius: 50%; }
 
     .main { flex: 1; overflow-y: auto; }
-    #frame-content { padding: 2rem; min-height: 100%; }
+    #frame-content { width: min(100%, 75rem); min-height: 100%; margin: 0 auto; padding: 2rem; }
+    #frame-content > p, .section > p { max-width: 75ch; }
 
     .header {
       background: var(--bg-secondary);
@@ -195,19 +223,29 @@
     .mock-content { padding: 1.5rem; flex: 1; }
     .mock-button { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; }
     .mock-input { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; width: 100%; }
+
+    @media (max-width: 600px) {
+      .header { padding: 0.5rem 1rem; }
+      #frame-content { padding: 1.25rem; }
+      .pros-cons { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <!-- BRANDING -->
-    <div class="status">Connecting…</div>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div class="status-region" role="status" aria-live="polite" aria-atomic="true">
+    <div class="header">
+      <!-- BRANDING -->
+      <div class="status">Connecting…</div>
+    </div>
   </div>
 
-  <div class="main">
+  <main class="main" id="main-content" tabindex="-1">
+    <h1 class="visually-hidden">Superpowers brainstorming</h1>
     <div id="frame-content">
       <!-- CONTENT -->
     </div>
-  </div>
+  </main>
 
 </body>
 </html>
