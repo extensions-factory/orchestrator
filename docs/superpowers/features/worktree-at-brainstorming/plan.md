@@ -40,148 +40,11 @@ After completing this plan, the developer will have:
 
 ---
 
-## Foundation
-
-### Task 1: Correct the plan-writing workspace context
-
-**Depends on:** none
-
-**Files:**
-- Modify: `skills/writing-plans/SKILL.md:16`
-- Test: No automated test file; use `superpowers-orchestrator:writing-skills` pressure testing and record before/after eval evidence.
-
-**Interfaces:**
-- Consumes: the workspace created or deliberately declined during `superpowers-orchestrator:brainstorming`.
-- Produces: an exact Context statement telling plan writers to continue in that same workspace.
-
-**task_type:** implementation_coding
-
-- [ ] **Step 1: Replace the stale Context line**
-
-Before (exact current text):
-
-```diff
--**Context:** If working in an isolated worktree, it should have been created via the `superpowers-orchestrator:using-git-worktrees` skill at execution time.
-```
-
-After (exact replacement):
-
-```diff
-+**Context:** If working in an isolated worktree, it should have been created via the `superpowers-orchestrator:using-git-worktrees` skill during brainstorming; continue writing the plan in that same workspace.
-```
-
-- [ ] **Step 2: Run pressure testing and record the behavior change**
-
-Run the edited skill through `superpowers-orchestrator:writing-skills`' pressure-testing process and record the before/after behavior difference.
-
-Expected: before the edit, a plan-writing scenario says isolation was created at execution time; after the edit, it recognizes the brainstorming-created workspace and continues there without creating or requesting a second workspace.
-
-**Orchestrator Git Bookkeeping (not a worker step):**
-
-After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:
-
-```bash
-git add skills/writing-plans/SKILL.md
-git commit -m "docs: correct plan workspace context"
-```
-
-The worker never runs these commands.
-
-### Task 2: Correct the executing-plans worktree wording
-
-**Depends on:** none
-
-**Files:**
-- Modify: `skills/executing-plans/SKILL.md:72`
-- Test: No automated test file; use `superpowers-orchestrator:writing-skills` pressure testing and record before/after eval evidence.
-
-**Interfaces:**
-- Consumes: `using-git-worktrees` Step 0's existing-isolation detection.
-- Produces: execution guidance that verifies and continues the workspace created during brainstorming without changing the call.
-
-**task_type:** implementation_coding
-
-- [ ] **Step 1: Replace the using-git-worktrees integration line**
-
-Before (exact current text):
-
-```diff
--- **superpowers-orchestrator:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
-```
-
-After (exact replacement):
-
-```diff
-+- **superpowers-orchestrator:using-git-worktrees** - Verifies and continues the isolated workspace created during brainstorming; its existing-isolation check prevents duplicate creation
-```
-
-- [ ] **Step 2: Run pressure testing and record the behavior change**
-
-Run the edited skill through `superpowers-orchestrator:writing-skills`' pressure-testing process and record the before/after behavior difference.
-
-Expected: before the edit, an execution scenario describes worktree creation as an execution-time responsibility; after the edit, it still calls `using-git-worktrees` but treats Step 0 as verification and continues the existing brainstorming-created workspace.
-
-**Orchestrator Git Bookkeeping (not a worker step):**
-
-After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:
-
-```bash
-git add skills/executing-plans/SKILL.md
-git commit -m "docs: clarify execution workspace verification"
-```
-
-The worker never runs these commands.
-
-### Task 3: Correct the subagent workflow's worktree wording
-
-**Depends on:** none
-
-**Files:**
-- Modify: `skills/subagent-driven-development/SKILL.md:436`
-- Test: No automated test file; use `superpowers-orchestrator:writing-skills` pressure testing and record before/after eval evidence.
-
-**Interfaces:**
-- Consumes: `using-git-worktrees` Step 0's existing-isolation detection.
-- Produces: subagent-driven execution guidance that verifies and continues the workspace created during brainstorming without changing the call.
-
-**task_type:** implementation_coding
-
-- [ ] **Step 1: Replace the using-git-worktrees integration line**
-
-Before (exact current text):
-
-```diff
--- **superpowers-orchestrator:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
-```
-
-After (exact replacement):
-
-```diff
-+- **superpowers-orchestrator:using-git-worktrees** - Verifies and continues the isolated workspace created during brainstorming; its existing-isolation check prevents duplicate creation
-```
-
-- [ ] **Step 2: Run pressure testing and record the behavior change**
-
-Run the edited skill through `superpowers-orchestrator:writing-skills`' pressure-testing process and record the before/after behavior difference.
-
-Expected: before the edit, a subagent-driven execution scenario describes worktree creation as an execution-time responsibility; after the edit, it still calls `using-git-worktrees` but treats Step 0 as verification and continues the existing brainstorming-created workspace.
-
-**Orchestrator Git Bookkeeping (not a worker step):**
-
-After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:
-
-```bash
-git add skills/subagent-driven-development/SKILL.md
-git commit -m "docs: clarify subagent workspace verification"
-```
-
-The worker never runs these commands.
-
 ## US-1: Branch/worktree created at brainstorming start
 
-### Task 4: Add isolated workspace creation to brainstorming
+### Task 1: Add isolated workspace creation to brainstorming
 
-**Depends on:** Foundation
+**Depends on:** none
 
 **Files:**
 - Modify: `skills/brainstorming/SKILL.md:24-65`
@@ -189,7 +52,7 @@ The worker never runs these commands.
 
 **Interfaces:**
 - Consumes: the user's initial request text, the existing brainstorming scope check, and `superpowers-orchestrator:using-git-worktrees`' consent and existing-isolation behavior.
-- Produces: a kebab-case slug of approximately five words, a `feature/<slug>` workspace before clarifying questions, and material-name-drift rename guidance before `design.md` is written.
+- Produces: a kebab-case slug of approximately five words (the same identifier this file already calls `<feature-slug>` in its design-doc path convention), a `feature/<slug>` workspace before clarifying questions, and material-name-drift rename guidance before `design.md` is written.
 
 **task_type:** implementation_coding
 
@@ -227,7 +90,7 @@ After (exact replacement):
 +   - Kebab-slugify approximately five words from the user's initial request and use the branch name `feature/<slug>`.
 +   - Invoke `superpowers-orchestrator:using-git-worktrees` with `<slug>` and continue in the workspace state it reports: created, reused, or working in place after declined consent or sandbox fallback.
 +   - If the request requires decomposition, create no workspace for the umbrella request. Start this step separately when brainstorming begins for each sub-project.
-+   - Before writing the design document, compare the settled feature name with `<slug>`. If it changed materially, rename the branch with `git branch -m feature/<old-slug> feature/<new-slug>` and move or rename the worktree directory to match; ignore cosmetic or minor wording drift. Surface any unrelated branch collision and do not overwrite it.
++   - Before writing the design document, compare the settled feature name with `<slug>`. If it changed materially, check for a destination collision first with `git branch --list "feature/<new-slug>"`; if none, rename the branch with `git branch -m feature/<old-slug> feature/<new-slug>` and run `git worktree move "$old_path" "$new_path"` to relocate the worktree directory in place; ignore cosmetic or minor wording drift. Surface any unrelated branch collision and do not overwrite it.
 +3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 +4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 +5. **Propose 2-3 approaches** — with trade-offs and your recommendation
@@ -329,6 +192,141 @@ git commit -m "feat: create worktree during brainstorming"
 
 The worker never runs these commands.
 
+### Task 2: Correct the plan-writing workspace context
+
+**Depends on:** Task 1
+
+**Files:**
+- Modify: `skills/writing-plans/SKILL.md:16`
+- Test: No automated test file; use `superpowers-orchestrator:writing-skills` pressure testing and record before/after eval evidence.
+
+**Interfaces:**
+- Consumes: the workspace created or deliberately declined during `superpowers-orchestrator:brainstorming` (Task 1).
+- Produces: an exact Context statement telling plan writers to continue in that same workspace.
+
+**task_type:** implementation_coding
+
+- [ ] **Step 1: Replace the stale Context line**
+
+Before (exact current text):
+
+```diff
+-**Context:** If working in an isolated worktree, it should have been created via the `superpowers-orchestrator:using-git-worktrees` skill at execution time.
+```
+
+After (exact replacement):
+
+```diff
++**Context:** If working in an isolated worktree, it should have been created via the `superpowers-orchestrator:using-git-worktrees` skill during brainstorming; continue writing the plan in that same workspace.
+```
+
+- [ ] **Step 2: Run pressure testing and record the behavior change**
+
+Run the edited skill through `superpowers-orchestrator:writing-skills`' pressure-testing process and record the before/after behavior difference.
+
+Expected: before the edit, a plan-writing scenario says isolation was created at execution time; after the edit, it recognizes the brainstorming-created workspace and continues there without creating or requesting a second workspace.
+
+**Orchestrator Git Bookkeeping (not a worker step):**
+
+After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:
+
+```bash
+git add skills/writing-plans/SKILL.md
+git commit -m "docs: correct plan workspace context"
+```
+
+The worker never runs these commands.
+
+### Task 3: Correct the executing-plans worktree wording
+
+**Depends on:** Task 1
+
+**Files:**
+- Modify: `skills/executing-plans/SKILL.md:72`
+- Test: No automated test file; use `superpowers-orchestrator:writing-skills` pressure testing and record before/after eval evidence.
+
+**Interfaces:**
+- Consumes: `using-git-worktrees` Step 0's existing-isolation detection.
+- Produces: execution guidance that verifies and continues the workspace created during brainstorming (Task 1) without changing the call.
+
+**task_type:** implementation_coding
+
+- [ ] **Step 1: Replace the using-git-worktrees integration line**
+
+Before (exact current text):
+
+```diff
+-- **superpowers-orchestrator:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
+```
+
+After (exact replacement):
+
+```diff
++- **superpowers-orchestrator:using-git-worktrees** - Verifies and continues the isolated workspace created during brainstorming; its existing-isolation check prevents duplicate creation
+```
+
+- [ ] **Step 2: Run pressure testing and record the behavior change**
+
+Run the edited skill through `superpowers-orchestrator:writing-skills`' pressure-testing process and record the before/after behavior difference.
+
+Expected: before the edit, an execution scenario describes worktree creation as an execution-time responsibility; after the edit, it still calls `using-git-worktrees` but treats Step 0 as verification and continues the existing brainstorming-created workspace.
+
+**Orchestrator Git Bookkeeping (not a worker step):**
+
+After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:
+
+```bash
+git add skills/executing-plans/SKILL.md
+git commit -m "docs: clarify execution workspace verification"
+```
+
+The worker never runs these commands.
+
+### Task 4: Correct the subagent workflow's worktree wording
+
+**Depends on:** Task 1
+
+**Files:**
+- Modify: `skills/subagent-driven-development/SKILL.md:436`
+- Test: No automated test file; use `superpowers-orchestrator:writing-skills` pressure testing and record before/after eval evidence.
+
+**Interfaces:**
+- Consumes: `using-git-worktrees` Step 0's existing-isolation detection.
+- Produces: subagent-driven execution guidance that verifies and continues the workspace created during brainstorming (Task 1) without changing the call.
+
+**task_type:** implementation_coding
+
+- [ ] **Step 1: Replace the using-git-worktrees integration line**
+
+Before (exact current text):
+
+```diff
+-- **superpowers-orchestrator:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
+```
+
+After (exact replacement):
+
+```diff
++- **superpowers-orchestrator:using-git-worktrees** - Verifies and continues the isolated workspace created during brainstorming; its existing-isolation check prevents duplicate creation
+```
+
+- [ ] **Step 2: Run pressure testing and record the behavior change**
+
+Run the edited skill through `superpowers-orchestrator:writing-skills`' pressure-testing process and record the before/after behavior difference.
+
+Expected: before the edit, a subagent-driven execution scenario describes worktree creation as an execution-time responsibility; after the edit, it still calls `using-git-worktrees` but treats Step 0 as verification and continues the existing brainstorming-created workspace.
+
+**Orchestrator Git Bookkeeping (not a worker step):**
+
+After a successful worker response or successful inline task execution with recorded pressure-test evidence, the orchestrator runs this before generating the task review package:
+
+```bash
+git add skills/subagent-driven-development/SKILL.md
+git commit -m "docs: clarify subagent workspace verification"
+```
+
+The worker never runs these commands.
+
 **US-1 Checkpoint:**
 
 Run: Through `superpowers-orchestrator:writing-skills`, run separate brainstorming walkthroughs for a single feature with consent granted, consent declined, an umbrella request requiring decomposition, material and cosmetic feature-name drift, and continuation into writing-plans and both execution workflows.
@@ -344,7 +342,7 @@ Expected:
 
 ### Task 5: Add fresh-session resume lookup
 
-**Depends on:** Foundation
+**Depends on:** none
 
 **Files:**
 - Modify: `skills/using-git-worktrees/SKILL.md:45-53`
@@ -386,12 +384,20 @@ After (exact replacement):
 +git branch --list "feature/<slug>*"
 +```
 +
-+Classify every match before continuing:
++For each matching branch found, classify it with these exact checks, in order:
 +
-+- If a matching branch is already merged into `main`, report it as stale or finished, do not reuse it, and continue to Step 1's fresh-creation path.
-+- If exactly one matching branch is unmerged and contains `docs/superpowers/features/<slug>/design.md`, reuse it. If `git worktree list` shows it already attached, enter that worktree. If only the branch remains because its worktree was deleted or pruned, recreate a worktree at that branch: prefer a native worktree tool; otherwise follow Step 1b's directory selection and safety verification, then run `git worktree add "$path" "$MATCHED_BRANCH"` without `-b`.
-+- If exactly one matching branch is unmerged but lacks `docs/superpowers/features/<slug>/design.md` or otherwise looks unrelated, report the match and ask the user to choose resume or create-new. Never silently reuse it.
-+- If multiple unmerged branches match, report every match and ask the user which one to resume or whether to create new. Never guess.
++```bash
++# 1. Is it already merged into main?
++git merge-base --is-ancestor "$MATCHED_BRANCH" main && echo merged || echo unmerged
++
++# 2. If unmerged, does it have the feature's design document?
++git cat-file -e "$MATCHED_BRANCH:docs/superpowers/features/<slug>/design.md" 2>/dev/null && echo present || echo absent
++```
++
++- If `git merge-base --is-ancestor "$MATCHED_BRANCH" main` exits `0`, the branch is already merged into `main`: report it as stale or finished, do not reuse it, and continue to Step 1's fresh-creation path.
++- If the branch is unmerged and `git cat-file -e "$MATCHED_BRANCH:docs/superpowers/features/<slug>/design.md" 2>/dev/null` exits `0` (the design document is present on that branch), reuse it. If `git worktree list` shows it already attached, enter that worktree. If only the branch remains because its worktree was deleted or pruned, first run `git worktree prune` to clear the stale administrative entry — otherwise `git worktree add` fails with "already checked out" even though the directory is gone — then recreate a worktree at that branch: prefer a native worktree tool; otherwise follow Step 1b's directory selection and safety verification, then run `git worktree add "$path" "$MATCHED_BRANCH"` without `-b`.
++- If the branch is unmerged but the `git cat-file -e` check exits non-zero (no matching design document) or the branch otherwise looks unrelated, report the match and ask the user to choose resume or create-new. Never silently reuse it.
++- If multiple branches match, report every match and its classification, and ask the user which one to resume or whether to create new. Never guess.
 +- If no branch or worktree matches, continue to Step 1 unchanged.
 +
 +<!-- riso-tech:orchestrator-split START -->
@@ -407,7 +413,7 @@ After (exact replacement):
 
 Run the edited skill through `superpowers-orchestrator:writing-skills`' pressure-testing process and record the before/after behavior difference.
 
-Expected: before the edit, a fresh main-root session proceeds directly to creation; after the edit, a matching unmerged branch with its design document is reused, a merged match follows fresh creation, an unmerged match without the design document and multiple matches trigger an explicit choice, a pruned worktree is recreated at its existing branch, and no match preserves existing creation behavior.
+Expected: before the edit, a fresh main-root session proceeds directly to creation; after the edit, a matching unmerged branch with its design document is reused, a merged match follows fresh creation, an unmerged match without the design document and multiple matches trigger an explicit choice, a pruned worktree is recreated at its existing branch after `git worktree prune`, and no match preserves existing creation behavior.
 
 **Orchestrator Git Bookkeeping (not a worker step):**
 
