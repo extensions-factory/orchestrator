@@ -94,5 +94,77 @@
     "plan": null,
     "created": "2026-08-01",
     "completed": "2026-08-02"
+  },
+  {
+    "slug": "workflow-skill-pattern--pattern-doc-fenced-block-table",
+    "epic": "Superpowers Skills",
+    "feature": "Workflow Skill Structural Pattern",
+    "title": "Pattern doc with normative fenced block table and exclusion fences",
+    "description": "Single normative file defining every required block by ID, validator marker, tier, and omit-when condition — block table fenced for machine parsing, exclusion list fenced for visibility.",
+    "status": "open",
+    "spec": "features/workflow-skill-pattern/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "workflow-skill-pattern--structural-validator-script",
+    "epic": "Superpowers Skills",
+    "feature": "Workflow Skill Structural Pattern",
+    "title": "Structural validator script that parses the doc and checks all in-scope skills",
+    "description": "Bash script that reads the block table from the pattern doc, applies all six rules to every in-scope skills/*/SKILL.md, and exits non-zero with one line per violation.",
+    "status": "open",
+    "spec": "features/workflow-skill-pattern/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "workflow-skill-pattern--readme-pattern-omissions-format",
+    "epic": "Superpowers Skills",
+    "feature": "Workflow Skill Structural Pattern",
+    "title": "README Pattern Omissions section format specified and enforced by rules 2–4",
+    "description": "Documented and machine-enforced format for recording why a conditional block is absent; rules 2–4 keep omission records honest as skills evolve.",
+    "status": "open",
+    "spec": "features/workflow-skill-pattern/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "workflow-skill-pattern--writing-skills-pointer",
+    "epic": "Superpowers Skills",
+    "feature": "Workflow Skill Structural Pattern",
+    "title": "writing-skills/SKILL.md generic structure section replaced by a pointer",
+    "description": "The generic '## SKILL.md Structure' section body in writing-skills/SKILL.md is replaced with a short pointer to workflow-skill-pattern.md, eliminating the competing template.",
+    "status": "open",
+    "spec": "features/workflow-skill-pattern/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "workflow-skill-pattern--validator-self-check-fixture",
+    "epic": "Superpowers Skills",
+    "feature": "Workflow Skill Structural Pattern",
+    "title": "Validator self-check fixture proving rule 6 fails loudly",
+    "description": "Fixture that strips the block table from the pattern doc and asserts the validator exits non-zero, preventing a doc edit from silently making the validator a no-op.",
+    "status": "open",
+    "spec": "features/workflow-skill-pattern/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "workflow-skill-pattern--run-all-runner",
+    "epic": "Superpowers Skills",
+    "feature": "Workflow Skill Structural Pattern",
+    "title": "tests/skills/run-all.sh wired in tests/split/run-all.sh style",
+    "description": "Runner that discovers and executes all test-*.sh files in tests/skills/, accumulates failures, and prints ALL SKILL TESTS PASS on success — matching the existing split test runner idiom.",
+    "status": "open",
+    "spec": "features/workflow-skill-pattern/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
   }
 ]

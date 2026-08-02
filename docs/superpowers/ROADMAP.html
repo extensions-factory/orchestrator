@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Superpowers Roadmap</title>
+<title>Product Roadmap</title>
 <style>
   :root{
     --bg:#0e0e10; --panel:#161618; --panel-2:#1d1d20;
@@ -98,9 +98,9 @@
   <!-- HERO -->
   <header class="hero">
     <div class="wrap">
-      <h1>Superpowers Roadmap</h1>
+      <h1>Superpowers Orchestrator — Roadmap</h1>
       <div class="intro">
-        <p>The Superpowers orchestrator plugin roadmap. Three levels: <strong>Epics</strong> (the cards below), the <strong>Features</strong> inside each epic, and the <strong>User Stories</strong> listed under each feature.</p>
+        <p>Three levels: <strong>Epics</strong> (the cards below), the <strong>Features</strong> inside each epic, and the <strong>User Stories</strong> listed under each feature. Each User Story ships independently and is tracked from <em>open</em> through <em>released</em>.</p>
         <p>Every User Story carries a status badge. Use the legend above to filter the whole page down to a single status — for example, show only what has shipped, or only what's in active development.</p>
       </div>
     </div>
@@ -128,6 +128,7 @@
           <h3>Superpowers Skills</h3>
           <ul>
             <li>designing-ui skill</li>
+            <li>Workflow Skill Structural Pattern</li>
           </ul>
         </div>
         <div class="card">
@@ -145,7 +146,7 @@
     <div class="wrap">
       <p class="eyebrow">Superpowers Skills</p>
       <h2>designing-ui skill</h2>
-      <p class="lead">A dedicated UI/visual-design sibling of <code>brainstorming</code> that detects the target platform, captures layout via Figma or text description, maps sections to free-tier ReUI components, and produces a design spec for <code>writing-plans</code>.</p>
+      <p class="lead">Skill that guides agents through platform-aware UI design: detecting the stack, capturing Figma layout, mapping ReUI components, and producing a complete design doc with roadmap entries.</p>
       <div class="grid">
         <div class="item" data-status="open">
           <a href="features/designing-ui-skill/design.md" class="t">Platform detection</a>
@@ -181,12 +182,53 @@
     </div>
   </section>
 
+  <!-- DETAIL SECTION — Workflow Skill Structural Pattern -->
+  <section class="section" data-section>
+    <div class="wrap">
+      <p class="eyebrow">Superpowers Skills</p>
+      <h2>Workflow Skill Structural Pattern</h2>
+      <p class="lead">Defines one canonical structural pattern for all in-scope workflow skills, enforced by a doc-parsing validator. Eliminates heading vocabulary drift across 19 skills and makes conformance a CI gate rather than a social convention.</p>
+      <div class="grid">
+        <div class="item" data-status="open">
+          <a href="features/workflow-skill-pattern/design.md" class="t">Pattern doc with normative fenced block table and exclusion fences</a>
+          <div class="d">Single normative file defining every required block by ID, validator marker, tier, and omit-when condition — block table fenced for machine parsing, exclusion list fenced for visibility.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="open">
+          <a href="features/workflow-skill-pattern/design.md" class="t">Structural validator script that parses the doc and checks all in-scope skills</a>
+          <div class="d">Bash script that reads the block table from the pattern doc, applies all six rules to every in-scope skills/*/SKILL.md, and exits non-zero with one line per violation.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="open">
+          <a href="features/workflow-skill-pattern/design.md" class="t">README Pattern Omissions section format specified and enforced by rules 2–4</a>
+          <div class="d">Documented and machine-enforced format for recording why a conditional block is absent; rules 2–4 keep omission records honest as skills evolve.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="open">
+          <a href="features/workflow-skill-pattern/design.md" class="t">writing-skills/SKILL.md generic structure section replaced by a pointer</a>
+          <div class="d">The generic '## SKILL.md Structure' section body in writing-skills/SKILL.md is replaced with a short pointer to workflow-skill-pattern.md, eliminating the competing template.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="open">
+          <a href="features/workflow-skill-pattern/design.md" class="t">Validator self-check fixture proving rule 6 fails loudly</a>
+          <div class="d">Fixture that strips the block table from the pattern doc and asserts the validator exits non-zero, preventing a doc edit from silently making the validator a no-op.</div>
+          <span class="badge open">Open</span>
+        </div>
+        <div class="item" data-status="open">
+          <a href="features/workflow-skill-pattern/design.md" class="t">tests/skills/run-all.sh wired in tests/split/run-all.sh style</a>
+          <div class="d">Runner that discovers and executes all test-*.sh files in tests/skills/, accumulates failures, and prints ALL SKILL TESTS PASS on success — matching the existing split test runner idiom.</div>
+          <span class="badge open">Open</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- DETAIL SECTION — Branch-per-feature SDLC -->
   <section class="section" data-section>
     <div class="wrap">
       <p class="eyebrow">Developer Workflow</p>
       <h2>Branch-per-feature SDLC</h2>
-      <p class="lead">Create or resume an isolated feature branch and worktree at brainstorming time so the design, plan, and implementation share one branch from the first commit.</p>
+      <p class="lead">Each feature gets its own isolated Git branch and worktree created at brainstorming start, so spec, plan, and implementation land on one branch and can be resumed cleanly in a fresh session.</p>
       <div class="grid">
         <div class="item" data-status="released">
           <a href="features/worktree-at-brainstorming/design.md" class="t">Branch/worktree created at brainstorming start</a>
@@ -205,7 +247,7 @@
   <div class="wrap"><p class="empty-note hide" id="emptyNote">No items match this status.</p></div>
 
   <footer>
-    <div class="wrap">Superpowers orchestrator plugin roadmap · generated from roadmap.json · 2026-08-02</div>
+    <div class="wrap">Superpowers Orchestrator product roadmap · generated from docs/superpowers/roadmap.json</div>
   </footer>
 
 <script>
