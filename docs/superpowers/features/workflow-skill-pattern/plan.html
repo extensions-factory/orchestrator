@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workflow Skill Structural Pattern — Implementation Plan</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f4f6f8;
+    --panel: #ffffff;
+    --panel-soft: #f8fafc;
+    --text: #1f2933;
+    --muted: #52606d;
+    --line: #d9e0e7;
+    --accent: #0759c7;
+    --accent-soft: #e8f1ff;
+    --success: #147d4f;
+    --code: #eef2f6;
+    --shadow: 0 18px 45px rgba(31, 41, 51, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1116;
+      --panel: #171b22;
+      --panel-soft: #1e242d;
+      --text: #edf2f7;
+      --muted: #aeb9c6;
+      --line: #343c48;
+      --accent: #78b7ff;
+      --accent-soft: #162b46;
+      --success: #60d394;
+      --code: #0b0e13;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 6rem; }
+  body { margin: 0; color: var(--text); background: var(--bg); font: 16px/1.65 system-ui, sans-serif; }
+  a { color: var(--accent); }
+  a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  .skip-link {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.55rem 0.8rem;
+    transform: translateY(-150%);
+    color: var(--panel);
+    background: var(--text);
+    border-radius: 6px;
+  }
+  .skip-link:focus { transform: translateY(0); }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    min-height: 4.5rem;
+    padding: 0.75rem max(1.25rem, calc((100vw - 1280px) / 2));
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--panel) 92%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .document-label { min-width: 0; }
+  .eyebrow { display: block; margin-bottom: 0.1rem; color: var(--muted); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; }
+  .document-title { display: block; overflow: hidden; font-size: 0.95rem; text-overflow: ellipsis; white-space: nowrap; }
+
+  .progress { width: min(19rem, 35vw); }
+  #plan-progress { display: block; margin-bottom: 0.35rem; color: var(--muted); font-size: 0.78rem; text-align: right; }
+  .progress-track { height: 5px; overflow: hidden; border-radius: 999px; background: var(--line); }
+  .progress-track span { display: block; width: 0; height: 100%; background: var(--success); }
+
+  .layout { display: grid; grid-template-columns: 15rem minmax(0, 82ch); gap: 2.5rem; max-width: 1280px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+  .outline { align-self: start; position: sticky; top: 7rem; max-height: calc(100vh - 9rem); overflow: auto; padding-right: 1rem; }
+  .outline-title { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .outline nav { display: grid; gap: 0.2rem; }
+  .outline a { padding: 0.4rem 0.55rem; border-left: 2px solid transparent; color: var(--muted); font-size: 0.85rem; line-height: 1.35; text-decoration: none; }
+  .outline a:hover { border-left-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+  .outline a.depth-3 { padding-left: 1.3rem; font-size: 0.8rem; }
+  .mobile-outline { display: none; }
+
+  main {
+    min-width: 0;
+    padding: clamp(1.5rem, 4vw, 3.5rem);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+  }
+  h1, h2, h3 { line-height: 1.25; text-wrap: balance; }
+  h1 { margin: 0 0 1.5rem; font-size: clamp(2rem, 5vw, 3.25rem); letter-spacing: -0.035em; }
+  h2 { margin: 3.5rem 0 1.25rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: clamp(1.5rem, 3vw, 2rem); }
+  h3 { margin: 2rem 0 0.75rem; font-size: 1.15rem; }
+  p, li { max-width: 72ch; }
+  li + li { margin-top: 0.35rem; }
+  hr { margin: 3rem 0; border: 0; border-top: 1px solid var(--line); }
+
+  blockquote {
+    margin: 1.5rem 0;
+    padding: 1rem 1.15rem;
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    color: var(--muted);
+    background: var(--accent-soft);
+  }
+  blockquote p { margin: 0; }
+  .plan-fact { margin: 0.45rem 0; padding: 0.65rem 0.85rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-soft); }
+
+  .task-card {
+    margin: 1.5rem 0 2rem;
+    padding: 0 1.25rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel-soft);
+  }
+  .task-card > h3 { margin: 0 -1.25rem 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; background: var(--accent-soft); }
+  .task-card pre { background: var(--code); }
+
+  input[type="checkbox"] { width: 1.05rem; height: 1.05rem; margin: 0 0.45rem 0 0; accent-color: var(--success); vertical-align: -0.15rem; }
+  input[type="checkbox"]:disabled { opacity: 1; }
+  .checkpoint { margin: 1.5rem 0; padding: 1rem 1.15rem; border: 1px solid var(--success); border-radius: 9px; background: color-mix(in srgb, var(--success) 9%, var(--panel)); }
+  .sample-note { margin: 0 0 2rem; padding: 0.8rem 1rem; border: 1px dashed var(--accent); border-radius: 8px; color: var(--muted); background: var(--accent-soft); }
+
+  code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+  :not(pre) > code { padding: 0.12em 0.35em; border-radius: 4px; background: var(--code); overflow-wrap: anywhere; }
+  pre { overflow: auto; padding: 1rem; border: 1px solid var(--line); border-radius: 9px; background: var(--code); font-size: 0.88rem; line-height: 1.55; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { padding: 0.7rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  @media (max-width: 900px) {
+    .layout { display: block; padding: 1rem; }
+    .outline { display: none; }
+    .mobile-outline { display: block; max-width: 82ch; margin: 0 auto 1rem; padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+    .mobile-outline summary { cursor: pointer; font-weight: 650; }
+    .mobile-outline nav { display: grid; gap: 0.4rem; margin-top: 0.75rem; }
+    .mobile-outline a { color: var(--muted); text-decoration: none; }
+    main { margin: auto; }
+  }
+  @media (max-width: 600px) {
+    .topbar { gap: 1rem; min-height: 4rem; padding: 0.65rem 1rem; }
+    .progress { width: 8rem; }
+    #plan-progress { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    main { padding: 1.25rem; border-radius: 10px; }
+    .task-card { padding: 0 0.85rem 0.85rem; }
+    .task-card > h3 { margin-right: -0.85rem; margin-left: -0.85rem; padding: 0.85rem; }
+  }
+  @media print {
+    :root { --bg: #fff; --panel: #fff; --panel-soft: #fff; --text: #000; --muted: #333; --line: #bbb; --accent: #000; --code: #f4f4f4; }
+    body { font-size: 10.5pt; }
+    .topbar, .outline, .mobile-outline, .skip-link { display: none; }
+    .layout { display: block; max-width: none; padding: 0; }
+    main { max-width: none; padding: 0; border: 0; box-shadow: none; }
+    h2, h3, blockquote, .checkpoint, pre { break-after: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to plan</a>
+
+<header class="topbar">
+  <div class="document-label">
+    <span class="eyebrow">Implementation plan</span>
+    <strong class="document-title">Workflow Skill Structural Pattern</strong>
+  </div>
+  <div class="progress" aria-live="polite">
+    <span id="plan-progress">Plan ready for review</span>
+    <div class="progress-track" id="progress-track" role="progressbar" aria-label="Plan completion" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+      <span id="progress-bar"></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="outline" aria-label="Plan outline">
+    <p class="outline-title">On this page</p>
+    <nav id="outline-nav"></nav>
+  </aside>
+
+  <details class="mobile-outline">
+    <summary>Plan outline</summary>
+    <nav id="mobile-nav" aria-label="Plan outline"></nav>
+  </details>
+
+  <main id="main-content" tabindex="-1" data-plan-content>
+    <article aria-label="Workflow Skill Structural Pattern implementation plan">
+<h1>Workflow Skill Structural Pattern Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers-orchestrator:subagent-driven-development when the harness supports subagents; use superpowers-orchestrator:executing-plans only when the harness has no subagent capability. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Spec:</strong> <code>docs/superpowers/features/workflow-skill-pattern/design.md</code></p>
+<p><strong>Goal:</strong> Define one canonical workflow-skill structure and enforce it with a data-driven Bash validator and regression runner.</p>
+<p><strong>Architecture:</strong> <code>skills/writing-skills/workflow-skill-pattern.md</code> is the sole runtime source for block identities, markers, tiers, omission conditions, and exclusions. <code>tests/skills/test-workflow-skill-pattern.sh</code> parses that document with awk, interprets the parsed marker syntax generically, validates fixture or repository skill trees with grep/awk, and exercises every rule without migrating existing skills.</p>
+<p><strong>Tech Stack:</strong> Bash, grep, awk, Markdown, HTML</p>
+<h2>Expected Outcome</h2>
+<p>After completing this plan, the developer will have:</p>
+<h3>Working behavior</h3>
+<ul>
+<li>US-1: skill authors and tooling can read one normative document containing the approved 12-block table and the sole exclusion list.</li>
+<li>US-2: the structural validator can check every non-excluded <code>skills/*/SKILL.md</code>, emit exact rule violations, and return a non-zero status for invalid input.</li>
+<li>US-3: conditional omissions pass only when the corresponding README records the block ID inside an exact <code>## Pattern Omissions</code> section, and stale records fail.</li>
+<li>US-4: <code>skills/writing-skills/SKILL.md</code> directs authors to the canonical pattern instead of maintaining a competing structure template.</li>
+<li>US-5: the test suite proves a stripped or empty block table triggers a loud rule-6 failure.</li>
+<li>US-6: one runner discovers all <code>tests/skills/test-*.sh</code> scripts, runs every one, accumulates failures, and prints a success summary only when all pass.</li>
+</ul>
+<h3>Artifacts</h3>
+<ul>
+<li><code>skills/writing-skills/workflow-skill-pattern.md</code> — normative block table, block guidance, omission format, validator rules, and fenced exclusion list.</li>
+<li><code>skills/writing-skills/SKILL.md</code> — existing structure section reduced to the canonical pointer sentence.</li>
+<li><code>tests/skills/test-workflow-skill-pattern.sh</code> — data-driven validator plus structural contract fixtures for rules 1–6.</li>
+<li><code>tests/skills/run-all.sh</code> — aggregate skill-test runner matching the split-test idiom.</li>
+</ul>
+<h3>How to see it working</h3>
+<ul>
+<li>Run <code>bash tests/skills/run-all.sh</code>; expect <code>PASS test-workflow-skill-pattern</code> followed by <code>ALL SKILL TESTS PASS</code> once US-1, US-2, US-5, and US-6 are implemented.</li>
+<li>Run <code>bash tests/split/run-all.sh</code>; expect <code>ALL ORCHESTRATOR SPLIT TESTS PASS</code>, proving this sub-project did not regress the existing split tests.</li>
+</ul>
+<h2>Global Constraints</h2>
+<ul>
+<li>Implementation is bash + grep + awk only, matching the tests/split/*.sh convention. No new tooling, no new dependency, no new file format.</li>
+<li>The validator script must hold zero block knowledge of its own — every block id, marker, tier, and omit-when condition is parsed from workflow-skill-pattern.md at run time, never hardcoded in the script.</li>
+<li>This plan's tasks never touch skills/*/README.md (other than the pattern doc's own home directory) or any skill's SKILL.md body content — migrating the 18 in-scope skills is sub-project B and out of scope here.</li>
+</ul>
+<hr />
+<h2>US-1: Pattern doc with normative fenced block table and exclusion fences</h2>
+<h3>Task 1: Establish the canonical pattern document</h3>
+<p><strong>Depends on:</strong> none</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>skills/writing-skills/workflow-skill-pattern.md</code></li>
+<li>Modify: none</li>
+<li>Test: <code>tests/skills/test-workflow-skill-pattern.sh</code></li>
+</ul>
+<p><strong>Interfaces:</strong></p>
+<ul>
+<li>Consumes: the approved table, omission format, block-10 constraint, validator rules, and D10 exclusion from <code>docs/superpowers/features/workflow-skill-pattern/design.md</code>.</li>
+<li>Produces: <code>workflow-skill-pattern.md</code> fences <code>&lt;!-- blocks:start --&gt;</code> / <code>&lt;!-- blocks:end --&gt;</code> and <code>&lt;!-- exclude:start --&gt;</code> / <code>&lt;!-- exclude:end --&gt;</code>, consumed at runtime by <code>parse_blocks(pattern_doc)</code> and <code>parse_exclusions(pattern_doc)</code> in Task 2.</li>
+</ul>
+<p><strong>task_type:</strong> documentation_knowledge_transfer</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 1: Write the failing document-contract test</strong></li>
+</ul>
+<p>Create <code>tests/skills/test-workflow-skill-pattern.sh</code> with this complete content:</p>
+<pre><code class="language-bash">#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT=&quot;$(cd &quot;$(dirname &quot;$0&quot;)/../..&quot; &amp;&amp; pwd)&quot;
+PATTERN=&quot;$ROOT/skills/writing-skills/workflow-skill-pattern.md&quot;
+fail=0
+
+check() {
+  grep -Fq -- &quot;$2&quot; &quot;$1&quot; || { echo &quot;[FAIL] missing: $2&quot;; fail=1; }
+}
+
+if [ ! -f &quot;$PATTERN&quot; ]; then
+  echo &quot;[FAIL] no skills/writing-skills/workflow-skill-pattern.md&quot;
+  exit 1
+fi
+
+rows=&quot;$(awk -F'|' '
+  /&lt;!-- blocks:start --&gt;/ { inside=1; next }
+  /&lt;!-- blocks:end --&gt;/ { inside=0 }
+  inside &amp;&amp; $2 ~ /^[[:space:]]*[0-9]+[[:space:]]*$/ { count++ }
+  END { print count+0 }
+' &quot;$PATTERN&quot;)&quot;
+[ &quot;$rows&quot; -eq 12 ] || { echo &quot;[FAIL] expected 12 block rows, got $rows&quot;; fail=1; }
+
+exclusions=&quot;$(awk '
+  /&lt;!-- exclude:start --&gt;/ { inside=1; next }
+  /&lt;!-- exclude:end --&gt;/ { inside=0 }
+  inside &amp;&amp; /^[[:space:]]*skills\/[^[:space:]]+\/[[:space:]]*$/ {
+    gsub(/^[[:space:]]+|[[:space:]]+$/, &quot;&quot;)
+    print
+  }
+' &quot;$PATTERN&quot;)&quot;
+[ &quot;$exclusions&quot; = 'skills/visual-companion/' ] || {
+  echo &quot;[FAIL] exclusion fence must contain only skills/visual-companion/&quot;
+  fail=1
+}
+
+check &quot;$PATTERN&quot; '## Pattern Omissions'
+check &quot;$PATTERN&quot; '- `hard-gate` — skill only reads and reports; no irreversible act.'
+check &quot;$PATTERN&quot; '- `token-cost-monitoring` — never invokes a model nor dispatches.'
+check &quot;$PATTERN&quot; 'the section must be a plain append-only record, writing one line per dispatch or model-invocation event to the run'
+check &quot;$PATTERN&quot; 'No analysis or reporting belongs here.'
+
+for rule in 1 2 3 4 5 6; do
+  grep -Eq &quot;^\\| $rule \\|&quot; &quot;$PATTERN&quot; || {
+    echo &quot;[FAIL] missing validator rule $rule&quot;
+    fail=1
+  }
+done
+
+[ &quot;$fail&quot; -eq 0 ] &amp;&amp; echo 'PASS test-workflow-skill-pattern'
+exit &quot;$fail&quot;
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 2: Run the document-contract test to verify RED</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: exit 1 with <code>[FAIL] no skills/writing-skills/workflow-skill-pattern.md</code>.</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 3: Write the complete normative pattern document</strong></li>
+</ul>
+<p>Create <code>skills/writing-skills/workflow-skill-pattern.md</code> with this complete content; the fenced 12-row table is copied character for character from the approved request:</p>
+<pre><code class="language-markdown"># Follow the Workflow Skill Structural Pattern
+
+Workflow skills expose the same process at three fidelities: a Checklist is the trackable contract, a Process Flow shows gates and loops, and The Process provides the prose elaboration. Authors use the canonical blocks below so a reader can move between those views without encountering different steps.
+
+## Canonical Blocks
+
+The table is normative. Its `id` values join this document to README omission records, and its validator markers are parsed directly by the structural validator.
+
+&lt;!-- blocks:start --&gt;
+| # | id | Block | Validator marker | Tier | Omit when |
+|---|---|---|---|---|---|
+| 1 | frontmatter | Frontmatter | `name:` + `description:` inside a `---` fence | Mandatory | — |
+| 2 | title | Title | `^# ` verb phrase | Mandatory | — |
+| 3 | purpose | Purpose | non-heading paragraph directly after the title | Mandatory | — |
+| 4 | hard-gate | Hard gate | `&lt;HARD-GATE&gt;` | Conditional | no irreversible act precedes an approval |
+| 5 | anti-pattern | Anti-pattern | `## Anti-Pattern: &quot;` | Conditional | baseline testing surfaced no dominant rationalization |
+| 6 | checklist | Checklist | `## Checklist` | Mandatory | — |
+| 7 | process-flow | Process flow | `## Process Flow` plus a ```dot fence | Conditional | workflow strictly linear — no gates, no loops back |
+| 8 | the-process | The process | `## The Process` | Mandatory | — |
+| 9 | after-artifact | After the artifact | `## After ` | Conditional | skill produces no durable artifact |
+| 10 | token-cost-monitoring | Token-cost monitoring | `## Token-cost Monitoring` | Conditional | skill never invokes a model nor dispatches |
+| 11 | red-flags | Red flags | `## Red Flags` | Conditional | skill enforces no discipline an agent could rationalize past |
+| 12 | key-principles | Key principles | `## Key Principles` | Mandatory | — |
+&lt;!-- blocks:end --&gt;
+
+Mandatory blocks cannot be omitted. Conditional blocks may be omitted only when the skill's README records the matching block ID and reason in the exact format below.
+
+## Block Guidance
+
+1. Frontmatter supplies the discoverable `name` and trigger-only `description` inside the opening YAML fence.
+2. Title names the action in a level-one verb-phrase heading.
+3. Purpose is the first non-heading paragraph after the title and states the skill's job directly.
+4. Hard gate prevents an irreversible action until its approval or prerequisite is satisfied.
+5. Anti-pattern names the dominant rationalization found during baseline testing and counters it.
+6. Checklist gives the ordered, trackable contract for completing the workflow.
+7. Process flow presents non-linear gates, branches, and loops in a `dot` fence.
+8. The process elaborates the checklist without adding or removing steps.
+9. After the artifact defines the required handoff or follow-up after a durable output is written.
+10. Token-cost monitoring records model or dispatch events at the minimized fidelity below.
+11. Red flags identify signals that the agent is rationalizing past the workflow's discipline.
+12. Key principles close with the compact rules that govern the whole workflow.
+
+## Recording Pattern Omissions
+
+Use this exact README section shape. Each bullet joins to the canonical table through the backticked block ID and gives the skill-specific reason.
+
+```markdown
+## Pattern Omissions
+
+- `hard-gate` — skill only reads and reports; no irreversible act.
+- `token-cost-monitoring` — never invokes a model nor dispatches.
+```
+
+When block 10 (`token-cost-monitoring`) is present, its content expectation under this pattern is minimized: the section must be a plain append-only record, writing one line per dispatch or model-invocation event to the run's JSONL file. No analysis or reporting belongs here. This is an explicit contrast with `skills/brainstorming/SKILL.md`'s current elaborate `## Token-cost monitoring` section, which tracks per-source (worker and orchestrator) records, computes coverage percentages, and carries &quot;never label a partial subtotal complete&quot; language — that style is specific to brainstorming and is not carried into this pattern.
+
+## Validator Rules
+
+| Rule | Condition | Result |
+|---|---|---|
+| 1 | Mandatory block absent | FAIL — no omission possible |
+| 2 | Conditional absent, README lists its id | pass |
+| 3 | Conditional absent, README does not list it (or no README) | FAIL |
+| 4 | Conditional PRESENT but README lists it as omitted | FAIL — stale record |
+| 5 | Present blocks out of table order | FAIL |
+| 6 | Block table unparseable or zero rows | FAIL loudly, never pass-by-default |
+
+Every violation is emitted as exactly `skills/&lt;name&gt;: rule&lt;N&gt; &lt;block-id&gt;`. Validation exits non-zero when any violation occurs and exits zero only when no violation occurs.
+
+## Exclusions
+
+The validator reads the only exclusion set from this fence.
+
+&lt;!-- exclude:start --&gt;
+skills/visual-companion/
+&lt;!-- exclude:end --&gt;
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 4: Run the focused test to verify GREEN</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: exit 0 with <code>PASS test-workflow-skill-pattern</code>.</p>
+<p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+<p>After a successful worker response or successful inline task execution with passing tests, the orchestrator runs this before generating the task review package:</p>
+<pre><code class="language-bash">git add skills/writing-skills/workflow-skill-pattern.md tests/skills/test-workflow-skill-pattern.sh
+git commit -m &quot;docs: define workflow skill pattern&quot;
+</code></pre>
+<p>The worker never runs these commands.</p>
+<p><strong>US-1 Checkpoint:</strong></p>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: exit 0; the output is <code>PASS test-workflow-skill-pattern</code>; the parser-facing table has exactly 12 rows between the block fences; the exclusion fence contains only <code>skills/visual-companion/</code>; no validator logic contains a block identity; after Task 4, the same command also confirms the D1 pointer in <code>skills/writing-skills/SKILL.md</code>.</p>
+<h2>US-2: Structural validator script that parses the doc and checks all in-scope skills</h2>
+<h3>Task 2: Implement the data-driven structural validator</h3>
+<p><strong>Depends on:</strong> Task 1</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: none</li>
+<li>Modify: <code>tests/skills/test-workflow-skill-pattern.sh</code></li>
+<li>Test: <code>tests/skills/test-workflow-skill-pattern.sh</code></li>
+</ul>
+<p><strong>Interfaces:</strong></p>
+<ul>
+<li>Consumes: <code>workflow-skill-pattern.md</code> table rows with pipe-delimited columns <code>#</code>, <code>id</code>, <code>Block</code>, <code>Validator marker</code>, <code>Tier</code>, and <code>Omit when</code>, plus the fenced exclusion paths.</li>
+<li>Produces: <code>parse_blocks(pattern_doc)</code> emitting tab-delimited <code>id</code>, <code>validator_marker</code>, <code>tier</code>, and <code>omit_when</code> rows; <code>validate_tree(pattern_doc, repo_root)</code> emitting exact <code>skills/&lt;name&gt;: rule&lt;N&gt; &lt;block-id&gt;</code> lines and returning 0 only for a violation-free tree; CLI <code>--validate &lt;pattern-doc&gt; &lt;repo-root&gt;</code>.</li>
+</ul>
+<p><strong>task_type:</strong> implementation_coding</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 1: Add concrete failing fixtures for validator rules 1–5</strong></li>
+</ul>
+<p>Before the final PASS/exit lines in <code>tests/skills/test-workflow-skill-pattern.sh</code>, add this complete fixture harness. The temporary table deliberately uses synthetic IDs so the validator itself still gets all real block knowledge only from the runtime document:</p>
+<pre><code class="language-bash">validate_tree() {
+  echo '[FAIL] validate_tree not implemented' &gt;&amp;2
+  return 99
+}
+
+TMP=&quot;$(mktemp -d)&quot;
+trap 'rm -rf &quot;$TMP&quot;' EXIT
+FIXTURE_PATTERN=&quot;$TMP/workflow-skill-pattern.md&quot;
+
+cat &gt; &quot;$FIXTURE_PATTERN&quot; &lt;&lt;'EOF'
+&lt;!-- blocks:start --&gt;
+| # | id | Block | Validator marker | Tier | Omit when |
+|---|---|---|---|---|---|
+| 1 | mandatory-1 | Mandatory one | `## Mandatory One` | Mandatory | — |
+| 2 | conditional-1 | Conditional one | `## Conditional One` | Conditional | not needed |
+| 3 | mandatory-2 | Mandatory two | `## Mandatory Two` | Mandatory | — |
+| 4 | conditional-2 | Conditional two | `## Conditional Two` | Conditional | not needed |
+| 5 | mandatory-3 | Mandatory three | `## Mandatory Three` | Mandatory | — |
+| 6 | conditional-3 | Conditional three | `## Conditional Three` | Conditional | not needed |
+| 7 | mandatory-4 | Mandatory four | `## Mandatory Four` | Mandatory | — |
+| 8 | conditional-4 | Conditional four | `## Conditional Four` | Conditional | not needed |
+| 9 | mandatory-5 | Mandatory five | `## Mandatory Five` | Mandatory | — |
+| 10 | conditional-5 | Conditional five | `## Conditional Five` | Conditional | not needed |
+| 11 | mandatory-6 | Mandatory six | `## Mandatory Six` | Mandatory | — |
+| 12 | conditional-6 | Conditional six | `## Conditional Six` | Conditional | not needed |
+&lt;!-- blocks:end --&gt;
+&lt;!-- exclude:start --&gt;
+skills/excluded/
+&lt;!-- exclude:end --&gt;
+EOF
+
+make_case() {
+  local root=&quot;$1&quot;
+  mkdir -p &quot;$root/skills/demo&quot; &quot;$root/skills/excluded&quot;
+  cat &gt; &quot;$root/skills/demo/SKILL.md&quot; &lt;&lt;'EOF'
+## Mandatory One
+## Mandatory Two
+## Mandatory Three
+## Mandatory Four
+## Mandatory Five
+## Mandatory Six
+EOF
+  cat &gt; &quot;$root/skills/demo/README.md&quot; &lt;&lt;'EOF'
+## Pattern Omissions
+
+- `conditional-1` — not needed.
+- `conditional-2` — not needed.
+- `conditional-3` — not needed.
+- `conditional-4` — not needed.
+- `conditional-5` — not needed.
+- `conditional-6` — not needed.
+EOF
+  printf '%s\n' '# deliberately invalid but excluded' &gt; &quot;$root/skills/excluded/SKILL.md&quot;
+}
+
+expect_violation() {
+  local root=&quot;$1&quot; expected=&quot;$2&quot; output
+  if output=&quot;$(validate_tree &quot;$FIXTURE_PATTERN&quot; &quot;$root&quot; 2&gt;&amp;1)&quot;; then
+    echo &quot;[FAIL] expected violation: $expected&quot;
+    fail=1
+    return
+  fi
+  printf '%s\n' &quot;$output&quot; | grep -Fxq -- &quot;$expected&quot; || {
+    echo &quot;[FAIL] missing violation: $expected&quot;
+    fail=1
+  }
+}
+
+GOOD=&quot;$TMP/good&quot;
+make_case &quot;$GOOD&quot;
+if ! output=&quot;$(validate_tree &quot;$FIXTURE_PATTERN&quot; &quot;$GOOD&quot; 2&gt;&amp;1)&quot;; then
+  echo &quot;[FAIL] rule2/all-present fixture rejected: $output&quot;
+  fail=1
+elif [ -n &quot;$output&quot; ]; then
+  echo &quot;[FAIL] valid fixture emitted output: $output&quot;
+  fail=1
+fi
+
+RULE1=&quot;$TMP/rule1&quot;
+make_case &quot;$RULE1&quot;
+awk '$0 != &quot;## Mandatory Two&quot;' &quot;$RULE1/skills/demo/SKILL.md&quot; &gt; &quot;$RULE1/skill.tmp&quot;
+mv &quot;$RULE1/skill.tmp&quot; &quot;$RULE1/skills/demo/SKILL.md&quot;
+expect_violation &quot;$RULE1&quot; 'skills/demo: rule1 mandatory-2'
+
+RULE3=&quot;$TMP/rule3&quot;
+make_case &quot;$RULE3&quot;
+rm &quot;$RULE3/skills/demo/README.md&quot;
+expect_violation &quot;$RULE3&quot; 'skills/demo: rule3 conditional-1'
+
+RULE4=&quot;$TMP/rule4&quot;
+make_case &quot;$RULE4&quot;
+awk '{ print; if ($0 == &quot;## Mandatory One&quot;) print &quot;## Conditional One&quot; }' \
+  &quot;$RULE4/skills/demo/SKILL.md&quot; &gt; &quot;$RULE4/skill.tmp&quot;
+mv &quot;$RULE4/skill.tmp&quot; &quot;$RULE4/skills/demo/SKILL.md&quot;
+expect_violation &quot;$RULE4&quot; 'skills/demo: rule4 conditional-1'
+
+RULE5=&quot;$TMP/rule5&quot;
+make_case &quot;$RULE5&quot;
+cat &gt; &quot;$RULE5/skills/demo/SKILL.md&quot; &lt;&lt;'EOF'
+## Mandatory Two
+## Mandatory One
+## Mandatory Three
+## Mandatory Four
+## Mandatory Five
+## Mandatory Six
+EOF
+expect_violation &quot;$RULE5&quot; 'skills/demo: rule5 mandatory-2'
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 2: Run the fixture suite to verify RED</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: non-zero exit with <code>[FAIL] validate_tree not implemented</code>; the rule fixtures cannot pass through the stub.</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 3: Replace the stub with the complete parser and validator</strong></li>
+</ul>
+<p>Replace only the <code>validate_tree</code> stub from Step 1 with this complete implementation. It parses every table field at runtime; the marker interpreter recognizes table syntax shapes, not block IDs or literal block names:</p>
+<pre><code class="language-bash">parse_blocks() {
+  local pattern_doc=&quot;$1&quot;
+  awk -F'|' '
+    function trim(value) {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, &quot;&quot;, value)
+      return value
+    }
+    /&lt;!-- blocks:start --&gt;/ { inside=1; next }
+    /&lt;!-- blocks:end --&gt;/ { inside=0 }
+    inside &amp;&amp; $2 ~ /^[[:space:]]*[0-9]+[[:space:]]*$/ {
+      id=trim($3)
+      marker=trim($5)
+      tier=trim($6)
+      omit_when=trim($7)
+      if (id == &quot;&quot; || marker == &quot;&quot; || (tier != &quot;Mandatory&quot; &amp;&amp; tier != &quot;Conditional&quot;)) bad=1
+      printf &quot;%s\t%s\t%s\t%s\n&quot;, id, marker, tier, omit_when
+      rows++
+    }
+    END {
+      if (bad || rows &lt; 12) {
+        print &quot;skills/writing-skills: rule6 block-table&quot; &gt; &quot;/dev/stderr&quot;
+        exit 1
+      }
+    }
+  ' &quot;$pattern_doc&quot;
+}
+
+parse_exclusions() {
+  local pattern_doc=&quot;$1&quot;
+  awk '
+    /&lt;!-- exclude:start --&gt;/ { inside=1; next }
+    /&lt;!-- exclude:end --&gt;/ { inside=0 }
+    inside &amp;&amp; /^[[:space:]]*skills\/[^[:space:]]+\/[[:space:]]*$/ {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, &quot;&quot;)
+      print
+    }
+  ' &quot;$pattern_doc&quot;
+}
+
+marker_line() {
+  local skill_file=&quot;$1&quot; marker=&quot;$2&quot; first second first_line token
+  local tokens=()
+
+  while IFS= read -r token; do
+    [ -n &quot;$token&quot; ] &amp;&amp; tokens[${#tokens[@]}]=&quot;$token&quot;
+  done &lt; &lt;(printf '%s\n' &quot;$marker&quot; | awk -F'`' '{ for (i=2; i&lt;=NF; i+=2) if ($i != &quot;&quot;) print $i }')
+
+  if [ &quot;${#tokens[@]}&quot; -eq 0 ]; then
+    awk '
+      /^# / { after_title=1; next }
+      after_title &amp;&amp; /^[[:space:]]*$/ { next }
+      after_title {
+        if ($0 !~ /^#/) print NR
+        exit
+      }
+    ' &quot;$skill_file&quot;
+    return
+  fi
+
+  if [[ &quot;$marker&quot; == *&quot; inside a &quot;* ]] &amp;&amp; [ &quot;${#tokens[@]}&quot; -ge 3 ]; then
+    awk -v first=&quot;${tokens[0]}&quot; -v second=&quot;${tokens[1]}&quot; -v fence=&quot;${tokens[2]}&quot; '
+      $0 == fence &amp;&amp; !inside { inside=1; fence_line=NR; next }
+      $0 == fence &amp;&amp; inside { if (have_first &amp;&amp; have_second) print fence_line; exit }
+      inside &amp;&amp; index($0, first) == 1 { have_first=1 }
+      inside &amp;&amp; index($0, second) == 1 { have_second=1 }
+    ' &quot;$skill_file&quot;
+    return
+  fi
+
+  first=&quot;${tokens[0]}&quot;
+  if [[ &quot;$marker&quot; == *&quot; plus a &quot;* ]]; then
+    second=&quot;${marker#* plus a }&quot;
+    second=&quot;${second%% *}&quot;
+    first_line=&quot;$(grep -nF -- &quot;$first&quot; &quot;$skill_file&quot; | awk -F: 'NR == 1 { print $1 }')&quot;
+    [ -n &quot;$first_line&quot; ] || return 1
+    awk -v start=&quot;$first_line&quot; -v needle=&quot;$second&quot; '
+      NR &gt;= start &amp;&amp; index($0, needle) { print start; exit }
+    ' &quot;$skill_file&quot;
+    return
+  fi
+
+  if [[ &quot;$first&quot; == ^* ]]; then
+    grep -nE -- &quot;$first&quot; &quot;$skill_file&quot; | awk -F: 'NR == 1 { print $1 }'
+  else
+    grep -nF -- &quot;$first&quot; &quot;$skill_file&quot; | awk -F: 'NR == 1 { print $1 }'
+  fi
+}
+
+omits_block() {
+  local readme=&quot;$1&quot; id=&quot;$2&quot;
+  [ -f &quot;$readme&quot; ] &amp;&amp; grep -Fq -- &quot;- \`$id\` — &quot; &quot;$readme&quot;
+}
+
+validate_tree() {
+  local pattern_doc=&quot;$1&quot; repo_root=&quot;$2&quot; rows exclusions
+  local skill_file skill_dir readme id marker tier omit_when line omitted last_line
+  local fail=0
+
+  if ! rows=&quot;$(parse_blocks &quot;$pattern_doc&quot;)&quot;; then
+    return 1
+  fi
+  exclusions=&quot;$(parse_exclusions &quot;$pattern_doc&quot;)&quot;
+
+  for skill_file in &quot;$repo_root&quot;/skills/*/SKILL.md; do
+    [ -f &quot;$skill_file&quot; ] || continue
+    skill_dir=&quot;${skill_file#&quot;$repo_root&quot;/}&quot;
+    skill_dir=&quot;${skill_dir%/SKILL.md}&quot;
+    printf '%s\n' &quot;$exclusions&quot; | grep -Fxq -- &quot;$skill_dir/&quot; &amp;&amp; continue
+    readme=&quot;$repo_root/$skill_dir/README.md&quot;
+    last_line=0
+
+    while IFS=$'\t' read -r id marker tier omit_when; do
+      line=&quot;$(marker_line &quot;$skill_file&quot; &quot;$marker&quot; || true)&quot;
+      omitted=0
+      omits_block &quot;$readme&quot; &quot;$id&quot; &amp;&amp; omitted=1
+
+      if [ -z &quot;$line&quot; ]; then
+        if [ &quot;$tier&quot; = &quot;Mandatory&quot; ]; then
+          echo &quot;$skill_dir: rule1 $id&quot;
+          fail=1
+        elif [ &quot;$omitted&quot; -eq 0 ]; then
+          echo &quot;$skill_dir: rule3 $id&quot;
+          fail=1
+        fi
+        continue
+      fi
+
+      if [ &quot;$tier&quot; = &quot;Conditional&quot; ] &amp;&amp; [ &quot;$omitted&quot; -eq 1 ]; then
+        echo &quot;$skill_dir: rule4 $id&quot;
+        fail=1
+      fi
+
+      if [ &quot;$line&quot; -lt &quot;$last_line&quot; ]; then
+        echo &quot;$skill_dir: rule5 $id&quot;
+        fail=1
+      else
+        last_line=&quot;$line&quot;
+      fi
+    done &lt; &lt;(printf '%s\n' &quot;$rows&quot;)
+  done
+
+  return &quot;$fail&quot;
+}
+</code></pre>
+<p>Add this CLI branch immediately after the validator functions and before the fixture harness:</p>
+<pre><code class="language-bash">if [ &quot;${1:-}&quot; = '--validate' ]; then
+  [ &quot;$#&quot; -eq 3 ] || {
+    echo 'usage: test-workflow-skill-pattern.sh --validate &lt;pattern-doc&gt; &lt;repo-root&gt;' &gt;&amp;2
+    exit 2
+  }
+  validate_tree &quot;$2&quot; &quot;$3&quot;
+  exit $?
+fi
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 4: Run the fixture suite to verify GREEN</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: exit 0 with <code>PASS test-workflow-skill-pattern</code>; the good fixture proves rule 2 and the all-present success path, while the invalid fixtures assert exact rule 1, 3, 4, and 5 output lines. Rule 6 is implemented by <code>parse_blocks</code> and receives its stripped-table self-check in Task 5.</p>
+<p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+<p>After a successful worker response or successful inline task execution with passing tests, the orchestrator runs this before generating the task review package:</p>
+<pre><code class="language-bash">git add tests/skills/test-workflow-skill-pattern.sh
+git commit -m &quot;test: add workflow pattern validator&quot;
+</code></pre>
+<p>The worker never runs these commands.</p>
+<p><strong>US-2 Checkpoint:</strong></p>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: exit 0 with <code>PASS test-workflow-skill-pattern</code>; a valid non-excluded fixture emits no violations, the excluded invalid fixture is ignored, mandatory absence emits <code>skills/demo: rule1 mandatory-2</code>, a documented conditional absence passes, an undocumented conditional absence emits <code>skills/demo: rule3 conditional-1</code>, a stale omission emits <code>skills/demo: rule4 conditional-1</code>, and out-of-order blocks emit <code>skills/demo: rule5 mandatory-2</code>. <code>parse_blocks</code> emits <code>id</code>, <code>validator_marker</code>, <code>tier</code>, and <code>omit_when</code> for all 12 pipe-delimited rows and rejects fewer than 12 rows with rule 6.</p>
+<h2>US-3: README <code>## Pattern Omissions</code> section format specified and enforced by rules 2–4</h2>
+<h3>Task 3: Restrict omission records to the exact README section</h3>
+<p><strong>Depends on:</strong> Task 2</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: none</li>
+<li>Modify: <code>tests/skills/test-workflow-skill-pattern.sh</code></li>
+<li>Test: <code>tests/skills/test-workflow-skill-pattern.sh</code></li>
+</ul>
+<p><strong>Interfaces:</strong></p>
+<ul>
+<li>Consumes: <code>omits_block(readme, id)</code> and the exact bullet prefix <code>- `&lt;id&gt;` —</code> from Task 2.</li>
+<li>Produces: section-scoped <code>omits_block(readme, id)</code> behavior that reads only between <code>## Pattern Omissions</code> and the next level-two heading.</li>
+</ul>
+<p><strong>task_type:</strong> implementation_coding</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 1: Add the failing out-of-section and no-README cases</strong></li>
+</ul>
+<p>Add these complete cases after the existing rule-5 fixture in <code>tests/skills/test-workflow-skill-pattern.sh</code>:</p>
+<pre><code class="language-bash">OUTSIDE=&quot;$TMP/outside-section&quot;
+make_case &quot;$OUTSIDE&quot;
+cat &gt; &quot;$OUTSIDE/skills/demo/README.md&quot; &lt;&lt;'EOF'
+# Demo
+
+- `conditional-1` — this bullet is outside the omission section.
+
+## Pattern Omissions
+
+- `conditional-2` — not needed.
+- `conditional-3` — not needed.
+- `conditional-4` — not needed.
+- `conditional-5` — not needed.
+- `conditional-6` — not needed.
+EOF
+expect_violation &quot;$OUTSIDE&quot; 'skills/demo: rule3 conditional-1'
+
+STALE_SCOPED=&quot;$TMP/stale-scoped&quot;
+make_case &quot;$STALE_SCOPED&quot;
+awk '{ print; if ($0 == &quot;## Mandatory One&quot;) print &quot;## Conditional One&quot; }' \
+  &quot;$STALE_SCOPED/skills/demo/SKILL.md&quot; &gt; &quot;$STALE_SCOPED/skill.tmp&quot;
+mv &quot;$STALE_SCOPED/skill.tmp&quot; &quot;$STALE_SCOPED/skills/demo/SKILL.md&quot;
+expect_violation &quot;$STALE_SCOPED&quot; 'skills/demo: rule4 conditional-1'
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 2: Run the focused test to verify RED</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: non-zero exit with <code>[FAIL] expected violation: skills/demo: rule3 conditional-1</code> because the naive whole-file grep incorrectly accepts the out-of-section bullet.</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 3: Replace whole-file omission matching with section-scoped awk</strong></li>
+</ul>
+<p>Replace <code>omits_block</code> with this complete implementation:</p>
+<pre><code class="language-bash">omits_block() {
+  local readme=&quot;$1&quot; id=&quot;$2&quot;
+  [ -f &quot;$readme&quot; ] || return 1
+  awk -v id=&quot;$id&quot; '
+    /^## Pattern Omissions$/ { inside=1; next }
+    inside &amp;&amp; /^## / { exit }
+    inside &amp;&amp; index($0, &quot;- `&quot; id &quot;` — &quot;) == 1 { found=1 }
+    END { exit !found }
+  ' &quot;$readme&quot;
+}
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 4: Run the omission fixtures to verify GREEN</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: exit 0 with <code>PASS test-workflow-skill-pattern</code>; a valid omission bullet passes rule 2, a bullet outside the exact section and a missing README both emit rule 3, and a present block listed inside the section emits rule 4.</p>
+<p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+<p>After a successful worker response or successful inline task execution with passing tests, the orchestrator runs this before generating the task review package:</p>
+<pre><code class="language-bash">git add tests/skills/test-workflow-skill-pattern.sh
+git commit -m &quot;test: enforce scoped pattern omissions&quot;
+</code></pre>
+<p>The worker never runs these commands.</p>
+<p><strong>US-3 Checkpoint:</strong></p>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: exit 0 with <code>PASS test-workflow-skill-pattern</code>; the pattern doc contains the exact README example, valid backticked IDs inside <code>## Pattern Omissions</code> satisfy rule 2, stale in-section IDs trigger rule 4, out-of-section IDs do not count, and an absent README triggers rule 3.</p>
+<h2>US-4: writing-skills/SKILL.md generic structure section replaced by a pointer</h2>
+<h3>Task 4: Replace the competing structure template with the canonical pointer</h3>
+<p><strong>Depends on:</strong> Task 1</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: none</li>
+<li>Modify: <code>skills/writing-skills/SKILL.md</code></li>
+<li>Test: <code>tests/skills/test-workflow-skill-pattern.sh</code></li>
+</ul>
+<p><strong>Interfaces:</strong></p>
+<ul>
+<li>Consumes: canonical document path <code>skills/writing-skills/workflow-skill-pattern.md</code> from Task 1.</li>
+<li>Produces: the exact single-sentence body under <code>## SKILL.md Structure</code>, consumed by skill authors and asserted by <code>check_pointer_section(skill_file)</code>.</li>
+</ul>
+<p><strong>task_type:</strong> documentation_knowledge_transfer</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 1: Add the failing exact-body assertion</strong></li>
+</ul>
+<p>Add this complete helper beside the other assertion helpers in <code>tests/skills/test-workflow-skill-pattern.sh</code>:</p>
+<pre><code class="language-bash">check_pointer_section() {
+  local skill_file=&quot;$1&quot; expected actual
+  expected='See `skills/writing-skills/workflow-skill-pattern.md` for the canonical block structure all workflow skills must follow.'
+  actual=&quot;$(awk '
+    /^## SKILL.md Structure$/ { inside=1; next }
+    inside &amp;&amp; /^## / { exit }
+    inside &amp;&amp; NF { print }
+  ' &quot;$skill_file&quot;)&quot;
+  [ &quot;$actual&quot; = &quot;$expected&quot; ] || {
+    echo '[FAIL] ## SKILL.md Structure must contain only the canonical pointer'
+    fail=1
+  }
+}
+</code></pre>
+<p>Add this invocation before the final PASS/exit lines:</p>
+<pre><code class="language-bash">check_pointer_section &quot;$ROOT/skills/writing-skills/SKILL.md&quot;
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 2: Run the focused test to verify RED</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: non-zero exit with <code>[FAIL] ## SKILL.md Structure must contain only the canonical pointer</code>.</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 3: Apply the exact diff-equivalent section replacement</strong></li>
+</ul>
+<p>Apply this exact before/after diff; no line outside the <code>## SKILL.md Structure</code> body changes:</p>
+<pre><code class="language-diff"> ## SKILL.md Structure
+-
+-**Frontmatter (YAML):**
+-- Two required fields: `name` and `description` (see [agentskills.io/specification](https://agentskills.io/specification) for all supported fields)
+-- Max 1024 characters total
+-- `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
+-- `description`: Third-person, describes ONLY when to use (NOT what it does)
+-  - Start with &quot;Use when...&quot; to focus on triggering conditions
+-  - Include specific symptoms, situations, and contexts
+-  - **NEVER summarize the skill's process or workflow** (see SDO section for why)
+-  - Keep under 500 characters if possible
+-
+-```markdown
+----
+-name: Skill-Name-With-Hyphens
+-description: Use when [specific triggering conditions and symptoms]
+----
+-
+-# Skill Name
+-
+-## Overview
+-What is this? Core principle in 1-2 sentences.
+-
+-## When to Use
+-[Small inline flowchart IF decision non-obvious]
+-
+-Bullet list with SYMPTOMS and use cases
+-When NOT to use
+-
+-## Core Pattern (for techniques/patterns)
+-Before/after code comparison
+-
+-## Quick Reference
+-Table or bullets for scanning common operations
+-
+-## Implementation
+-Inline code for simple patterns
+-Link to file for heavy reference or reusable tools
+-
+-## Common Mistakes
+-What goes wrong + fixes
+-
+-## Real-World Impact (optional)
+-Concrete results
+-```
+-
++
++See `skills/writing-skills/workflow-skill-pattern.md` for the canonical block structure all workflow skills must follow.
++
+ ## Skill Discovery Optimization (SDO)
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 4: Run the exact-body and regression tests to verify GREEN</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: exit 0 with <code>PASS test-workflow-skill-pattern</code>.</p>
+<p>Run: <code>bash tests/split/run-all.sh</code></p>
+<p>Expected: exit 0 with <code>ALL ORCHESTRATOR SPLIT TESTS PASS</code>.</p>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh --validate skills/writing-skills/workflow-skill-pattern.md . 2&gt;&amp;1 | grep -q '^skills/writing-skills:'</code></p>
+<p>Expected: exit 0 from grep, proving <code>skills/writing-skills/SKILL.md</code> is included rather than exempt; its remaining structural violations are intentionally resolved only by the separately specified sub-project B migration.</p>
+<p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+<p>After a successful worker response or successful inline task execution with passing tests, the orchestrator runs this before generating the task review package:</p>
+<pre><code class="language-bash">git add skills/writing-skills/SKILL.md tests/skills/test-workflow-skill-pattern.sh
+git commit -m &quot;docs: point writing skills to pattern&quot;
+</code></pre>
+<p>The worker never runs these commands.</p>
+<p><strong>US-4 Checkpoint:</strong></p>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh &amp;&amp; bash tests/split/run-all.sh</code></p>
+<p>Expected: both commands exit 0; the first prints <code>PASS test-workflow-skill-pattern</code> and proves the <code>## SKILL.md Structure</code> body is exactly the pointer sentence with no competing list or format; the second prints <code>ALL ORCHESTRATOR SPLIT TESTS PASS</code>. The Task 4 <code>--validate</code> probe separately proves <code>skills/writing-skills/SKILL.md</code> is included rather than exempt.</p>
+<h2>US-5: Validator self-check fixture proving rule 6 fails loudly</h2>
+<h3>Task 5: Add the stripped-table self-check</h3>
+<p><strong>Depends on:</strong> Task 2</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: none</li>
+<li>Modify: <code>tests/skills/test-workflow-skill-pattern.sh</code></li>
+<li>Test: <code>tests/skills/test-workflow-skill-pattern.sh</code></li>
+</ul>
+<p><strong>Interfaces:</strong></p>
+<ul>
+<li>Consumes: <code>parse_blocks(pattern_doc)</code> and <code>validate_tree(pattern_doc, repo_root)</code> from Task 2.</li>
+<li>Produces: <code>self_check_rule6(pattern_doc, fixture_root, temp_dir)</code> returning 0 only when a stripped table is rejected and the exact loud message <code>skills/writing-skills: rule6 block-table</code> is observed.</li>
+</ul>
+<p><strong>task_type:</strong> testing_qa</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 1: Add a failing call to the required self-check fixture</strong></li>
+</ul>
+<p>Add this exact invocation after the good fixture is created and before the rule-1 fixture:</p>
+<pre><code class="language-bash">self_check_rule6 &quot;$PATTERN&quot; &quot;$GOOD&quot; &quot;$TMP&quot; || fail=1
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 2: Run the focused test to verify RED</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: non-zero exit with <code>self_check_rule6: command not found</code>.</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 3: Implement the complete stripped-table self-check</strong></li>
+</ul>
+<p>Add this function above the fixture harness:</p>
+<pre><code class="language-bash">self_check_rule6() {
+  local pattern_doc=&quot;$1&quot; fixture_root=&quot;$2&quot; temp_dir=&quot;$3&quot;
+  local stripped=&quot;$temp_dir/stripped-workflow-skill-pattern.md&quot; output
+
+  awk '
+    /&lt;!-- blocks:start --&gt;/ { print; inside=1; next }
+    /&lt;!-- blocks:end --&gt;/ { inside=0; print; next }
+    !inside { print }
+  ' &quot;$pattern_doc&quot; &gt; &quot;$stripped&quot;
+
+  if output=&quot;$(validate_tree &quot;$stripped&quot; &quot;$fixture_root&quot; 2&gt;&amp;1)&quot;; then
+    echo '[FAIL] rule6 accepted a stripped block table'
+    return 1
+  fi
+
+  printf '%s\n' &quot;$output&quot; | grep -Fxq -- 'skills/writing-skills: rule6 block-table' || {
+    echo '[FAIL] rule6 did not emit the loud block-table failure'
+    return 1
+  }
+}
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 4: Run the self-check and regression suites to verify GREEN</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh</code></p>
+<p>Expected: exit 0 with <code>PASS test-workflow-skill-pattern</code>; the stripped real table produces a non-zero nested validator status and the exact loud rule-6 line, while the valid real table still parses at least 12 rows.</p>
+<p>Run: <code>bash tests/split/run-all.sh</code></p>
+<p>Expected: exit 0 with <code>ALL ORCHESTRATOR SPLIT TESTS PASS</code>.</p>
+<p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+<p>After a successful worker response or successful inline task execution with passing tests, the orchestrator runs this before generating the task review package:</p>
+<pre><code class="language-bash">git add tests/skills/test-workflow-skill-pattern.sh
+git commit -m &quot;test: prove block parser fails closed&quot;
+</code></pre>
+<p>The worker never runs these commands.</p>
+<p><strong>US-5 Checkpoint:</strong></p>
+<p>Run: <code>bash tests/skills/test-workflow-skill-pattern.sh &amp;&amp; bash tests/split/run-all.sh</code></p>
+<p>Expected: both commands exit 0; the first prints <code>PASS test-workflow-skill-pattern</code>, proves a stripped or zero-row table is rejected with <code>skills/writing-skills: rule6 block-table</code>, and proves the real table yields at least 12 parsed rows; the second prints <code>ALL ORCHESTRATOR SPLIT TESTS PASS</code>.</p>
+<h2>US-6: tests/skills/run-all.sh wired in tests/split/run-all.sh style</h2>
+<h3>Task 6: Add the aggregate skill-test runner</h3>
+<p><strong>Depends on:</strong> Task 2, Task 3, Task 4, Task 5</p>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>tests/skills/run-all.sh</code></li>
+<li>Modify: none</li>
+<li>Test: <code>tests/skills/test-workflow-skill-pattern.sh</code></li>
+</ul>
+<p><strong>Interfaces:</strong></p>
+<ul>
+<li>Consumes: same-directory <code>test-*.sh</code> scripts, including <code>test-workflow-skill-pattern.sh</code>.</li>
+<li>Produces: <code>bash tests/skills/run-all.sh</code>, which executes every matching shell test in glob order, accumulates failure status in <code>fail</code>, prints <code>ALL SKILL TESTS PASS</code> only on success, and exits with the accumulated code.</li>
+</ul>
+<p><strong>task_type:</strong> testing_qa</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 1: Run the absent aggregate entry point to verify RED</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/run-all.sh</code></p>
+<p>Expected: non-zero exit with <code>No such file or directory</code>.</p>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 2: Create the runner by reusing the split runner's exact shell idiom</strong></li>
+</ul>
+<p>Create <code>tests/skills/run-all.sh</code> with this complete content:</p>
+<pre><code class="language-bash">#!/usr/bin/env bash
+set -euo pipefail
+DIR=&quot;$(cd &quot;$(dirname &quot;$0&quot;)&quot; &amp;&amp; pwd)&quot;
+fail=0
+for t in &quot;$DIR&quot;/test-*.sh; do echo &quot;== $(basename &quot;$t&quot;)&quot;; bash &quot;$t&quot; || fail=1; done
+[ &quot;$fail&quot; -eq 0 ] &amp;&amp; echo &quot;ALL SKILL TESTS PASS&quot;
+exit $fail
+</code></pre>
+<ul>
+<li><input type="checkbox" disabled> <strong>Step 3: Run both aggregate suites to verify GREEN and no regression</strong></li>
+</ul>
+<p>Run: <code>bash tests/skills/run-all.sh</code></p>
+<p>Expected: exit 0; output includes <code>== test-workflow-skill-pattern.sh</code>, <code>PASS test-workflow-skill-pattern</code>, and final summary <code>ALL SKILL TESTS PASS</code>.</p>
+<p>Run: <code>bash tests/split/run-all.sh</code></p>
+<p>Expected: exit 0 with final summary <code>ALL ORCHESTRATOR SPLIT TESTS PASS</code>.</p>
+<p><strong>Orchestrator Git Bookkeeping (not a worker step):</strong></p>
+<p>After a successful worker response or successful inline task execution with passing tests, the orchestrator runs this before generating the task review package:</p>
+<pre><code class="language-bash">git add tests/skills/run-all.sh
+git commit -m &quot;test: add skill test runner&quot;
+</code></pre>
+<p>The worker never runs these commands.</p>
+<p><strong>US-6 Checkpoint:</strong></p>
+<p>Run: <code>bash tests/skills/run-all.sh &amp;&amp; bash tests/split/run-all.sh</code></p>
+<p>Expected: both commands exit 0; the skill runner executes every same-directory <code>test-*.sh</code> in glob order without short-circuiting, prints <code>ALL SKILL TESTS PASS</code>, and the unchanged split runner prints <code>ALL ORCHESTRATOR SPLIT TESTS PASS</code>.</p>
+</article>
+  </main>
+</div>
+
+<script>
+(() => {
+  const main = document.querySelector("[data-plan-content]");
+
+  for (const paragraph of main.querySelectorAll(":scope > p")) {
+    const label = paragraph.querySelector(":scope > strong:first-child")?.textContent.trim();
+    if (["Spec:", "Goal:", "Architecture:", "Tech Stack:"].includes(label)) paragraph.classList.add("plan-fact");
+  }
+
+  const taskHeadings = [...main.querySelectorAll("h3")].filter((heading) => /^Task\s+\d+:/i.test(heading.textContent.trim()));
+  for (const heading of taskHeadings) {
+    const card = document.createElement("section");
+    card.className = "task-card";
+    heading.before(card);
+    let node = heading;
+    while (node && !(node !== heading && node.nodeType === 1 && /H[23]/.test(node.tagName))) {
+      const next = node.nextSibling;
+      card.append(node);
+      node = next;
+    }
+  }
+
+  for (const label of main.querySelectorAll("strong")) {
+    if (/^US-\d+ Checkpoint:$/i.test(label.textContent.trim())) {
+      const start = label.closest("p") || label.parentElement;
+      const checkpoint = document.createElement("section");
+      checkpoint.classList.add("checkpoint");
+      start.before(checkpoint);
+      let node = start;
+      while (node && !(node.nodeType === 1 && node.tagName === "H2")) {
+        const next = node.nextSibling;
+        checkpoint.append(node);
+        node = next;
+      }
+    }
+  }
+
+  const usedIds = new Set([...document.querySelectorAll("[id]")].map((element) => element.id));
+  const headings = [...main.querySelectorAll("h2, h3")];
+  for (const heading of headings) {
+    if (!heading.id) {
+      const base = heading.textContent.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "section";
+      let id = base;
+      let suffix = 2;
+      while (usedIds.has(id)) id = `${base}-${suffix++}`;
+      heading.id = id;
+      usedIds.add(id);
+    }
+  }
+
+  for (const nav of [document.getElementById("outline-nav"), document.getElementById("mobile-nav")]) {
+    for (const heading of headings) {
+      const link = document.createElement("a");
+      link.href = `#${heading.id}`;
+      link.className = `depth-${heading.tagName.slice(1)}`;
+      link.textContent = heading.textContent;
+      nav.append(link);
+    }
+  }
+
+  const checks = [...main.querySelectorAll('input[type="checkbox"]')];
+  const complete = checks.filter((check) => check.checked).length;
+  const progressText = document.getElementById("plan-progress");
+  const progressTrack = document.getElementById("progress-track");
+  const progressBar = document.getElementById("progress-bar");
+  if (checks.length) {
+    progressText.textContent = `${complete} of ${checks.length} steps complete`;
+    progressTrack.setAttribute("aria-valuemax", String(checks.length));
+    progressTrack.setAttribute("aria-valuenow", String(complete));
+    progressBar.style.width = `${Math.round((complete / checks.length) * 100)}%`;
+  } else {
+    progressTrack.hidden = true;
+  }
+})();
+</script>
+</body>
+</html>
