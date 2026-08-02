@@ -138,7 +138,13 @@ marker_line() {
 
 omits_block() {
   local readme="$1" id="$2"
-  [ -f "$readme" ] && grep -Fq -- "- \`$id\` — " "$readme"
+  [ -f "$readme" ] || return 1
+  awk -v id="$id" '
+    /^## Pattern Omissions$/ { inside=1; next }
+    inside && /^## / { exit }
+    inside && index($0, "- `" id "` — ") == 1 { found=1 }
+    END { exit !found }
+  ' "$readme"
 }
 
 validate_tree() {
@@ -303,6 +309,30 @@ cat > "$RULE5/skills/demo/SKILL.md" <<'EOF'
 ## Mandatory Six
 EOF
 expect_violation "$RULE5" 'skills/demo: rule5 mandatory-2'
+
+OUTSIDE="$TMP/outside-section"
+make_case "$OUTSIDE"
+cat > "$OUTSIDE/skills/demo/README.md" <<'EOF'
+# Demo
+
+- `conditional-1` — this bullet is outside the omission section.
+
+## Pattern Omissions
+
+- `conditional-2` — not needed.
+- `conditional-3` — not needed.
+- `conditional-4` — not needed.
+- `conditional-5` — not needed.
+- `conditional-6` — not needed.
+EOF
+expect_violation "$OUTSIDE" 'skills/demo: rule3 conditional-1'
+
+STALE_SCOPED="$TMP/stale-scoped"
+make_case "$STALE_SCOPED"
+awk '{ print; if ($0 == "## Mandatory One") print "## Conditional One" }' \
+  "$STALE_SCOPED/skills/demo/SKILL.md" > "$STALE_SCOPED/skill.tmp"
+mv "$STALE_SCOPED/skill.tmp" "$STALE_SCOPED/skills/demo/SKILL.md"
+expect_violation "$STALE_SCOPED" 'skills/demo: rule4 conditional-1'
 
 [ "$fail" -eq 0 ] && echo 'PASS test-workflow-skill-pattern'
 exit "$fail"
