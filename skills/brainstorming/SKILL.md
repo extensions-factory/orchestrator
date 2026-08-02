@@ -9,6 +9,10 @@ Help turn ideas into fully formed designs and specs through natural collaborativ
 
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
 
+The token-cost boundary starts when this skill is announced. Before any other brainstorming action, capture the exact cumulative orchestrator counter scope and baseline when the harness exposes them. **Read `main:docs/superpower/manifest.json` and select the session entry matching the current workspace** by `workspace.type` and `workspace.target`; require exactly one session entry and preserve all others. A missing or duplicate match returns to the Session Gate. Initialize the active workflow run and write its ID to `brainstorming.workflow_id` in the selected entry, or reuse that ID and run directory on resume. Reuse an approved bundle only when all five decision fields are present; otherwise continue to the Human Gate without guessing missing values.
+
+Every `D9` worker request and handoff must include: “Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.”
+
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
@@ -31,10 +35,10 @@ You MUST create a task for each of these items and complete them in order:
    - Kebab-slugify approximately five words from the user's initial request and use the branch name `feature/<slug>`.
    - Invoke `superpowers-orchestrator:using-git-worktrees` with `<slug>` and continue in the workspace state it reports: created, reused, or working in place after declined consent or sandbox fallback; remember the reported workspace path for a possible rename in item 7.
    - If the request requires decomposition, create no workspace for the umbrella request. Start this step separately when brainstorming begins for each sub-project.
-3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
-4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-5. **Propose 2-3 approaches** — with trade-offs and your recommendation
-6. **Present design** — in sections scaled to their complexity, get user approval after each section
+3. **Ask clarifying questions** — one at a time, establish the problem, scope, exclusions, constraints, and acceptance criteria
+4. **Propose 2-3 approaches** — with trade-offs and your recommendation
+5. **Human Gate — Design decisions** — present the settled `problem`, `scope`, `exclusions`, `approach`, and `acceptance_criteria` together. The human must explicitly approve or revise all five; permission to “choose for me” still requires presenting the resulting bundle for approval. Problem, scope, approach, and acceptance criteria must be non-empty; `exclusions` may be empty only when the human explicitly approves none. Write the approved bundle to `brainstorming` in the selected main-manifest session entry, preserving its `workflow_id` and every other session. **Do not present design sections or dispatch D9 until this approval is recorded.** If any decision changes later, return to this gate, update the record, and regenerate and reapprove all affected downstream design artifacts before continuing.
+6. **Present design** — derive it from the approved decision bundle, in sections scaled to their complexity, and get user approval after each section
 <!-- riso-tech:orchestrator-split START -->
 7. **Write design doc** — before writing, compare the settled feature name with the slug used in item 2. If it changed materially, check for a destination collision with `git branch --list "feature/<new-slug>"`, then rename the branch with `git branch -m feature/<old-slug> feature/<new-slug>`; if the workspace was created via a native worktree tool, use that tool's own rename/move capability (or ask the human if it has none) and never use raw `git worktree move`; if created via the git fallback, run `git worktree move "<the-remembered-workspace-path>" "<new-path>"` and `cd` into the new path before continuing; ignore cosmetic or minor wording drift; surface any unrelated branch collision and do not overwrite it. Save to `docs/superpowers/features/<feature-slug>/design.md` following `skills/brainstorming/templates/spec-template.md`, generate `design.html` from `templates/document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
 <!-- riso-tech:orchestrator-split END -->
@@ -52,6 +56,8 @@ digraph brainstorming {
     "Create isolated workspace" [shape=box];
     "Ask clarifying questions" [shape=box];
     "Propose 2-3 approaches" [shape=box];
+    "Approve decision bundle?" [shape=diamond];
+    "Record approved decisions" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
     "Feature name changed materially?" [shape=diamond];
@@ -67,7 +73,10 @@ digraph brainstorming {
     "Decompose into sub-projects" -> "Explore project context" [label="begin first sub-project"];
     "Create isolated workspace" -> "Ask clarifying questions";
     "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Present design sections";
+    "Propose 2-3 approaches" -> "Approve decision bundle?";
+    "Approve decision bundle?" -> "Ask clarifying questions" [label="revise"];
+    "Approve decision bundle?" -> "Record approved decisions" [label="approved"];
+    "Record approved decisions" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
     "User approves design?" -> "Feature name changed materially?" [label="yes"];
@@ -153,6 +162,26 @@ After writing the spec document, look at it with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
+## Token-cost monitoring
+
+Use `.superpowers/runs/<workflow-id>/brainstorming-token-cost.jsonl` for both sources. After every D9 provider attempt, append and validate one worker record, retaining retries, revisions, blocked results, and fallbacks:
+
+```json
+{"source":"worker","task":"D9","turn":1,"attempt":1,"agent":"codex","model":"<exact-model>","input_tokens":123,"output_tokens":45,"unavailable_reason":null}
+```
+
+`turn` is the D9 request envelope turn. `attempt` starts at 1 for that turn and increments only for provider fallbacks; a revision or blocked reroute uses the next request turn with attempt 1.
+
+After each harness-reported main-orchestrator model invocation becomes observable, append and validate one orchestrator record before the next action; on resume continue at the highest recorded orchestrator turn plus one:
+
+```json
+{"source":"orchestrator","task":"orchestrator","turn":1,"attempt":1,"agent":"claude","model":"<exact-model>","input_tokens":456,"output_tokens":78,"unavailable_reason":null}
+```
+
+Copy exact per-invocation metadata. For comparable cumulative counters, use only monotonic snapshot deltas; after a reset, record nulls with the reason and retain the new baseline. Otherwise set unavailable counts to `null` with `unavailable_reason`. **Do not estimate missing token counts** or treat them as zero. Ordinary non-model tool calls are already included in orchestrator model usage and get no separate record.
+
+Before rendering handoff, append its orchestrator record with null counts and reason `usage becomes visible only after this turn completes`. Report worker, orchestrator, and combined measured totals, partial columns, unavailable reasons, and coverage as measured records / total records for each source and combined. Never label a partial subtotal complete.
+
 **User Review Gate:**
 After the spec review loop passes, ask the user to review the written spec before proceeding:
 
@@ -160,8 +189,11 @@ After the spec review loop passes, ask the user to review the written spec befor
 
 Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
 
+If requested changes alter `problem`, `scope`, `exclusions`, `approach`, or `acceptance_criteria`, return to the Human Gate, update the selected session entry, and rerun D9 plus review; artifact approval alone cannot change an approved decision.
+
 **Implementation:**
 
+- **Before handoff, reread the selected session entry** from `main:docs/superpower/manifest.json`. Require `brainstorming.workflow_id` and non-missing approved values for all five decision fields, and verify the written design matches them. Return to the Human Gate on any mismatch.
 - If `superpowers-orchestrator:designing-ui` ran during this session, invoke `superpowers-orchestrator:writing-plans` exactly once, referencing both this skill's `design.md` and the `designing-ui` spec. Otherwise, invoke it on this skill's `design.md` alone to create a detailed implementation plan.
 - Do NOT invoke any other skill at this point. `superpowers-orchestrator:writing-plans` is the next step.
 
@@ -173,22 +205,3 @@ Wait for the user's response. If they request changes, make them and re-run the 
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design, get approval before moving on
 - **Be flexible** - Go back and clarify when something doesn't make sense
-
-## Visual Companion
-
-A browser-based companion for showing mockups, diagrams, and visual options during brainstorming. Available as a tool — not a mode. Accepting the companion means it's available for questions that benefit from visual treatment; it does NOT mean every question goes through the browser.
-
-**Offering the companion (just-in-time):** Do NOT offer it upfront. Wait until a question would genuinely be clearer shown than told — a real mockup / layout / diagram question, not merely a UI *topic*. The first time that happens, offer it then, as its own message:
-> "This next part might be easier if I show you — I can put together mockups, diagrams, and comparisons in a browser tab as we go. It's still new and can be token-intensive. Want me to? I'll open it for you."
-
-**This offer MUST be its own message.** Only the offer — no clarifying question, summary, or other content. Wait for the user's response. If they accept, start the server with `--open` so their browser opens to the first screen automatically. If they decline, continue text-only and don't offer again unless they raise it.
-
-**Per-question decision:** Even after the user accepts, decide FOR EACH QUESTION whether to use the browser or the terminal. The test: **would the user understand this better by seeing it than reading it?**
-
-- **Use the browser** for content that IS visual — mockups, wireframes, layout comparisons, architecture diagrams, side-by-side visual designs
-- **Use the terminal** for content that is text — requirements questions, conceptual choices, tradeoff lists, A/B/C/D text options, scope decisions
-
-A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
-
-If they agree to the companion, read the detailed guide before proceeding:
-`skills/brainstorming/visual-companion.md`

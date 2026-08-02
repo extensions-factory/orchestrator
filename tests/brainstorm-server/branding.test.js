@@ -9,7 +9,7 @@ const path = require('path');
 const assert = require('assert');
 
 const REPO_ROOT = path.join(__dirname, '../..');
-const SERVER_PATH = path.join(REPO_ROOT, 'skills/brainstorming/scripts/server.cjs');
+const SERVER_PATH = path.join(REPO_ROOT, 'skills/visual-companion/scripts/server.cjs');
 const PACKAGE_VERSION = JSON.parse(
   fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8')
 ).version;
@@ -76,8 +76,8 @@ function writeFragment(dir) {
 
 function createPackagedServerFixture(version) {
   const root = fs.mkdtempSync(path.join('/tmp', 'superpowers-packaged-server-'));
-  const skillDir = path.join(root, 'skills/brainstorming');
-  fs.cpSync(path.join(REPO_ROOT, 'skills/brainstorming'), skillDir, { recursive: true });
+  const skillDir = path.join(root, 'skills/visual-companion');
+  fs.cpSync(path.join(REPO_ROOT, 'skills/visual-companion'), skillDir, { recursive: true });
   fs.mkdirSync(path.join(root, '.codex-plugin'), { recursive: true });
   fs.writeFileSync(
     path.join(root, '.codex-plugin/plugin.json'),
