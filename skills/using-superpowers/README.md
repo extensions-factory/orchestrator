@@ -146,3 +146,25 @@ BOOTSTRAP FILES
     └── determined by the selected lifecycle skill after it selects its entry
         from the main manifest.
 ```
+
+## Pattern Omissions
+
+- `anti-pattern` — baseline testing surfaced five rationalizations, all already countered by the existing `## Red Flags` table. No single dominant rationalization emerged that warrants a named anti-pattern separate from that table.
+- `process-flow` — the workflow has a Create/Resume branch, but the Lifecycle Tree in this README already captures that structure. A duplicate `dot` fence would add no information beyond what is already present.
+- `after-artifact` — the skill's durable output (appending to `docs/superpower/manifest.json`) and its handoff to downstream lifecycle skills are already described in the `## Durable Output` and `## Handoff` sections of this README. A separate `## After Using Superpowers` block would duplicate that material without adding substance.
+- `token-cost-monitoring` — this skill never invokes a model nor dispatches a worker; it reads files and manifests and routes to the next skill.
+
+## Pattern Migration Notes
+
+- `hard-gate` — DERIVED from `## Session Gate` ("A Create MUST NOT overwrite other in-process session entries"; "Ask the human partner to choose Create Session or Resume Session unless their request already makes that choice explicit"), no new requirements.
+- `checklist` — DERIVED from `## Session Gate` (steps 1–4 of the session reconcile/create/resume sequence), `## The Rule` (invoke skills before any response or action), and `## Skill Priority` (process skills first, then implementation skills), no new requirements.
+- `the-process` — DERIVED from `## Session Gate` (full prose elaboration of manifest read, reconcile, create, resume steps), `## The Rule` (skill invocation timing), and `## Skill Priority` (ordering when multiple skills apply), no new requirements.
+- `key-principles` — DERIVED from `<EXTREMELY-IMPORTANT>` (skills mandatory, 1% rule), `## The Rule` (check before acting, announce skill), `## Skill Priority` (process skills first), `## User Instructions` (user instructions override skills), and the orchestrator-split paragraph (never absorb work inline), no new requirements.
+
+### Migration evidence
+
+- Scenario: `bootstrap-before-action-under-launch-pressure` (adapted from `evals/scenarios/superpowers-bootstrap/story.md`)
+- Baseline (pre-migration): 4/4 PASS
+- After (post-migration): 4/4 PASS — no regression (gate: after >= baseline)
+- Gate: no-regression A/B; DERIVED blocks only, no gap-fill content
+- Caveat: baselines in this campaign are contaminated — the measuring subagent carries prior knowledge of this repository, so a pre-migration baseline is not a clean no-skill control. Contamination is symmetric across the A/B, so regression detection remains valid; necessity claims for new content do not.
