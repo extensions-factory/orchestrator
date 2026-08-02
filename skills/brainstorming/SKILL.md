@@ -162,7 +162,7 @@ After writing the spec document, look at it with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
-## Token-cost monitoring
+## Token-cost Monitoring
 
 Use `.superpowers/runs/<workflow-id>/brainstorming-token-cost.jsonl` for both sources. After every D9 provider attempt, append and validate one worker record, retaining retries, revisions, blocked results, and fallbacks:
 

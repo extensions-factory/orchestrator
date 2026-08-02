@@ -192,3 +192,24 @@ BRAINSTORMING FILES
                 ├── request.json
                 └── response.json
 ```
+
+## Pattern Omissions
+
+- `red-flags` — the `<HARD-GATE>` forbids implementation before design approval and `## Anti-Pattern: "This Is Too Simple To Need A Design"` directly counters the dominant rationalization. No additional rationalization/counter material in the file falls outside those two structures; the Anti-Pattern section already does this block's job.
+
+## Pattern Migration Notes
+
+- `token-cost-monitoring` — RETAINED, heading normalized to Title Case; body unchanged.
+- `red-flags` — OMITTED, the existing `<HARD-GATE>` and `## Anti-Pattern: "This Is Too Simple To Need A Design"` already counter the dominant rationalization and enforce the discipline. No additional counter material exists in the file that would belong in a separate Red Flags table without fabricating new rationalizations.
+
+### Migration evidence
+
+- Scenario: not required for this task — no eval-gated block changed. Per
+  decision B3, `Checklist`, `The Process`, and gap-fill content are the
+  eval-gated blocks; a heading rename and a conditional-block decision are not.
+- Baseline / After: not run; no behavior-shaping content was authored.
+- Gate: structural only (validator + both suites).
+- Caveat: baselines in this campaign are contaminated — the measuring subagent
+  carries prior knowledge of this repository, so a pre-migration baseline is
+  not a clean no-skill control. Recorded here for consistency with the other
+  migrated skills.
