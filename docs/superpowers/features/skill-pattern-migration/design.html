@@ -72,11 +72,11 @@ in-scope skills require substantially more than verbatim text moves to conform:
 54 rule1 violations mean that mandatory blocks simply do not exist in those
 skills and must be authored from scratch. This sub-project (B) performs the
 full migration of all 18 in-scope skills, one per commit in
-<code>skills/SDLC.md</code> order, with eval-harness gating for every block whose
-authoring constitutes behavior-shaping content. The outcome is a repository
-where the structural validator reports zero violations for all in-scope skills
-and where every newly-authored block has been pressure-tested against a
-recorded scenario.</p>
+<code>skills/SDLC.md</code> order, with subagent pressure-scenario gating for every block
+whose authoring constitutes behavior-shaping content. The outcome is a
+repository where the structural validator reports zero violations for all
+in-scope skills and where every newly-authored block has been pressure-tested
+against a recorded scenario.</p>
 
 <h2>2. Context &amp; Assumptions</h2>
 
@@ -130,25 +130,23 @@ eval evidence for, and what <code>writing-skills</code>' Iron Law covers ("appli
 skills AND EDITS to existing skills"). Sub-project A's Iron-Law exemption does
 not survive this evidence.</p>
 
-<h3>Eval harness facts (verified)</h3>
+<h3>Eval machinery: blocker and resolution</h3>
 
-<p>Harness: <code>evals/</code> (cloned <code>superpowers-evals</code>), 79 scenarios, drives real tmux
-sessions of Claude Code / Codex and judges compliance with an LLM verifier.</p>
+<p>The <code>evals/</code> harness (cloned <code>superpowers-evals</code>) requires <code>bun</code> and <code>tmux</code>
+to operate — it drives real tmux sessions of Claude Code / Codex and judges
+compliance with an LLM verifier. Neither <code>bun</code> nor <code>tmux</code> is installed in this
+environment. Sub-project B stopped at its own US-1 gate as specified, rather
+than silently degrading to structural-only migration.</p>
 
-<p>Commands:</p>
-<pre>bun install
-bun run check
-bun run quorum check
-bun run quorum run scenarios/&lt;name&gt; --coding-agent claude --credential sonnet
-bun run quorum show &lt;run-dir&gt;</pre>
+<p>The human was given the options and chose: <strong>use the subagent pressure-testing
+method</strong> documented in <code>skills/writing-skills/testing-skills-with-subagents.md</code>
+as the eval machinery. That method requires no new tooling, works today, and is
+the methodology the Iron Law itself references.</p>
 
-<p>Scenario structure — a directory under <code>evals/scenarios/&lt;name&gt;/</code> containing:</p>
-<ul>
-  <li><code>story.md</code> — frontmatter (<code>id</code>, <code>title</code>, <code>status</code>, <code>tags</code>, <code>quorum_tier</code>) + roleplay instructions + an <code>## Acceptance Criteria</code> section.</li>
-  <li><code>setup.sh</code> — fixture creation, uses setup-helpers.</li>
-  <li><code>checks.sh</code> — <code>pre()</code> and <code>post()</code> functions using <code>check-transcript</code> assertions.</li>
-</ul>
-<p>Tiers observed: <code>sentinel</code>, <code>full</code>, <code>adhoc</code>.</p>
+<p>The <code>evals/</code> directory remains in the repository and its 79 scenarios remain
+useful as source material — specifically, the <code>story.md</code> prose from existing
+scenarios can be adapted into subagent pressure scenarios. The harness itself
+is not run.</p>
 
 <h3>Known environment facts</h3>
 
@@ -158,44 +156,62 @@ bun run quorum show &lt;run-dir&gt;</pre>
   <li>Migrating <code>project-kickoff</code> must also update <code>tests/split/test-project-kickoff.sh</code> line 55 (the literal lowercase <code>## Token-cost monitoring</code>) in the same commit.</li>
 </ul>
 
-<h3>Existing eval coverage per in-scope skill</h3>
+<h3>Subagent pressure-scenario coverage per in-scope skill</h3>
+
+<p>No subagent pressure scenario exists for any of the 18 skills. All 18 need one
+authored. The difference is only in starting material:</p>
 
 <table>
-  <thead><tr><th>Scenarios</th><th>Skills</th></tr></thead>
+  <thead><tr><th>Starting material</th><th>Skills</th></tr></thead>
   <tbody>
     <tr>
-      <td>Has coverage</td>
-      <td><code>brainstorming</code> (18), <code>subagent-driven-development</code> (19), <code>finishing-a-development-branch</code> (5), <code>using-superpowers</code> (3), <code>writing-plans</code> (2), <code>using-git-worktrees</code> (2), <code>requesting-code-review</code> (2), <code>executing-plans</code> (1), <code>dispatching-parallel-agents</code> (1)</td>
+      <td>Adaptable prose exists in <code>evals/scenarios/*/story.md</code></td>
+      <td><code>brainstorming</code>, <code>subagent-driven-development</code>, <code>finishing-a-development-branch</code>, <code>using-superpowers</code>, <code>writing-plans</code>, <code>using-git-worktrees</code>, <code>requesting-code-review</code>, <code>executing-plans</code>, <code>dispatching-parallel-agents</code></td>
     </tr>
     <tr>
-      <td>Zero coverage</td>
+      <td>No existing prose; author from scratch</td>
       <td><code>project-kickoff</code>, <code>designing-ui</code>, <code>requesting-plan-refine</code>, <code>receiving-plan-refine</code>, <code>sprint-retrospective</code>, <code>writing-skills</code>, <code>backlog-refinement</code>, <code>dispatch-agent</code>, <code>worker-healing</code></td>
     </tr>
   </tbody>
 </table>
 
-<p>9 of 18 skills have no scenario. Approximately 9 new scenarios must be authored.
-<code>skills/SDLC.md</code> order puts <code>project-kickoff</code> (zero scenarios) at position 2, so
-scenario authoring begins almost immediately rather than after a warm-up.</p>
+<p>Consequence: scenario-authoring work went <strong>up</strong>, from ~9 new scenarios to 18
+(9 adapted from existing <code>evals/</code> story.md prose, 9 authored from scratch).
+<code>skills/SDLC.md</code> order puts <code>project-kickoff</code> (scratch authoring) at position 2,
+so scenario authoring begins almost immediately rather than after a warm-up.</p>
+
+<h3>Subagent pressure scenario format</h3>
+
+<p>Per <code>skills/writing-skills/testing-skills-with-subagents.md</code>, every scenario:</p>
+<ul>
+  <li>Combines <strong>3+ pressures</strong> (time, sunk cost, authority, exhaustion, economic, social, pragmatic) — single-pressure scenarios are insufficient.</li>
+  <li>Forces an explicit A/B/C choice with concrete options and real constraints (specific times, real file paths, actual consequences). No open-ended "what should you do?" framing.</li>
+  <li>Opens with the standard setup preamble:<br>
+    <code>IMPORTANT: This is a real scenario. You must choose and act. Don't ask hypothetical questions - make the actual decision. You have access to: [skill-being-tested]</code></li>
+  <li>Is dispatched to a <strong>fresh subagent</strong> via <code>superpowers-orchestrator:dispatch-agent</code>, never reused across baseline and after runs.</li>
+  <li>RED/baseline = run against the pre-migration skill.</li>
+  <li>GREEN/after = run the same scenario against the migrated skill.</li>
+  <li>Rationalizations captured verbatim from baseline runs become rationalization-table material for the skill.</li>
+</ul>
 
 <h3>Scale</h3>
 
-<p>18 commits, ~9 authored scenarios, ~28+ eval-gated blocks, minimum 2 harness
-runs per eval-gated skill. Substantially larger than sub-project A. Eval runs
-are wall-clock expensive because they drive real sessions. Durable progress
-lives in the run manifest so work survives compaction and resumes at the first
-incomplete skill.</p>
+<p>18 commits, 18 authored scenarios (9 adapted, 9 from scratch), ~28+ pressure-gated
+blocks, minimum 2 subagent dispatches per gated skill — one for baseline, one for
+after. The real cost driver is one subagent dispatch per run; there is no wall-clock
+penalty from tmux sessions. Durable progress lives in the run manifest so work
+survives compaction and resumes at the first incomplete skill.</p>
 
 <h2>3. Scope</h2>
 
 <h3>Goals</h3>
 <ul>
   <li>Migrate all 18 in-scope workflow skills to the canonical structural pattern, one skill per commit in <code>skills/SDLC.md</code> order.</li>
-  <li>Gate every behavior-shaping block with an eval scenario.</li>
+  <li>Gate every behavior-shaping block with a pressure scenario — either by adapting existing <code>evals/</code> story.md prose or by authoring one from scratch.</li>
   <li>Populate the <code>## Pattern Omissions</code> README section for every absent conditional block.</li>
   <li>Populate the <code>## Pattern Migration Notes</code> README section for every migrated block, using the <code><strong>NEW</strong></code> review marker for authored content.</li>
   <li>Pass the structural validator with zero violations repo-wide after the final commit.</li>
-  <li>Verify the eval harness runs in this environment before the first migration commit.</li>
+  <li>Define and demonstrate the subagent pressure-scenario protocol end to end on one skill before the remaining 17 skills proceed.</li>
 </ul>
 
 <h3>Non-Goals</h3>
@@ -205,37 +221,39 @@ incomplete skill.</p>
   <li>Weakening the Mandatory tiers of the pattern.</li>
   <li>Rewriting or quality-improving blocks that are already present and conforming.</li>
   <li>Committing or pushing any changes (constraints of this spec task).</li>
+  <li>Running the <code>evals/</code> harness. It requires <code>bun</code> and <code>tmux</code>, neither installed; subagent pressure testing is the evaluation machinery.</li>
 </ul>
 
 <h2>4. User Stories</h2>
 
-<h3>US-1: Eval harness foundation verified and gating (Priority: P1)</h3>
+<h3>US-1: Subagent pressure-scenario protocol defined and demonstrated (Priority: P1)</h3>
 
-<p>As the migration executor, I want to confirm the eval harness runs successfully
-in this environment before any skill migration begins, so that a broken harness
-environment does not cause 18 commits of structural-only work to silently
-bypass the Iron Law.</p>
+<p>As the migration executor, I want the subagent pressure-scenario protocol
+defined and demonstrated end to end on one skill — scenario authored, baseline
+dispatched against the pre-migration skill, verdict recorded — before the
+remaining 17 skills proceed, so that the protocol is proven to work and the
+gating method is consistent across all 18 migrations.</p>
 
 <p><strong>Acceptance criteria:</strong></p>
 <ul>
-  <li>GIVEN the <code>evals/</code> directory exists WHEN <code>bun install</code> is run there THEN it exits zero with no unresolved packages.</li>
-  <li>GIVEN <code>bun install</code> succeeded WHEN <code>bun run quorum check</code> is run THEN it exits zero.</li>
-  <li>GIVEN <code>bun run quorum check</code> passed WHEN one throwaway scenario is run THEN the harness drives a tmux session and produces a run directory with a result.</li>
-  <li>GIVEN the harness cannot complete any of the above steps WHEN the gate fires THEN sub-project B stops rather than silently degrading to structural-only migration.</li>
+  <li>GIVEN the protocol documented in <code>skills/writing-skills/testing-skills-with-subagents.md</code> WHEN a pressure scenario is authored for the first skill (<code>using-superpowers</code>) THEN the scenario combines 3+ pressures, includes the standard setup preamble ("IMPORTANT: This is a real scenario…"), and forces an explicit A/B/C choice.</li>
+  <li>GIVEN the scenario is authored WHEN a fresh subagent is dispatched via <code>superpowers-orchestrator:dispatch-agent</code> with the pre-migration skill active THEN the subagent produces a verdict and any rationalizations are captured verbatim.</li>
+  <li>GIVEN the baseline verdict is recorded WHEN it is examined THEN it is stored in the run manifest as the RED result for that skill.</li>
+  <li>GIVEN the baseline run completes WHEN the remaining 17 skills are queued THEN each will follow the same 7-step work unit using this same dispatch protocol.</li>
 </ul>
 
 <h3>US-2: Per-skill migration work unit executes end to end for one skill (Priority: P1)</h3>
 
 <p>As the migration executor, I want a repeatable 7-step work unit for each skill
 so that every migration commit is produced by the same defined process and the
-eval gate is never skipped.</p>
+pressure gate is never skipped.</p>
 
 <p><strong>Acceptance criteria:</strong></p>
 <ul>
-  <li>GIVEN a skill to be migrated WHEN step 1 is run THEN the existence of an eval scenario is checked; if none exists, it is authored and verified to run.</li>
-  <li>GIVEN a scenario exists WHEN step 2 is run THEN a baseline harness run executes on the commit before this migration and its verdict is recorded.</li>
+  <li>GIVEN a skill to be migrated WHEN step 1 is run THEN the existence of a subagent pressure scenario is checked; if none exists, a scenario combining 3+ pressures is authored per <code>testing-skills-with-subagents.md</code> before proceeding.</li>
+  <li>GIVEN a pressure scenario exists for the skill WHEN step 2 is run THEN a fresh subagent is dispatched via <code>superpowers-orchestrator:dispatch-agent</code> against the commit before this migration (pre-migration skill active) and its verdict is recorded as the baseline.</li>
   <li>GIVEN the baseline is recorded WHEN step 3 is run THEN derived blocks, gap-fill, Omissions, Migration Notes, and heading corrections are applied.</li>
-  <li>GIVEN step 3 is complete WHEN step 4 is run THEN the same scenario runs again with the same credential.</li>
+  <li>GIVEN step 3 is complete WHEN step 4 is run THEN the same scenario is dispatched to a fresh subagent with the migrated skill active and its verdict is recorded.</li>
   <li>GIVEN the after-run verdict is recorded WHEN step 5 is run THEN <code>after &gt;= baseline</code> is confirmed; NEW content must show baseline actually failing.</li>
   <li>GIVEN step 5 passes WHEN step 6 is run THEN the validator reports zero violations for that skill.</li>
   <li>GIVEN steps 1–6 all pass WHEN step 7 is run THEN the migration commit is created.</li>
@@ -251,7 +269,7 @@ so that reviewing a commit requires reading only the <code><strong>NEW</strong><
 <ul>
   <li>GIVEN any migrated skill's README WHEN <code>## Pattern Migration Notes</code> is read THEN every migrated block appears as a bullet marked <code>DERIVED</code> or <code><strong>NEW</strong></code>.</li>
   <li>GIVEN a bullet is marked <code>DERIVED</code> WHEN the source prose is checked THEN the block can be traced back to existing text with no net new behavioral requirement.</li>
-  <li>GIVEN a bullet is marked <code><strong>NEW</strong></code> WHEN the README entry is read THEN it contains the eval scenario name, baseline verdict, and after verdict inline.</li>
+  <li>GIVEN a bullet is marked <code><strong>NEW</strong></code> WHEN the README entry is read THEN it contains the pressure scenario name, baseline verdict, and after verdict inline.</li>
   <li>GIVEN both sections are present WHEN the README is read THEN <code>## Pattern Omissions</code> precedes <code>## Pattern Migration Notes</code>.</li>
 </ul>
 
@@ -266,7 +284,7 @@ so that reviewing a commit requires reading only the <code><strong>NEW</strong><
 - `the-process` — DERIVED from existing prose under "How to Request".
 - `key-principles` — DERIVED, restates rules already in Red Flags.
 - `after-artifact` — **NEW**: skill had no stated durable output. Authored;
-  eval scenario `&lt;name&gt;`, baseline &lt;result&gt; → after &lt;result&gt;.</pre>
+  pressure scenario `&lt;name&gt;`, baseline &lt;result&gt; → after &lt;result&gt;.</pre>
 
 <h3>US-4: Derived-block migration passes the no-regression A/B gate (Priority: P1)</h3>
 
@@ -297,29 +315,36 @@ every <code><strong>NEW</strong></code> block can be demonstrated to have been n
 
 <p><strong>Acceptance criteria:</strong></p>
 <ul>
-  <li>GIVEN a block is marked <code><strong>NEW</strong></code> WHEN the baseline harness run is examined THEN the scenario's verdict for the criterion the new block addresses is recorded as failing.</li>
+  <li>GIVEN a block is marked <code><strong>NEW</strong></code> WHEN the baseline subagent run is examined THEN the scenario's verdict for the criterion the new block addresses is recorded as failing.</li>
   <li>GIVEN the baseline fails WHEN the migration is applied and the after-run executes THEN the after verdict passes the same criterion.</li>
   <li>GIVEN <code>after</code> passes WHEN the commit is made THEN the <code><strong>NEW</strong></code> entry records both verdicts inline.</li>
   <li>GIVEN a <code><strong>NEW</strong></code> block where the baseline did not fail WHEN this is discovered THEN the content must be revised or reclassified.</li>
 </ul>
 
-<h3>US-6: Eval scenarios authored for the 9 uncovered skills (Priority: P2)</h3>
+<h3>US-6: Pressure scenarios authored for all 18 skills (Priority: P2)</h3>
 
-<p>As the migration executor, I want each of the 9 skills that currently have no
-eval scenario to gain a scenario as part of their migration commit, so that no
-skill ships behavior-shaping content without gate evidence.</p>
+<p>As the migration executor, I want every skill to have a subagent pressure
+scenario as part of its migration commit — 9 adapted from existing <code>evals/</code>
+story.md prose and 9 authored from scratch — so that no skill ships
+behavior-shaping content without gate evidence.</p>
 
 <p><strong>Acceptance criteria:</strong></p>
 <ul>
-  <li>GIVEN a skill with zero existing scenarios WHEN its migration commit is prepared THEN a scenario directory is authored under <code>evals/scenarios/&lt;name&gt;/</code> with <code>story.md</code>, <code>setup.sh</code>, and <code>checks.sh</code>.</li>
-  <li>GIVEN the authored scenario WHEN <code>bun run quorum run scenarios/&lt;name&gt;</code> executes THEN it runs to completion and produces a verdict.</li>
-  <li>GIVEN the scenario runs WHEN it is used as the migration gate THEN the same 7-step work unit applies.</li>
-  <li>GIVEN the scenario is authored WHEN <code>story.md</code> frontmatter is read THEN <code>id</code>, <code>title</code>, <code>status</code>, and <code>quorum_tier</code> are all present.</li>
+  <li>GIVEN a skill whose <code>evals/scenarios/*/story.md</code> prose exists WHEN its migration commit is prepared THEN that prose is adapted into a pressure scenario following the <code>testing-skills-with-subagents.md</code> format: 3+ combined pressures, standard setup preamble, forced A/B/C choice.</li>
+  <li>GIVEN a skill with no existing <code>evals/</code> prose WHEN its migration commit is prepared THEN a pressure scenario is authored from scratch following the same format.</li>
+  <li>GIVEN any pressure scenario WHEN it is used as the migration gate THEN the same 7-step work unit applies: baseline dispatch before the migration, after dispatch after, gate on <code>after &gt;= baseline</code>.</li>
+  <li>GIVEN the scenario is authored WHEN it is dispatched THEN it is sent to a fresh subagent via <code>superpowers-orchestrator:dispatch-agent</code> with the skill-being-tested explicitly listed in the setup preamble.</li>
 </ul>
 
-<p>The 9 skills requiring scenario authoring: <code>project-kickoff</code>, <code>designing-ui</code>,
-<code>requesting-plan-refine</code>, <code>receiving-plan-refine</code>, <code>sprint-retrospective</code>,
-<code>writing-skills</code>, <code>backlog-refinement</code>, <code>dispatch-agent</code>, <code>worker-healing</code>.</p>
+<p>The 9 skills with adaptable <code>evals/</code> story.md prose: <code>brainstorming</code>,
+<code>subagent-driven-development</code>, <code>finishing-a-development-branch</code>,
+<code>using-superpowers</code>, <code>writing-plans</code>, <code>using-git-worktrees</code>,
+<code>requesting-code-review</code>, <code>executing-plans</code>, <code>dispatching-parallel-agents</code>.</p>
+
+<p>The 9 skills requiring authoring from scratch: <code>project-kickoff</code>,
+<code>designing-ui</code>, <code>requesting-plan-refine</code>, <code>receiving-plan-refine</code>,
+<code>sprint-retrospective</code>, <code>writing-skills</code>, <code>backlog-refinement</code>,
+<code>dispatch-agent</code>, <code>worker-healing</code>.</p>
 
 <h3>US-7: All 18 skills migrated; validator reports zero violations repo-wide (Priority: P2)</h3>
 
@@ -337,12 +362,13 @@ that the pattern is fully enforced rather than partially enforced.</p>
 
 <h2>5. Approach</h2>
 
-<p>The chosen approach is <strong>full migration with evals</strong>. All 18 in-scope skills
-are migrated to the canonical structural pattern with the eval harness gating
-every block whose authoring constitutes behavior-shaping content. Migration
-proceeds one skill per commit in <code>skills/SDLC.md</code> order. Derived blocks pass a
-no-regression A/B gate; authored (<code><strong>NEW</strong></code>) blocks require a true RED-GREEN cycle
-where the baseline must actually fail the new criterion.</p>
+<p>The chosen approach is <strong>full migration with subagent pressure testing</strong>. All
+18 in-scope skills are migrated to the canonical structural pattern with
+subagent pressure-scenario gating for every block whose authoring constitutes
+behavior-shaping content. Migration proceeds one skill per commit in
+<code>skills/SDLC.md</code> order. Derived blocks pass a no-regression A/B gate; authored
+(<code><strong>NEW</strong></code>) blocks require a true RED-GREEN cycle where the baseline must
+actually fail the new criterion.</p>
 
 <h3>Alternatives considered</h3>
 
@@ -372,12 +398,7 @@ where the baseline must actually fail the new criterion.</p>
 
 <h3>Architecture</h3>
 
-<pre>evals/scenarios/&lt;name&gt;/   NEW (×9) — one scenario dir per currently-uncovered skill
-  story.md
-  setup.sh
-  checks.sh
-
-skills/&lt;each&gt;/README.md   EDIT (×18) — ## Pattern Omissions + ## Pattern Migration Notes
+<pre>skills/&lt;each&gt;/README.md   EDIT (×18) — ## Pattern Omissions + ## Pattern Migration Notes
 
 skills/&lt;each&gt;/SKILL.md    EDIT (×18) — add missing mandatory blocks, derive/gap-fill,
                                        rename/recase headings, reorder (dispatch-agent only)</pre>
@@ -389,10 +410,10 @@ skills/&lt;each&gt;/SKILL.md    EDIT (×18) — add missing mandatory blocks, de
 <h3>Per-skill migration work unit (7 steps — verbatim)</h3>
 
 <ol>
-  <li><strong>Scenario exists?</strong> no → author <code>story.md</code> + <code>setup.sh</code> + <code>checks.sh</code>, verify it runs.</li>
-  <li><strong>Baseline run</strong> on the commit BEFORE this migration → record verdict.</li>
+  <li><strong>Scenario exists?</strong> no → author a pressure scenario (3+ combined pressures, standard setup preamble, forced A/B/C choice) per <code>testing-skills-with-subagents.md</code>; adapt from <code>evals/</code> story.md prose where it exists.</li>
+  <li><strong>Baseline dispatch</strong> — send the scenario to a fresh subagent via <code>superpowers-orchestrator:dispatch-agent</code> with the pre-migration skill active → record verdict and any rationalizations verbatim.</li>
   <li><strong>Migrate</strong> derived blocks + gap-fill + README Omissions + Migration Notes + heading renames/casing (+ reorder for <code>dispatch-agent</code>).</li>
-  <li><strong>After run</strong> same scenario, same credential.</li>
+  <li><strong>After dispatch</strong> — send the same scenario to a fresh subagent with the migrated skill active → record verdict.</li>
   <li><strong>Gate</strong> <code>after &gt;= baseline</code>; NEW content must show baseline actually failing.</li>
   <li><strong>Validator</strong> that skill produces zero violations.</li>
   <li><strong>Commit</strong>.</li>
@@ -411,17 +432,17 @@ G  backlog-refinement
 S  dispatch-agent, dispatching-parallel-agents, worker-healing
 (visual-companion excluded per sub-project A decision D10)</pre>
 
-<h3>Eval scope</h3>
+<h3>Pressure-gate scope</h3>
 
 <table>
   <thead><tr><th>Block</th><th>Skills affected</th><th>Gate</th></tr></thead>
   <tbody>
-    <tr><td><code>## Checklist</code></td><td>17</td><td>EVAL-GATED</td></tr>
-    <tr><td><code>## The Process</code></td><td>11</td><td>EVAL-GATED</td></tr>
-    <tr><td>Gap-fill content</td><td>Count unknown until derivation</td><td>EVAL-GATED</td></tr>
+    <tr><td><code>## Checklist</code></td><td>17</td><td>PRESSURE-GATED</td></tr>
+    <tr><td><code>## The Process</code></td><td>11</td><td>PRESSURE-GATED</td></tr>
+    <tr><td>Gap-fill content</td><td>Count unknown until derivation</td><td>PRESSURE-GATED</td></tr>
     <tr><td><code>## Key Principles</code></td><td>17</td><td>Structural validation ONLY</td></tr>
     <tr><td><code>## Purpose</code> (paragraph)</td><td>9</td><td>Structural validation ONLY</td></tr>
-    <tr><td>README records, heading renames, casing, reordering</td><td>All</td><td>NOT eval-gated</td></tr>
+    <tr><td>README records, heading renames, casing, reordering</td><td>All</td><td>NOT gated</td></tr>
   </tbody>
 </table>
 
@@ -447,8 +468,8 @@ is what catches that judgment being wrong — which is precisely why the gate is
 after each migration commit. The validator is run after every commit, not once
 at the end.</p>
 
-<p><strong>Eval gate (per eval-gated block, every commit):</strong> <code>bun run quorum run
-scenarios/&lt;name&gt; --coding-agent claude --credential sonnet</code> twice per skill —
+<p><strong>Pressure gate (per gated block, every commit):</strong> dispatch the scenario to a
+fresh subagent via <code>superpowers-orchestrator:dispatch-agent</code> twice per skill —
 once before (baseline), once after. Gate: <code>after &gt;= baseline</code>. For
 <code><strong>NEW</strong></code> content: baseline must fail the new criterion.</p>
 
@@ -456,18 +477,20 @@ once before (baseline), once after. Gate: <code>after &gt;= baseline</code>. For
 show exactly 17 failures. Any count above 17 indicates a new failure was
 introduced.</p>
 
-<p><strong>Harness foundation (before skill 0):</strong> <code>bun install</code>, <code>bun run quorum check</code>
-green, one throwaway run. If any step fails, sub-project B stops here.</p>
+<p><strong>Protocol demonstration (before skill 0):</strong> the subagent pressure-scenario
+protocol must be defined and demonstrated end to end on one skill — scenario
+authored, baseline dispatched, verdict recorded — before any skill migration
+commit is made.</p>
 
 <table>
   <thead><tr><th>US</th><th>Verification</th></tr></thead>
   <tbody>
-    <tr><td>US-1</td><td><code>bun install &amp;&amp; bun run quorum check &amp;&amp; bun run quorum run &lt;throwaway&gt;</code></td></tr>
+    <tr><td>US-1</td><td>Pressure scenario authored for <code>using-superpowers</code>; fresh subagent dispatched; baseline verdict recorded in run manifest</td></tr>
     <tr><td>US-2</td><td>7-step work unit executed for each of 18 skills</td></tr>
     <tr><td>US-3</td><td>Each README contains both sections with correct format</td></tr>
     <tr><td>US-4</td><td><code>after &gt;= baseline</code> confirmed for every DERIVED block</td></tr>
     <tr><td>US-5</td><td>Baseline fails, after passes, evidence recorded inline</td></tr>
-    <tr><td>US-6</td><td>9 scenario dirs exist and run successfully</td></tr>
+    <tr><td>US-6</td><td>18 pressure scenarios exist (9 adapted, 9 from scratch) and have been dispatched</td></tr>
     <tr><td>US-7</td><td><code>bash tests/skills/run-all.sh</code> exits zero; <code>bash tests/split/run-all.sh</code> shows exactly 17 failures</td></tr>
   </tbody>
 </table>
@@ -478,9 +501,9 @@ green, one throwaway run. If any step fails, sub-project B stops here.</p>
   <li>SC-1: <code>bash tests/skills/run-all.sh</code> prints <code>ALL SKILL TESTS PASS</code> and exits zero after the final migration commit.</li>
   <li>SC-2: <code>bash tests/split/run-all.sh</code> shows exactly 17 failures — no new failures introduced.</li>
   <li>SC-3: Every migrated skill's README contains both <code>## Pattern Omissions</code> and <code>## Pattern Migration Notes</code>.</li>
-  <li>SC-4: Every <code><strong>NEW</strong></code> Migration Notes entry records its eval scenario name, baseline verdict, and after verdict inline.</li>
-  <li>SC-5: Every <code><strong>NEW</strong></code> block's baseline run produced a failing verdict for the criterion the new block addresses.</li>
-  <li>SC-6: The eval harness foundation check passes — <code>bun install</code>, <code>bun run quorum check</code>, and one throwaway run all exit successfully — before any skill migration commit is made.</li>
+  <li>SC-4: Every <code><strong>NEW</strong></code> Migration Notes entry records its pressure scenario name, baseline verdict, and after verdict inline.</li>
+  <li>SC-5: Every <code><strong>NEW</strong></code> block's baseline dispatch produced a failing verdict for the criterion the new block addresses (true RED-GREEN, not no-regression A/B).</li>
+  <li>SC-6: The subagent pressure-scenario protocol is demonstrated end to end on one skill — scenario authored, baseline dispatched via <code>superpowers-orchestrator:dispatch-agent</code>, verdict recorded — before any skill migration commit is made.</li>
   <li>SC-7: The migration order follows <code>skills/SDLC.md</code> exactly: <code>using-superpowers</code> first, then phases A → G → S, <code>visual-companion</code> excluded throughout.</li>
   <li>SC-8: <code>skills/visual-companion/</code> is not touched at any point in this sub-project.</li>
 </ul>
