@@ -166,5 +166,89 @@
     "plan": null,
     "created": "2026-08-02",
     "completed": null
+  },
+  {
+    "slug": "skill-pattern-migration--eval-harness-foundation",
+    "epic": "Superpowers Skills",
+    "feature": "Skill Pattern Migration",
+    "title": "Eval harness foundation verified and gating",
+    "description": "Confirm the eval harness runs in this environment (bun install, quorum check, one throwaway run) before any skill migration begins; sub-project B stops if the harness cannot run.",
+    "status": "open",
+    "spec": "features/skill-pattern-migration/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "skill-pattern-migration--per-skill-work-unit",
+    "epic": "Superpowers Skills",
+    "feature": "Skill Pattern Migration",
+    "title": "Per-skill migration work unit executes end to end for one skill",
+    "description": "Repeatable 7-step work unit (scenario check, baseline run, migrate, after run, gate, validator, commit) applied to each of 18 in-scope skills in SDLC.md order.",
+    "status": "open",
+    "spec": "features/skill-pattern-migration/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "skill-pattern-migration--readme-migration-notes",
+    "epic": "Superpowers Skills",
+    "feature": "Skill Pattern Migration",
+    "title": "README Pattern Migration Notes with NEW review marker",
+    "description": "Each migrated skill's README carries a Pattern Migration Notes section distinguishing DERIVED blocks (no behavior change) from **NEW** blocks (authored gap-fill, with inline eval evidence).",
+    "status": "open",
+    "spec": "features/skill-pattern-migration/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "skill-pattern-migration--derived-block-no-regression-ab",
+    "epic": "Superpowers Skills",
+    "feature": "Skill Pattern Migration",
+    "title": "Derived-block migration passes the no-regression A/B gate",
+    "description": "Derived blocks (existing content restructured) are gated by after >= baseline rather than a classical RED-GREEN cycle; the distinction is named plainly to avoid overclaiming.",
+    "status": "open",
+    "spec": "features/skill-pattern-migration/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "skill-pattern-migration--gap-fill-red-green",
+    "epic": "Superpowers Skills",
+    "feature": "Skill Pattern Migration",
+    "title": "Gap-fill content passes true RED-GREEN with a failing baseline",
+    "description": "Authored gap-fill blocks must show a failing baseline before the content is added and a passing after-run; a NEW block whose baseline did not fail must be revised or reclassified.",
+    "status": "open",
+    "spec": "features/skill-pattern-migration/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "skill-pattern-migration--nine-scenarios-authored",
+    "epic": "Superpowers Skills",
+    "feature": "Skill Pattern Migration",
+    "title": "Eval scenarios authored for the 9 uncovered skills",
+    "description": "Each of the 9 skills with zero eval coverage (project-kickoff, designing-ui, requesting-plan-refine, receiving-plan-refine, sprint-retrospective, writing-skills, backlog-refinement, dispatch-agent, worker-healing) gains a scenario as part of its migration commit.",
+    "status": "open",
+    "spec": "features/skill-pattern-migration/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
+  },
+  {
+    "slug": "skill-pattern-migration--all-18-migrated-zero-violations",
+    "epic": "Superpowers Skills",
+    "feature": "Skill Pattern Migration",
+    "title": "All 18 skills migrated; validator reports zero violations repo-wide",
+    "description": "After the final migration commit, bash tests/skills/run-all.sh exits zero and tests/split/run-all.sh shows exactly 17 pre-existing failures — no new failures introduced.",
+    "status": "open",
+    "spec": "features/skill-pattern-migration/design.md",
+    "plan": null,
+    "created": "2026-08-02",
+    "completed": null
   }
 ]
