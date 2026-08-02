@@ -44,8 +44,33 @@ Has the user already indicated their worktree preference in your instructions? I
 
 Honor any existing declared preference without asking. If the user declines consent, work in place and skip to Step 2.
 
+## Step 0.5: Resume an Existing Feature Workspace
+
+After Step 0 determines that this is a normal checkout and the user consents, if the caller supplied `<slug>`, inspect existing worktrees and matching feature branches before creating anything:
+
+```bash
+git worktree list
+git branch --list "feature/<slug>*"
+```
+
+For each matching branch found, classify it with these exact checks, in order:
+
+```bash
+# 1. Is it already merged into main?
+git merge-base --is-ancestor "$MATCHED_BRANCH" main && echo merged || echo unmerged
+
+# 2. If unmerged, does it have the feature's design document?
+git cat-file -e "$MATCHED_BRANCH:docs/superpowers/features/<slug>/design.md" 2>/dev/null && echo present || echo absent
+```
+
+- If `git merge-base --is-ancestor "$MATCHED_BRANCH" main` exits `0`, the branch is already merged into `main`: report it as stale or finished, do not reuse it, and continue to Step 1's fresh-creation path.
+- If the branch is unmerged and `git cat-file -e "$MATCHED_BRANCH:docs/superpowers/features/<slug>/design.md" 2>/dev/null` exits `0` (the design document is present on that branch), reuse it. If `git worktree list` shows it already attached, enter that worktree. If only the branch remains because its worktree was deleted or pruned, first run `git worktree prune` to clear the stale administrative entry — otherwise `git worktree add` fails with "already checked out" even though the directory is gone — then recreate a worktree at that branch: prefer a native worktree tool; otherwise follow Step 1b's directory selection and safety verification, then run `git worktree add "$path" "$MATCHED_BRANCH"` without `-b`.
+- If the branch is unmerged but the `git cat-file -e` check exits non-zero (no matching design document) or the branch otherwise looks unrelated, report the match and ask the user to choose resume or create-new. Never silently reuse it.
+- If multiple branches match, report every match and its classification, and ask the user which one to resume or whether to create new. Never guess.
+- If no branch or worktree matches, continue to Step 1 unchanged.
+
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D12` runs only when Step 0 confirms isolation is needed and the human or standing instructions consent: dispatch worktree creation through `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; require `output.artifacts` to contain the created worktree path, verify it exists, then `cd` exactly once and continue with setup and baseline tests, otherwise treat the response as blocked; create it inline only if the harness has no subagent capability at all.
+**Dispatch:** `D12` runs only when Step 0 confirms isolation is needed, the human or standing instructions consent, and Step 0.5 did not enter an existing worktree: dispatch worktree reuse or creation through `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; require `output.artifacts` to contain the resolved worktree path, verify it exists, then `cd` exactly once and continue with setup and baseline tests, otherwise treat the response as blocked; resolve it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Step 1: Create Isolated Workspace
