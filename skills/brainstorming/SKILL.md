@@ -26,37 +26,54 @@ You MUST create a task for each of these items and complete them in order:
    - Compare `project.gitCommitHash` with `git log -1 --format=%H -- .`. If the graph is malformed, `git log` fails, or the hashes differ, note `Knowledge graph missing or stale; continuing with file exploration.` and continue.
    - When the graph is fresh, `grep_search` the graph for the feature keywords and seed context from matching node names, summaries, and edge targets. If there are no matches, continue normal file exploration without error.
    - Never call `/understand`, dispatch a worker, write the graph, or block normal file exploration from this collect step.
-2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
+2. **Create isolated workspace** — after the scope check confirms one appropriately-sized feature and before asking any clarifying question:
+   - Kebab-slugify approximately five words from the user's initial request and use the branch name `feature/<slug>`.
+   - Invoke `superpowers-orchestrator:using-git-worktrees` with `<slug>` and continue in the workspace state it reports: created, reused, or working in place after declined consent or sandbox fallback.
+   - If the request requires decomposition, create no workspace for the umbrella request. Start this step separately when brainstorming begins for each sub-project.
+   - Before writing the design document, compare the settled feature name with `<slug>`. If it changed materially, check for a destination collision first with `git branch --list "feature/<new-slug>"`; if none, rename the branch with `git branch -m feature/<old-slug> feature/<new-slug>` and run `git worktree move "$old_path" "$new_path"` to relocate the worktree directory in place; ignore cosmetic or minor wording drift. Surface any unrelated branch collision and do not overwrite it.
+3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
+4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
 <!-- riso-tech:orchestrator-split START -->
-6. **Write design doc** — save to `docs/superpowers/features/<feature-slug>/design.md` following `skills/brainstorming/templates/spec-template.md`, generate `design.html` from `templates/document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
+7. **Write design doc** — save to `docs/superpowers/features/<feature-slug>/design.md` following `skills/brainstorming/templates/spec-template.md`, generate `design.html` from `templates/document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
 <!-- riso-tech:orchestrator-split END -->
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke `superpowers-orchestrator:writing-plans` to create implementation plan
+8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Transition to implementation** — invoke `superpowers-orchestrator:writing-plans` to create implementation plan
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
     "Explore project context" [shape=box];
+    "One appropriately-sized feature?" [shape=diamond];
+    "Decompose into sub-projects" [shape=box];
+    "Create isolated workspace" [shape=box];
     "Ask clarifying questions" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
+    "Feature name changed materially?" [shape=diamond];
+    "Rename branch and worktree" [shape=box];
     "Write design doc" [shape=box];
     "Spec self-review\n(fix inline)" [shape=box];
     "User reviews spec?" [shape=diamond];
     "Invoke superpowers-orchestrator:writing-plans" [shape=doublecircle];
 
-    "Explore project context" -> "Ask clarifying questions";
+    "Explore project context" -> "One appropriately-sized feature?";
+    "One appropriately-sized feature?" -> "Create isolated workspace" [label="yes"];
+    "One appropriately-sized feature?" -> "Decompose into sub-projects" [label="no"];
+    "Decompose into sub-projects" -> "Explore project context" [label="begin first sub-project"];
+    "Create isolated workspace" -> "Ask clarifying questions";
     "Ask clarifying questions" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
+    "User approves design?" -> "Feature name changed materially?" [label="yes"];
+    "Feature name changed materially?" -> "Rename branch and worktree" [label="yes"];
+    "Feature name changed materially?" -> "Write design doc" [label="no"];
+    "Rename branch and worktree" -> "Write design doc";
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
