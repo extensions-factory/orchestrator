@@ -209,3 +209,28 @@ PROJECT KICKOFF FILES
                 ├── request.json
                 └── response.json
 ```
+
+## Pattern Omissions
+
+- `anti-pattern` — baseline testing (4/4 PASS) surfaced four rationalizations, all already countered by existing `## Red Flags` rows (stray-file greenfield, unconfirmed seeding, authority-as-gate-substitute, retroactive approval). No single dominant rationalization emerged that warrants a named anti-pattern separate from that table.
+- `process-flow` — the workflow has a Create/Resume branch and two research tracks, but the Lifecycle Tree in this README already captures that structure in full. A duplicate `dot` fence would add no information beyond what is already present.
+- `after-artifact` — the skill's durable output and handoff steps are already defined in Phase 4 — Handoff inside `## The Process` and in the `## Handoff` section of this README. A separate `## After Project Kickoff` block would duplicate that material without adding substance.
+
+## Pattern Migration Notes
+
+- `hard-gate` — DERIVED from `## Trigger` ("Redirect guard: If the directory holds a real existing project, STOP") and `### Human Gate 1` ("Do not dispatch D1–D4 until this approval is recorded") and `### Human Gate 2` ("Do not dispatch D6–D8 until this approval is recorded"), no new requirements.
+- `checklist` — DERIVED from `## Trigger` (step 1), `## Flow` (steps 2–4), `## Phase 1` (steps 5–8), `## Phase 2` (steps 9–12), `## Phase 3` (steps 13–14), `## Token-cost monitoring` (step 15), and `## Phase 4` (step 16), no new requirements.
+- `the-process` — DERIVED from `## Trigger`, `## Flow`, and the four Phase sections in their entirety; every subsection carries real body text moved verbatim from the source sections, no new requirements.
+- `key-principles` — DERIVED compression (not verbatim) from: `## Trigger` redirect guard (Greenfield only bullet), Phase 1 "This phase gates the rest" (Discovery gates everything bullet), `### Human Gate 1` ("Do not dispatch D1–D4 until this approval is recorded") and `### Human Gate 2` ("Do not dispatch D6–D8 until this approval is recorded") combined with the Red Flags "Human says 'choose for me'" row ("Delegation does not replace approval or durable recording") for the Human gates bullet, `## Flow` manifest-record paragraph (Manifest is durable record bullet), Red Flags rows for skip-research (Research grounds decisions bullet), scaffold-as-plan-tasks (Plan tasks bullet), and exact-token-counts (Telemetry bullet). Each bullet is a compression of source text; no bullet adds scope the source does not cover. Fix applied in turn 4: the original human-gates bullet appended "authority, deadlines, and exhaustion do not substitute for explicit approval" — wording absent from the source — which was replaced with "delegation does not replace approval or durable recording", tracing to the Red Flags delegation row verbatim.
+- `token-cost-monitoring` — RETAINED, heading normalized from `## Token-cost monitoring` to Title Case (`## Token-cost Monitoring`); body unchanged.
+
+### Migration evidence
+
+- Scenario: `kickoff-gates-under-deadline-pressure` (authored from scratch; no eval prose existed)
+- Baseline (pre-migration): 4/4 PASS
+- After (post-migration): 4/4 PASS — no regression (gate: after >= baseline)
+- Gate: no-regression A/B; DERIVED blocks only, no gap-fill content
+- Caveat: baselines in this campaign are contaminated — the measuring subagent
+  carries prior knowledge of this repository, so a pre-migration baseline is
+  not a clean no-skill control. Contamination is symmetric across the A/B, so
+  regression detection remains valid; necessity claims for new content do not.

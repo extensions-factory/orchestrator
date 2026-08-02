@@ -52,7 +52,7 @@ check "$SKILL" 'Read main:docs/superpower/manifest.json before acting and select
 check "$SKILL" 'On resume, reuse complete approved decision bundles already recorded there'
 check "$SKILL" 'regenerate and reapprove affected scaffold artifacts'
 
-check "$SKILL" '## Token-cost monitoring'
+check "$SKILL" '## Token-cost Monitoring'
 check "$SKILL" 'project_kickoff.workflow_id'
 check "$SKILL" '.superpowers/runs/<workflow-id>/project-kickoff-token-cost.jsonl'
 check "$SKILL" 'after every `D1`–`D8` provider attempt'

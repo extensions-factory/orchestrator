@@ -9,7 +9,34 @@ description: Use when starting a greenfield project without an existing reposito
 
 **Announce at start:** "I'm using the project-kickoff skill to turn this idea into a validated, scaffolded starting point."
 
-## Trigger
+<HARD-GATE>
+Do NOT dispatch research workers (D1–D4) until Human Gate 1 approval — idea and research direction — is recorded in the selected session entry. Do NOT dispatch setup or scaffold workers (D6–D8) until Human Gate 2 approval — stack, standards, and AI tools — is recorded. Never scaffold a new repo on top of one that already exists; if the directory holds a real existing project, STOP immediately.
+</HARD-GATE>
+
+## Checklist
+
+You MUST complete these steps in order:
+
+1. **Verify greenfield trigger** — confirm the directory is empty or the request uses explicit greenfield language; if the directory holds a real existing project, redirect to `superpowers-orchestrator:brainstorming`.
+2. **Start token-cost boundary** — before any other project-kickoff action, capture the cumulative orchestrator counter baseline when the harness exposes it.
+3. **Select session entry** — read `main:docs/superpower/manifest.json` and select the session entry matching the current workspace by its `workspace.type` and `workspace.target`.
+4. **Initialize workflow ID** — write a new `project_kickoff.workflow_id` to the selected session entry, or on resume reuse the recorded ID and its run directory.
+5. **Capture idea and recommend research direction** — ask exactly one question ("What are you building, in a sentence?") and recommend the research track (market-facing or technical-build).
+6. **[Human Gate 1]** — present the idea and research direction for approval; record both in the session entry before any research dispatch.
+7. **Dispatch parallel research fan-out** — send D1–D4 as four independent workers covering the chosen track's four domains via `superpowers-orchestrator:dispatching-parallel-agents`.
+8. **Synthesize and present discovery** — dispatch D5 to produce `docs/superpowers/project/discovery.md` from the four results; validate and present it; confirm the backlog with the human.
+9. **Gather setup decisions** — ask stack, standards, and AI-tool questions one at a time.
+10. **[Human Gate 2]** — present the complete setup bundle for approval; record stack, standards, and ai_tools in the session entry before any setup dispatch.
+11. **Initialize repository** — dispatch D6 to run `git init` when no repository exists.
+12. **Create bootstrap commits** — dispatch D7 to generate the stack-specific `.gitignore`, make the initial commit, then commit `docs/superpowers/project/discovery.md` separately.
+13. **Write scaffold spec and roadmap** — dispatch D8 to produce `docs/superpowers/project/scaffold-design.md` and seed `docs/superpowers/roadmap.json` and `docs/superpowers/ROADMAP.html` from the human-confirmed backlog only.
+14. **Approve scaffold artifacts** — validate and present the D8 artifacts; obtain human approval before handoff.
+15. **Report token-cost coverage** — parse the telemetry file, report worker, orchestrator, and combined totals, and surface any unavailable counts.
+16. **Verify manifest and hand off** — reread the selected session entry, confirm all five approved fields are present, then invoke `superpowers-orchestrator:writing-plans`.
+
+## The Process
+
+### Trigger
 
 Use this skill when **either** holds:
 
@@ -18,7 +45,7 @@ Use this skill when **either** holds:
 
 **Redirect guard:** If the directory holds a real existing project, STOP and use `superpowers-orchestrator:brainstorming` instead. Never scaffold a new repo on top of one that already exists.
 
-## Flow
+### Flow
 
 Discovery (+ backlog) → Setup → Scaffold spec → Handoff. Each phase is defined below. **Do not skip or reorder phases.** Discovery gates everything after it.
 
@@ -26,11 +53,11 @@ The token-cost boundary starts when this skill is announced. At activation, befo
 
 Before Discovery, **Read `main:docs/superpower/manifest.json` and select the session entry matching the current workspace** by its `workspace.type` and `workspace.target`. Read and write only that entry's `project_kickoff` decisions; preserve every other session entry. On resume, reuse complete approved decision bundles already recorded there instead of asking or deciding them again. If the current workspace has no matching entry, stop and return to the Session Gate in `superpowers-orchestrator:using-superpowers`.
 
-Every `D1`–`D8` worker request must include: “Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.”
+Every `D1`–`D8` worker request must include: "Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace."
 
 Immediately after selecting the session entry and before Idea capture, initialize the workflow run and write its ID to `project_kickoff.workflow_id` in the selected session entry. On resume, reuse that ID and its run directory; never replace it.
 
-## Phase 1 — Discovery (gates everything)
+### Phase 1 — Discovery (gates everything)
 
 1. **Idea capture** — ask exactly one question: "What are you building, in a sentence?" Restate the answer as a concrete one-sentence idea. Do not create a separate vision document.
 
@@ -40,7 +67,7 @@ Immediately after selecting the session entry and before Idea capture, initializ
 
    If the answer doesn't clearly place it, ask one multiple-choice question: "Is this a product for users/customers, or a technical/internal build?"
 
-### Human Gate 1 — Idea and research direction
+#### Human Gate 1 — Idea and research direction
 
 Present the one-sentence idea and recommended research direction together. The human must approve or revise both. Write the approved `idea` and `research_direction` (`market-facing` or `technical-build`) to `project_kickoff` in the selected main-manifest session entry, preserving all other fields and sessions. **Do not dispatch D1–D4 until this approval is recorded.** If either decision changes later, return to this gate, update the record, and rerun affected downstream work before continuing.
 
@@ -72,7 +99,7 @@ Present the one-sentence idea and recommended research direction together. The h
 
 **This phase gates the rest.** Do not start Setup until the discovery doc is written, validated, and presented — even if the human "already knows the space." Once Setup begins, do not proceed beyond repository initialization until `D7` commits the generated `.gitignore` and then the discovery document. The research grounds the stack decision and the later `superpowers-orchestrator:brainstorming` session.
 
-## Phase 2 — Setup
+### Phase 2 — Setup
 
 Ask questions **one at a time**, multiple-choice where possible (same discipline as `superpowers-orchestrator:brainstorming`), informed by the discovery doc.
 
@@ -80,17 +107,17 @@ Ask questions **one at a time**, multiple-choice where possible (same discipline
 2. **Standards** — formatter/linter, naming conventions, commit convention, test-file convention.
 3. **AI tools** — multi-select: "Which AI coding tools do you use?" (Claude Code, Codex, Gemini CLI, Copilot, other/none). This drives which per-tool instruction files the scaffold spec will create.
 
-### Human Gate 2 — Stack, standards, and AI tools
+#### Human Gate 2 — Stack, standards, and AI tools
 
-Present the complete stack, standards, and AI-tool selections together. The human must approve or revise all three; permission to “just pick” still requires presenting the resulting choices for approval. Write the approved `stack`, `standards`, and `ai_tools` values to `project_kickoff` in the selected main-manifest session entry, preserving its approved idea and research direction. **Do not dispatch D6–D8 until this approval is recorded.** If any setup decision changes later, return to this gate, update the record, and regenerate and reapprove affected scaffold artifacts before continuing.
+Present the complete stack, standards, and AI-tool selections together. The human must approve or revise all three; permission to "just pick" still requires presenting the resulting choices for approval. Write the approved `stack`, `standards`, and `ai_tools` values to `project_kickoff` in the selected main-manifest session entry, preserving its approved idea and research direction. **Do not dispatch D6–D8 until this approval is recorded.** If any setup decision changes later, return to this gate, update the record, and regenerate and reapprove affected scaffold artifacts before continuing.
 
-### Step 4 — Bootstrap the repo
+#### Step 4 — Bootstrap the repo
 
 <!-- riso-tech:orchestrator-split START -->
 **Dispatch:** `D6` initializes the Git repository: if `git rev-parse --git-dir` fails, dispatch `git init` alone through `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; if a repository already exists, skip D6, and do not continue to `D7` until repository initialization is confirmed; run it inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
-### Step 5 — Create the bootstrap commits
+#### Step 5 — Create the bootstrap commits
 
 <!-- riso-tech:orchestrator-split START -->
 **Dispatch:** `D7` creates two isolated commits after `D6` succeeds or an existing repository is confirmed: dispatch `role: devops_engineer` and `task_type: workspace_setup` through `superpowers-orchestrator:dispatch-agent`, making `.gitignore` the initial commit when `HEAD` is absent and committing discovery second, following the steps below; run it inline only if the harness has no subagent capability at all.
@@ -103,7 +130,7 @@ Present the complete stack, standards, and AI-tool selections together. The huma
 
 These bootstrap commits are the one piece of setup nothing downstream can do for itself.
 
-## Phase 3 — Scaffold spec
+### Phase 3 — Scaffold spec
 
 <!-- riso-tech:orchestrator-split START -->
 **Dispatch:** `D8` dispatches the scaffold spec through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: architecture_design`; the worker writes `docs/superpowers/project/scaffold-design.md` from the discovery and approved stack/tooling choices, initializes the product roadmap as described below, and the orchestrator validates and presents the returned artifacts for user approval before handing the scaffold spec to `superpowers-orchestrator:writing-plans`; write them inline only if the harness has no subagent capability at all.
@@ -121,7 +148,17 @@ Write `docs/superpowers/project/scaffold-design.md` using the standard `superpow
 
 Initialize the product roadmap during `D8` from the **confirmed backlog** (Phase 1 step 5): write `docs/superpowers/roadmap.json` with one entry per confirmed User Story and generate `docs/superpowers/ROADMAP.html`, following `${CLAUDE_PLUGIN_ROOT}/skills/brainstorming/roadmap.md` and starting from `${CLAUDE_PLUGIN_ROOT}/assets/roadmap.html` verbatim. Follow that file's level mapping exactly: **Epic → summary card**, **Feature → exactly one detail section** (dedup by feature — never emit two sections for the same feature), **User Story → one `.item`**. Every seeded US is `status: open` with `spec` and `plan` set to `null`; kickoff creates no spec but Scaffold, so no roadmap entry points at a spec yet. `superpowers-orchestrator:brainstorming` attaches specs and adds later User Stories per feature as it designs them. Write nothing that wasn't in the human-confirmed backlog; if the backlog is empty, write `[]`.
 
-## Token-cost monitoring
+### Phase 4 — Handoff
+
+**Before handoff, reread the selected session entry** from `main:docs/superpower/manifest.json`. Require `project_kickoff.workflow_id` plus approved fields for `idea`, `research_direction`, `stack`, `standards`, and `ai_tools`; `ai_tools: []` is valid when the human approved none. If a field is missing or an approved value differs from the latest human approval, return to its owning step or human gate and update the record.
+
+If the frontend-framework path ran, invoke `superpowers-orchestrator:writing-plans` exactly once with both `docs/superpowers/project/scaffold-design.md` and the shell spec path returned by `superpowers-orchestrator:designing-ui`; otherwise invoke it on `docs/superpowers/project/scaffold-design.md` alone. From there the existing pipeline runs unmodified. After the scaffold branch is finished, `superpowers-orchestrator:brainstorming` designs the first real feature — now against a tested repo with market context in hand.
+
+The handoff must include the token-cost report, identify the current `workspace.type` and `workspace.target`, and instruct the next session: "Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace."
+
+**This is the terminal state.** Do NOT invoke any other implementation skill; `superpowers-orchestrator:writing-plans` is the next step.
+
+## Token-cost Monitoring
 
 Use one project-kickoff telemetry file for worker and orchestrator model usage. Immediately after every `D1`–`D8` provider attempt, append exactly one worker line to `.superpowers/runs/<workflow-id>/project-kickoff-token-cost.jsonl`, including retries, revisions, blocked results, and provider fallbacks:
 
@@ -145,16 +182,6 @@ Before rendering the handoff, append its orchestrator record with both counts `n
 
 Report worker, orchestrator, and combined measured input/output totals, unavailable reasons, and coverage: **measured attempts / total attempts** for workers, measured turns / total turns for the orchestrator, and measured records / total records combined. Sum input and output columns independently from non-null exact values and mark worker, orchestrator, and combined columns partial when any contributing record lacks the count. A record is measured only when both counts are present. **Refuse to label any partial subtotal as a complete project-kickoff total.** This report covers project-kickoff model usage only, not other lifecycle phases or monetary pricing.
 
-## Phase 4 — Handoff
-
-**Before handoff, reread the selected session entry** from `main:docs/superpower/manifest.json`. Require `project_kickoff.workflow_id` plus approved fields for `idea`, `research_direction`, `stack`, `standards`, and `ai_tools`; `ai_tools: []` is valid when the human approved none. If a field is missing or an approved value differs from the latest human approval, return to its owning step or human gate and update the record.
-
-If the frontend-framework path ran, invoke `superpowers-orchestrator:writing-plans` exactly once with both `docs/superpowers/project/scaffold-design.md` and the shell spec path returned by `superpowers-orchestrator:designing-ui`; otherwise invoke it on `docs/superpowers/project/scaffold-design.md` alone. From there the existing pipeline runs unmodified. After the scaffold branch is finished, `superpowers-orchestrator:brainstorming` designs the first real feature — now against a tested repo with market context in hand.
-
-The handoff must include the token-cost report, identify the current `workspace.type` and `workspace.target`, and instruct the next session: “Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.”
-
-**This is the terminal state.** Do NOT invoke any other implementation skill; `superpowers-orchestrator:writing-plans` is the next step.
-
 ## Red Flags
 
 | Situation | Rule |
@@ -169,9 +196,19 @@ The handoff must include the token-cost report, identify the current `workspace.
 | Walking-skeleton verification fails | Do not finish the branch or hand off to `superpowers-orchestrator:brainstorming` with a broken baseline. |
 | Tempted to run init/lint/CI commands here | Don't. Concrete scaffolding is plan tasks (Phase 3), executed by the pipeline — not by this skill. |
 | Seeding the roadmap from discovery candidates the human never confirmed | Stop. Phase 1 step 5 confirmation gates the seed. Present the Proposed backlog, refine it with the human, then write only what they approved. |
-| Human says “choose for me” | Recommend concrete choices, then present them at the owning human gate. Delegation does not replace approval or durable recording. |
+| Human says "choose for me" | Recommend concrete choices, then present them at the owning human gate. Delegation does not replace approval or durable recording. |
 | A kickoff decision changes after approval | Return to its human gate, update only the current workspace's session entry, and rerun and reapprove affected downstream work before handoff. |
 | A required `project_kickoff` field is missing at handoff | Stop. Do not ask `writing-plans` to infer or recreate an approved decision. |
 | Exact token counts are unavailable | Record `null` plus the reason. Missing telemetry is visible; invented telemetry is not monitoring. |
 | Two detail sections rendered for the same Feature | Wrong. One detail section per distinct Feature (dedup, first-appearance order); its User Stories are `.item`s inside it. See `roadmap.md`. |
 | Attaching a spec path to a seeded US, or inventing a Scaffold roadmap entry | Seeded US are `status: open`, `spec`/`plan` = `null`. Scaffold is tooling, not a product US — it stays its own spec, off the roadmap. |
+
+## Key Principles
+
+- **Greenfield only** — if the directory holds a real existing project, stop and redirect to `superpowers-orchestrator:brainstorming`; never scaffold a new repo on top of one that already exists.
+- **Discovery gates everything** — do not start Setup until the discovery doc is written, validated, and presented; "I already know the space" does not skip the research fan-out.
+- **Human gates are non-negotiable** — Do not dispatch D1–D4 until this approval is recorded; Do not dispatch D6–D8 until this approval is recorded; delegation does not replace approval or durable recording.
+- **Manifest is the durable record** — write approved decisions to the selected session entry immediately after each gate; a resumed kickoff reuses complete approved bundles rather than re-asking.
+- **Research grounds decisions** — the research fan-out is never skipped regardless of track; it grounds the stack decision and later brainstorming.
+- **Plan tasks, not kickoff, scaffold** — concrete scaffolding (init commands, config, CI stub, walking skeleton) belongs to plan tasks executed by the pipeline, not to this skill.
+- **Telemetry is exact or null** — record exact token counts when available; when unavailable, record `null` and the reason; do not estimate missing counts or present partial subtotals as complete.
