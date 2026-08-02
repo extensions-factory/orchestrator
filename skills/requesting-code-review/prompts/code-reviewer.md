@@ -20,6 +20,20 @@ Subagent (general-purpose):
 
     [PLAN_OR_REQUIREMENTS]
 
+    ## Approved Review Boundary
+
+    - Decision record: [DECISION_RECORD]
+    - Workspace: [WORKSPACE_TYPE]:[WORKSPACE_TARGET]
+    - Workflow: [WORKFLOW_ID]
+    - Approved decision snapshot: [DECISION_SNAPSHOT]
+    - Plan: [PLAN_FILE]
+    - Plan content hash: [PLAN_HASH]
+
+    Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.
+    Compare that entry and the current plan hash with this request. If either
+    differs, return a blocked response with reason `stale_input` and no
+    findings.
+
     ## Git Range to Review
 
     **Base:** [BASE_SHA]
@@ -38,7 +52,7 @@ Subagent (general-purpose):
 
     **Plan alignment:**
     - Does the implementation match the plan / requirements?
-    - Are deviations justified improvements, or problematic departures?
+    - Classify every deviation; approved values remain binding.
     - Is all planned functionality present?
 
     **Code quality:**
@@ -72,10 +86,9 @@ Subagent (general-purpose):
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
-    If you find significant deviations from the plan, flag them specifically
-    so the implementer can confirm whether the deviation was intentional.
-    If you find issues with the plan itself rather than the implementation,
-    say so.
+    Classify by actual effect, not severity or label. A suggested correction
+    that changes an approved value is a decision proposal, not an
+    implementation fix.
 
     ## Output Format
 
@@ -98,6 +111,13 @@ Subagent (general-purpose):
     - What's wrong
     - Why it matters
     - How to fix (if not obvious)
+    - Type: `implementation_defect` | `decision_deviation` |
+      `decision_change_proposal`
+    - Decision field(s): exact names, or `none`
+    - Approved value: exact snapshot value, or `not applicable`
+    - Observed/proposed value: exact value, or `not applicable`
+    - Route: `implementation_fix` | `align_implementation` |
+      `human_decision_required`
 
     ### Recommendations
     [Improvements for code quality, architecture, or process]
@@ -105,6 +125,10 @@ Subagent (general-purpose):
     ### Assessment
 
     **Ready to merge?** [Yes | No | With fixes]
+
+    **Implementation verdict:** [clean | fixes_required]
+
+    **Decision verdict:** [none | human_decision_required]
 
     **Reasoning:** [1-2 sentence technical assessment]
 
@@ -130,6 +154,9 @@ Subagent (general-purpose):
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
+- `[DECISION_RECORD]`, `[WORKSPACE_TYPE]`, `[WORKSPACE_TARGET]`,
+  `[WORKFLOW_ID]`, `[DECISION_SNAPSHOT]`, `[PLAN_FILE]`, and `[PLAN_HASH]` —
+  required approved review boundary values
 
 **Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
 
@@ -144,21 +171,15 @@ Subagent (general-purpose):
 ### Issues
 
 #### Important
-1. **Missing help text in CLI wrapper**
-   - File: index-conversations:1-31
-   - Issue: No --help flag, users won't discover --concurrency
-   - Fix: Add --help case with usage examples
-
-2. **Date validation missing**
+1. **Date validation missing**
    - File: search.ts:25-27
-   - Issue: Invalid dates silently return no results
+   - Issue: Invalid dates silently return no results, violating the approved error contract
    - Fix: Validate ISO format, throw error with example
-
-#### Minor
-1. **Progress indicators**
-   - File: indexer.ts:130
-   - Issue: No "X of Y" counter for long operations
-   - Impact: Users don't know how long to wait
+   - Type: `implementation_defect`
+   - Decision field(s): `brainstorming.acceptance_criteria`
+   - Approved value: invalid dates return a clear error
+   - Observed/proposed value: invalid dates silently return no results
+   - Route: `implementation_fix`
 
 ### Recommendations
 - Add progress reporting for user experience
@@ -166,7 +187,11 @@ Subagent (general-purpose):
 
 ### Assessment
 
-**Ready to merge: With fixes**
+**Ready to merge: No**
 
-**Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
+**Implementation verdict:** fixes_required
+
+**Decision verdict:** none
+
+**Reasoning:** The implementation misses one approved acceptance criterion.
 ```
