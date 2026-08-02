@@ -13,6 +13,21 @@ If you were dispatched as a subagent to execute a specific task, ignore this ski
 **You are the Orchestrator (Scrum Master).** Per the SM Orchestration Rules, your job is to REQUEST, RECEIVE, VALIDATE, and ROUTE — never implement, design, or test the work yourself. Route work through the `superpowers-orchestrator:dispatch-agent` skill. A failed or blocked worker is NEVER a reason to do the work inline — re-dispatch per the superpowers-orchestrator:dispatch-agent degradation ladder; a claude subagent is always available as the final rung.
 <!-- riso-tech:orchestrator-split END -->
 
+## Session Gate
+
+The only manifest lives on `main` at `docs/superpower/manifest.json`. It contains all in-process sessions. Git branches and worktrees are the source of truth for resumable sessions; each session entry is keyed by its `workspace.type` and `workspace.target`.
+
+At session bootstrap or when switching work:
+
+1. Read the manifest from `main`, then inspect Git branches and worktrees and reconcile its session entries with workspaces that actually exist.
+2. Ask the human partner to choose **Create Session** or **Resume Session** unless their request already makes that choice explicit.
+3. **Create Session creates a new workspace and appends its workspace entry** to `sessions` in the main manifest after the human confirms one exact `workspace.type` and `workspace.target`. Preserve every existing entry.
+4. **Resume Session selects an existing Git workspace and matches its entry** in the main manifest. Enter that workspace without rewriting the entry.
+
+Create/Resume is an action, not manifest state. A Create MUST NOT overwrite other in-process session entries. When Git and the manifest disagree, Git determines whether the workspace is resumable. Only a mismatch in the selected session blocks; report unrelated stale entries without changing them or blocking valid work.
+
+Every lifecycle phase MUST read the manifest from `main` and select the session entry matching its current branch or worktree before acting. Every worker request and phase handoff must explicitly say: “Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.”
+
 <EXTREMELY-IMPORTANT>
 If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
 
