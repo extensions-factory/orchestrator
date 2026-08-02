@@ -13,6 +13,22 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
+## Approved Finish Boundary
+
+The token-cost boundary starts when this skill is announced. Capture the exact cumulative orchestrator counter scope and baseline when the harness exposes them.
+
+**Read `main:docs/superpower/manifest.json` and select the session entry matching the current workspace** by `workspace.type` and `workspace.target`; require exactly one session entry and preserve every other session entry. Require `writing_plans.workflow_id`, the exact approved decision snapshot, exact plan path and content hash, optional design path/hash, current execution progress, and a clean D17 whole-branch review. For feature work also require `brainstorming.acceptance_criteria`.
+
+Use `writing_plans.workflow_id` as the active run. Reread the selected entry and rehash the plan before acceptance verification, before presenting the finish-action gate, before D19, and before an eligible D20. A mismatch returns blocked with reason `stale_input`; do not present or execute a finish action. Ambient run IDs and another session's artifacts never override the selected entry.
+
+Every D19 and D20 request carries `DECISION_RECORD=main:docs/superpower/manifest.json`, the original finish workspace key, workflow ID, decision snapshot, plan/design paths and hashes, finish-record path, selected action or refresh decision, and this instruction: “Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.” A worker mismatch returns `stale_input` without mutation.
+
+## Acceptance Delivery Record
+
+Create `.superpowers/runs/<workflow-id>/50-finish/finish-record.json` before presenting any action. It contains the workspace/workflow, decision and artifact hashes, final review evidence, test evidence, and one entry for every approved acceptance criterion with its exact text, status `delivered | not_delivered | unverified`, and observed evidence or missing-evidence reason.
+
+`all_delivered` is true only when every criterion is `delivered` with observed evidence. Tests passing and a clean review do not substitute for criterion-by-criterion proof; developer claims are not observed evidence. If any criterion is `not_delivered` or `unverified`, write the record, set `all_delivered` false, and stop. Do not present the finish-action gate. A proposal to remove, waive, or change a criterion returns to the Brainstorming Human Gate and affected downstream approval before finishing resumes.
+
 ## The Process
 
 ### Step 1: Verify Tests
@@ -65,6 +81,8 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 4: Present Options
 
+This is the finish-action Human Gate. Require the exact action selected at this gate. Never infer an action from prior conversation, a plan, branch state, a worker suggestion, or "choose for me." After resolving the menu response to `merge | pr | keep | discard`, write `selected_action` and the exact human response to the finish record before any D19 call. D19 executes only that named action.
+
 **Normal repo and named-branch worktree — present exactly these 4 options:**
 
 ```
@@ -93,7 +111,7 @@ Which option?
 **Don't add explanation** - keep options concise.
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D19` executes the selected finish path only after tests pass and the human chooses an option. Resolve the chosen option's menu selection to a named action before dispatch: attached branch: 1 = `merge`, 2 = `pr`, 3 = `keep`, 4 = `discard`; detached: 1 = `pr`, 2 = `keep`, 3 = `discard`. Then call `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: release_deployment` for that action's Git mechanics in the documented order. The `merge` action merges first, runs the shared roadmap recipe and commits it on the base branch, then tests the merged result. The `pr` action creates a branch at detached `HEAD` when needed, runs and commits the roadmap recipe on the feature branch, tests, pushes, validates the PR body against the template, then calls `gh pr create --draft --body-file`. The `keep` and `discard` actions skip the roadmap recipe. Preserve worktrees for `pr` and `keep`; clean up only for `merge` and confirmed `discard`, except detached externally managed workspaces are never cleaned up. For detached `discard`, do not delete a branch or worktree; after confirmation, report the abandoned `HEAD` SHA and leave disposal to the external workspace manager. For any `discard`, after the human's exact discard confirmation and before dispatch, append `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` to `context.constraints`, replacing `<operation>` with the exact confirmed destructive operation; never infer confirmation. Run the documented commands inline only if the harness has no subagent capability at all.
+**Dispatch:** `D19` executes only the named selected finish path after tests pass, every acceptance criterion is delivered, and the human chooses an option at the current gate. Resolve the chosen option's menu selection to a named action before dispatch: attached branch: 1 = `merge`, 2 = `pr`, 3 = `keep`, 4 = `discard`; detached: 1 = `pr`, 2 = `keep`, 3 = `discard`. Then call `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer`, `task_type: release_deployment`, the Approved Finish Boundary, and finish record for that action's Git mechanics in the documented order. The `merge` action merges first, runs the shared roadmap recipe and commits it on the base branch, then tests the merged result. The `pr` action creates a branch at detached `HEAD` when needed, runs and commits the roadmap recipe on the feature branch, tests, pushes, validates the PR body against the template, then calls `gh pr create --draft --body-file`. The `keep` and `discard` actions skip the roadmap recipe. Preserve worktrees for `pr` and `keep`; clean up only for `merge` and confirmed `discard`, except detached externally managed workspaces are never cleaned up. For detached `discard`, do not delete a branch or worktree; after confirmation, report the abandoned `HEAD` SHA and leave disposal to the external workspace manager. For any `discard`, after the human's exact discard confirmation and before dispatch, append `HUMAN_CONFIRMED_DESTRUCTIVE_RELEASE: <operation>` to `context.constraints`, replacing `<operation>` with the exact confirmed destructive operation; never infer confirmation. D19 never switches actions automatically: record a failed action as blocked, then require a new finish-action gate before another named action. Run the documented commands inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
 ### Step 4b: Post-Land Knowledge Graph Refresh
@@ -110,6 +128,28 @@ After D19 returns `done` for `merge` or `pr`, run this orchestrator-owned step a
 <!-- riso-tech:orchestrator-split END -->
 4. When the worker returns, validate the worker response, then verify that the rebuilt graph's `project.gitCommitHash` matches the current scoped HEAD from `git log -1 --format=%H -- .`; append one result to the project ledger.
 5. If the worker returns `blocked` or `needs_revision`, or the rebuilt hash is still stale, append that result to the ledger and surface it to the human. Do not retry automatically.
+
+## Token-cost Monitoring
+
+Use `.superpowers/runs/<workflow-id>/finishing-a-development-branch-token-cost.jsonl`. This skill owns every provider call for D19 and D20, including retries, fallbacks, blocked results, and resumed calls:
+
+```json
+{"source":"worker","task":"D19","action":"pr","turn":1,"attempt":1,"agent":"codex","model":"<exact-model>","input_tokens":123,"output_tokens":45,"unavailable_reason":null}
+```
+
+`turn` identifies one request envelope, approved snapshot, and human decision. Provider retries and fallbacks increment `attempt`; a revised request, resumed call, or newly selected action starts the next turn at attempt 1. An ineligible D20 creates no worker record.
+
+After each harness-reported main-orchestrator invocation becomes observable, append and validate one orchestrator record before the next finish action:
+
+```json
+{"source":"orchestrator","task":"orchestrator","turn":1,"attempt":1,"agent":"claude","model":"<exact-model>","input_tokens":456,"output_tokens":78,"unavailable_reason":null}
+```
+
+Copy exact per-invocation metadata. Use monotonic cumulative-counter deltas only; after a reset, record affected counts as `null` with the reason and retain the new baseline. Otherwise keep unavailable fields `null` with a reason. **Do not estimate missing token counts** or treat them as zero. Ordinary tools get no separate record.
+
+Do not copy this skill's usage into the caller execution ledger; the caller stopped metering at its handoff. Before the final handoff, append its orchestrator record with both counts `null` and reason `usage becomes visible only after this turn completes`. Report worker, orchestrator, and combined measured totals, unavailable reasons, full-record coverage as measured records / total records, and independent input/output field coverage. Never call a partial subtotal complete.
+
+Update the finish record with the selected action's `done | blocked` result, resulting SHAs/PR URL/workspace state, acceptance status, graph-refresh result when eligible, and token report before the final handoff.
 
 ### Step 5: Execute Choice
 
@@ -290,6 +330,10 @@ git worktree prune  # Self-healing: clean up any stale registrations
 **No confirmation for discard**
 - **Problem:** Accidentally delete work
 - **Fix:** Require typed "discard" confirmation
+
+**Inferring a finish action**
+- **Problem:** Prior intent or a worker fallback replaces the human gate
+- **Fix:** Execute only the action selected at the current gate; failures return to a new gate
 
 ## Red Flags
 

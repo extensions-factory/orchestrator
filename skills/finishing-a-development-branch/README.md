@@ -1,5 +1,27 @@
 # Finishing a Development Branch
 
+## Description
+
+Verifies completed work and lets the human choose how an approved development branch is integrated, preserved, or discarded.
+
+## Inputs
+
+- The current workspace and exactly matching session in the single `main:docs/superpower/manifest.json`.
+- Approved decision snapshot, Brainstorming acceptance criteria, exact plan/design paths and hashes, execution progress, and clean final review evidence.
+- Current Git/worktree state, base branch, observed test/checkpoint results, and exact worker/orchestrator token metadata.
+
+## Durable Output
+
+`50-finish/finish-record.json` records every acceptance criterion's delivery evidence, the exact human-selected action, action result, resulting Git/PR/workspace state, and token coverage. PR paths also retain `pr-body.md`; all finish-owned D19/D20 and orchestrator usage is stored in `finishing-a-development-branch-token-cost.jsonl`.
+
+## Human Decisions
+
+The human explicitly chooses `merge`, `pr`, `keep`, or `discard` at the finish gate; no prior intent or worker suggestion substitutes. Discard requires its second exact confirmation. An approved acceptance-criteria change returns to Brainstorming before finishing can resume; stale-graph refresh remains a separate optional gate.
+
+## Handoff
+
+Return the selected action and outcome, acceptance-delivery matrix, resulting SHAs/PR URL/workspace state, graph-refresh result, and worker/orchestrator token report. Blocked actions return to a new finish gate rather than switching automatically.
+
 ## Legend
 
 - `◆ Dn` — dispatch through `superpowers-orchestrator:dispatch-agent`
@@ -12,7 +34,16 @@
 ```text
 FINISH DEVELOPMENT BRANCH
 │
-├── ○ Run the project test suite
+├── ○ Select current main-manifest session and approved plan
+│   └── bind decision snapshot + plan/design hashes + clean D17
+│
+├── ○ Build acceptance-delivery matrix
+│   ├── one status + observed evidence per approved criterion
+│   └── persist 50-finish/finish-record.json
+│
+├── ◇ Every acceptance criterion delivered?
+│   ├── no  → record gaps and return to execution/owning decision gate
+│   └── yes → run the project test suite
 │
 ├── ◇ Tests pass?
 │   ├── no  → report failures and stop
@@ -26,6 +57,7 @@ FINISH DEVELOPMENT BRANCH
 ├── ○ Determine the base branch
 │
 ├── ◇ Human chooses finish action
+│   ├── record exact response + named action
 │   ├── attached branch
 │   │   ├── merge
 │   │   ├── draft PR
@@ -43,6 +75,7 @@ FINISH DEVELOPMENT BRANCH
 ├── ◆ D19 execute selected release path
 │   ├── role: devops_engineer
 │   ├── task_type: release_deployment
+│   ├── carry approved finish boundary + finish record
 │   ├── merge
 │   │   ├── merge into base
 │   │   ├── update and commit roadmap
@@ -59,6 +92,10 @@ FINISH DEVELOPMENT BRANCH
 │   └── discard
 │       ├── named branch → remove owned worktree and branch
 │       └── detached HEAD → report abandoned SHA; host owns disposal
+│
+├── ◇ D19 blocked?
+│   ├── yes → record result and return to a new finish-action gate
+│   └── no  → continue
 │
 ├── ◇ Did merge or PR finish?
 │   ├── no → finish without graph refresh
@@ -83,9 +120,9 @@ FINISH DEVELOPMENT BRANCH
 ├── use-file
 │   ├── read: design.md, plan.md, templates/pr-body-template.md
 │   ├── read/write: roadmap.json + ROADMAP.html [merge/PR]
-│   ├── write: 50-finish/pr-body.md [PR]
+│   ├── write: 50-finish/finish-record.json + pr-body.md [PR]
 │   ├── read/write: knowledge-graph.json [conditional]
-│   └── update: branch, worktree, remote, and PR state
+│   └── update: token-cost JSONL, branch, worktree, remote, and PR state
 │
 └── ○ Hand off to the next lifecycle event
 ```
@@ -102,7 +139,8 @@ BRANCH FINISH FILES
 │       └── templates/
 │           └── pr-body-template.md
 │
-├── Planning evidence [tracked, read]
+├── Approved inputs [tracked, read]
+│   ├── main:docs/superpower/manifest.json [single decision record]
 │   └── docs/superpowers/features/<feature-slug>/
 │       ├── design.md
 │       └── plan.md
@@ -119,7 +157,9 @@ BRANCH FINISH FILES
 ├── Finish evidence [ignored]
 │   └── .superpowers/runs/<workflow-id>/
 │       ├── ledger.jsonl
+│       ├── finishing-a-development-branch-token-cost.jsonl
 │       └── 50-finish/
+│           ├── finish-record.json
 │           └── pr-body.md [PR path only]
 │
 └── Git/GitHub state [updated by D19]
@@ -128,5 +168,3 @@ BRANCH FINISH FILES
     ├── draft pull request [PR path]
     └── worktree registration [removed only when owned and permitted]
 ```
-
-See [E. Finish Branch](../../docs/orchestrator-workflow.md#lifecycle-tree).
