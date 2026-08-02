@@ -25,6 +25,11 @@ BRAINSTORMING
 │       ├── visual question → browser companion
 │       └── textual question → normal conversation
 │
+├── ○ Create isolated workspace
+│   ├── kebab-slugify the feature and use `feature/<slug>`
+│   ├── invoke superpowers-orchestrator:using-git-worktrees
+│   └── defer workspace creation until each decomposed sub-project begins
+│
 ├── ○ Present two or three approaches
 │   └── lead with the recommended approach and trade-offs
 │
@@ -35,6 +40,8 @@ BRAINSTORMING
 │   └── yes → continue
 │
 ├── ◆ D9 write design artifacts
+│   ├── rename on material feature-name drift before writing: check collision,
+│   │   rename the branch, and use the owning native tool or git fallback move
 │   ├── discovery      → business_analyst / discovery_research
 │   ├── requirements   → product_owner / requirements_user_stories
 │   ├── architecture   → tech_lead / architecture_design
@@ -61,6 +68,7 @@ BRAINSTORMING
 │   ├── Git/file exploration for current project context
 │   ├── graph keyword search [fresh graph only]
 │   ├── visual-companion server [approved visual questions only]
+│   ├── superpowers-orchestrator:using-git-worktrees [create or resume workspace]
 │   ├── superpowers-orchestrator:dispatch-agent [D9]
 │   └── superpowers-orchestrator:writing-plans [terminal handoff]
 │

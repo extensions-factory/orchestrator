@@ -24,7 +24,12 @@ WORKTREE SETUP
 │   ├── no  → work in current checkout
 │   └── yes → continue
 │
-├── ◆ D12 create isolated workspace
+├── Step 0.5 — ○ Resume lookup
+│   ├── git worktree list + git branch --list
+│   ├── classify merged/unmerged and design-doc present/absent
+│   └── reuse; prune-then-recreate; ask when ambiguous; or create fresh
+│
+├── ◆ D12 resolve isolated workspace (reuse or create)
 │   ├── role: devops_engineer
 │   ├── task_type: workspace_setup
 │   └── require and verify returned worktree path

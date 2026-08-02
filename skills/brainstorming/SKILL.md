@@ -21,22 +21,22 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, recent commits, then collect graph context inline and best-effort before normal file exploration:
+1. **Explore project context and confirm scope** — check files, docs, recent commits, then collect graph context inline and best-effort before normal file exploration:
    - Resolve the graph path read-only: use `.ua/knowledge-graph.json` when present; otherwise use `.understand-anything/knowledge-graph.json` only when `.understand-anything/` exists. If neither graph exists, note `Knowledge graph missing or stale; continuing with file exploration.` and continue.
    - Compare `project.gitCommitHash` with `git log -1 --format=%H -- .`. If the graph is malformed, `git log` fails, or the hashes differ, note `Knowledge graph missing or stale; continuing with file exploration.` and continue.
    - When the graph is fresh, `grep_search` the graph for the feature keywords and seed context from matching node names, summaries, and edge targets. If there are no matches, continue normal file exploration without error.
    - Never call `/understand`, dispatch a worker, write the graph, or block normal file exploration from this collect step.
+   - Assess scope — if the request describes multiple independent subsystems, decompose into sub-projects and restart this checklist for the first sub-project once it is scoped to one appropriately-sized feature; otherwise continue to item 2.
 2. **Create isolated workspace** — after the scope check confirms one appropriately-sized feature and before asking any clarifying question:
    - Kebab-slugify approximately five words from the user's initial request and use the branch name `feature/<slug>`.
-   - Invoke `superpowers-orchestrator:using-git-worktrees` with `<slug>` and continue in the workspace state it reports: created, reused, or working in place after declined consent or sandbox fallback.
+   - Invoke `superpowers-orchestrator:using-git-worktrees` with `<slug>` and continue in the workspace state it reports: created, reused, or working in place after declined consent or sandbox fallback; remember the reported workspace path for a possible rename in item 7.
    - If the request requires decomposition, create no workspace for the umbrella request. Start this step separately when brainstorming begins for each sub-project.
-   - Before writing the design document, compare the settled feature name with `<slug>`. If it changed materially, check for a destination collision first with `git branch --list "feature/<new-slug>"`; if none, rename the branch with `git branch -m feature/<old-slug> feature/<new-slug>` and run `git worktree move "$old_path" "$new_path"` to relocate the worktree directory in place; ignore cosmetic or minor wording drift. Surface any unrelated branch collision and do not overwrite it.
 3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 4. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 5. **Propose 2-3 approaches** — with trade-offs and your recommendation
 6. **Present design** — in sections scaled to their complexity, get user approval after each section
 <!-- riso-tech:orchestrator-split START -->
-7. **Write design doc** — save to `docs/superpowers/features/<feature-slug>/design.md` following `skills/brainstorming/templates/spec-template.md`, generate `design.html` from `templates/document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
+7. **Write design doc** — before writing, compare the settled feature name with the slug used in item 2. If it changed materially, check for a destination collision with `git branch --list "feature/<new-slug>"`, then rename the branch with `git branch -m feature/<old-slug> feature/<new-slug>`; if the workspace was created via a native worktree tool, use that tool's own rename/move capability (or ask the human if it has none) and never use raw `git worktree move`; if created via the git fallback, run `git worktree move "<the-remembered-workspace-path>" "<new-path>"` and `cd` into the new path before continuing; ignore cosmetic or minor wording drift; surface any unrelated branch collision and do not overwrite it. Save to `docs/superpowers/features/<feature-slug>/design.md` following `skills/brainstorming/templates/spec-template.md`, generate `design.html` from `templates/document-companion-template.html`, add the feature to the product roadmap (see Documentation), and commit all
 <!-- riso-tech:orchestrator-split END -->
 8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 9. **User reviews written spec** — ask user to review the spec file before proceeding

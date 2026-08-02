@@ -69,6 +69,6 @@ After all tasks complete and verified:
 <!-- riso-tech:orchestrator-split END -->
 
 **Required workflow skills:**
-- **superpowers-orchestrator:using-git-worktrees** - Verifies and continues the isolated workspace created during brainstorming; its existing-isolation check prevents duplicate creation
+- **superpowers-orchestrator:using-git-worktrees** - Ensures the isolated workspace: verifies the current one, resumes the brainstorming-created one, or creates it when none exists; Step 0/0.5 prevent duplicate creation.
 - **superpowers-orchestrator:writing-plans** - Creates the plan this skill executes
 - **superpowers-orchestrator:finishing-a-development-branch** - Complete development after all tasks
