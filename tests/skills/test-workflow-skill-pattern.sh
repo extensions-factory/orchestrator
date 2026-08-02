@@ -334,5 +334,21 @@ awk '{ print; if ($0 == "## Mandatory One") print "## Conditional One" }' \
 mv "$STALE_SCOPED/skill.tmp" "$STALE_SCOPED/skills/demo/SKILL.md"
 expect_violation "$STALE_SCOPED" 'skills/demo: rule4 conditional-1'
 
+check_pointer_section() {
+  local skill_file="$1" expected actual
+  expected='See `skills/writing-skills/workflow-skill-pattern.md` for the canonical block structure all workflow skills must follow.'
+  actual="$(awk '
+    /^## SKILL.md Structure$/ { inside=1; next }
+    inside && /^## / { exit }
+    inside && NF { print }
+  ' "$skill_file")"
+  [ "$actual" = "$expected" ] || {
+    echo '[FAIL] ## SKILL.md Structure must contain only the canonical pointer'
+    fail=1
+  }
+}
+
+check_pointer_section "$ROOT/skills/writing-skills/SKILL.md"
+
 [ "$fail" -eq 0 ] && echo 'PASS test-workflow-skill-pattern'
 exit "$fail"
