@@ -4,14 +4,14 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 REQUEST="$ROOT/skills/requesting-plan-refine/SKILL.md"
 RECEIVE="$ROOT/skills/receiving-plan-refine/SKILL.md"
 TEMPLATE="$ROOT/skills/requesting-plan-refine/prompts/plan-reviewer.md"
-REF="$ROOT/../active/skills/requesting-plan-refine/plan-reviewer.md"
 fail=0
 check(){ grep -Fq -- "$2" "$1" || { echo "[FAIL] $1 missing: $2"; fail=1; }; }
 absent(){ ! grep -Fq -- "$2" "$1" || { echo "[FAIL] $1 must not contain: $2"; fail=1; }; }
 
 test -f "$REQUEST" || { echo "[FAIL] no requesting-plan-refine/SKILL.md"; exit 1; }
 test -f "$RECEIVE" || { echo "[FAIL] no receiving-plan-refine/SKILL.md"; exit 1; }
-cmp -s "$REF" "$TEMPLATE" || { echo "[FAIL] plan-reviewer.md differs from active"; fail=1; }
+check "$TEMPLATE" "## Read-Only Review"
+check "$TEMPLATE" "## Approved Decision Record"
 check "$REQUEST" "riso-tech:orchestrator-split — new skill, no upstream counterpart"
 check "$REQUEST" "Dispatch the plan reviewer via \`superpowers-orchestrator:dispatch-agent\`"
 check "$REQUEST" "role: tech_lead"

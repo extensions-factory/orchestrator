@@ -17,15 +17,40 @@ Subagent (general-purpose):
     ## Plan to Review
 
     Read: {PLAN_FILE}
+    Dispatched content hash: {PLAN_HASH}
 
     ## Spec / Requirements
 
     {SPEC_FILE}
+    Dispatched content hash: {SPEC_HASH}
+
+    ## Current Workspace
+
+    - Root: {WORKSPACE_ROOT}
+    - Type: {WORKSPACE_TYPE}
+    - Target: {WORKSPACE_TARGET}
+
+    The plan and any spec must resolve inside this workspace root. Otherwise,
+    return only `stale_input` and write no findings.
+
+    Read main:docs/superpower/manifest.json before acting and select the entry
+    matching this workspace. If it does not match exactly one entry, or its
+    writing_plans object differs from the snapshot below, return only
+    `stale_input` and write no findings.
+
+    ## Approved Decision Record
+
+    {APPROVED_DECISION_RECORD}
+
+    Treat this record as approved. Review the plan against its scope,
+    exclusions, ordering, files, interfaces, tests, and verification. Do not
+    redefine these values while describing a fix.
 
     ## Read-Only Review
 
-    Do not edit the plan, the spec, or any other file. Do not run
-    implementation code. This is a read-only review of a document.
+    Do not edit the plan, the spec, the manifest, or any other file except
+    {FINDINGS_FILE}. Do not run implementation code. This is a read-only
+    review of documents and the approved decision record.
 
     ## What to Check
 
@@ -33,11 +58,23 @@ Subagent (general-purpose):
     - Does every requirement in the spec map to at least one task in the plan?
     - List any spec requirement with no corresponding task.
 
+    **Approved-decision alignment:**
+    - Compare every decision field with the plan. Report additions, omissions,
+      reorderings, renamed files/interfaces, changed test obligations, and
+      weakened verification.
+    - A plan that differs from an approved value is a `decision_deviation`.
+      Recommend `align_plan`; do not rewrite the approved decision.
+    - An improvement that would require changing an approved value is a
+      `decision_change_proposal`. Recommend `human_decision_required`; do not
+      present it as an ordinary plan correction.
+
     **Placeholders and ambiguity:**
     - Any "TBD", "TODO", "implement later", "handle edge cases", "add
       appropriate error handling", or similar non-instructions?
-    - Any step that describes what to do without showing how (missing code
-      in a code step)?
+    - Any implementation or test source code? Plans must specify behavior,
+      interfaces, test cases, commands, and expected results without source.
+    - Any step that lacks exact targets, rules, inputs, assertions, commands,
+      or observable expected output?
     - Any requirement that could reasonably be read two different ways?
 
     **Cross-task consistency:**
@@ -85,7 +122,18 @@ Subagent (general-purpose):
     [Style, small naming inconsistencies]
 
     For each finding: which task/US it's in, what's wrong, why it matters,
-    and a concrete suggestion if the fix isn't obvious.
+    and a concrete suggestion if the fix isn't obvious. Include these fields:
+
+    - Type: `plan_defect` | `decision_deviation` |
+      `decision_change_proposal`
+    - Decision field(s): exact names, or `none`
+    - approved value: exact manifest value, or `not applicable`
+    - observed plan value: exact conflicting/missing value, or `not applicable`
+    - Route: `plan_fix` | `align_plan` | `human_decision_required`
+
+    A `decision_deviation` must use `align_plan`. A
+    `decision_change_proposal` must use `human_decision_required`. Never merge
+    the proposal into another finding to make it look pre-approved.
 
     ## Your Response
 
@@ -97,4 +145,8 @@ Subagent (general-purpose):
 **Placeholders:**
 - `{PLAN_FILE}` - path to the plan being reviewed
 - `{SPEC_FILE}` - path to the spec, or a note that none exists
+- `{WORKSPACE_ROOT}` - current workspace root containing the plan and spec
+- `{WORKSPACE_TYPE}` and `{WORKSPACE_TARGET}` - selected manifest session key
+- `{APPROVED_DECISION_RECORD}` - exact approved `writing_plans` object
+- `{PLAN_HASH}` and `{SPEC_HASH}` - dispatched artifact content hashes
 - `{FINDINGS_FILE}` - path the subagent should write findings to
