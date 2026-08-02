@@ -147,6 +147,7 @@ The normative document. Contains:
 - The `## Pattern Omissions` README section format specification.
 - The six validator rules.
 - The exclusion list fenced between `<!-- exclude:start -->` and `<!-- exclude:end -->`.
+- **Block 10 (`token-cost-monitoring`) content expectation:** when present, the section must be an append-only record — one line written per dispatch or model-invocation event to the run's JSONL file. No analysis, no per-source coverage percentages, no completeness assertions.
 
 The awk extractor targets the pipe-delimited table inside the `blocks` fence. Each data row yields: `id`, `validator_marker`, `tier` (Mandatory / Conditional), and `omit_when`.
 
@@ -196,6 +197,8 @@ The 12-block table is the canonical data model. Columns:
 **Conditional** = may be omitted with a README reason.
 The ids are the join key between pattern doc, `SKILL.md`, and `README.md`.
 The table sits between `<!-- blocks:start -->` and `<!-- blocks:end -->` fences so the doc can carry other tables without confusing the parser.
+
+When block 10 (`token-cost-monitoring`) is present, its content expectation under this pattern is minimized: the section must be a plain append-only record, writing one line per dispatch or model-invocation event to the run's JSONL file. No analysis or reporting belongs here. This is an explicit contrast with `skills/brainstorming/SKILL.md`'s current elaborate `## Token-cost monitoring` section, which tracks per-source (worker and orchestrator) records, computes coverage percentages, and carries "never label a partial subtotal complete" language — that style is specific to brainstorming and is not carried into this pattern.
 
 **README omission format (verbatim):**
 

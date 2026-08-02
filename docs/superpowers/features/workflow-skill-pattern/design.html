@@ -222,7 +222,16 @@ skills/&lt;each&gt;/README.md            EDIT (sub-project B) — ## Pattern Omi
 
 <h3>Components &amp; Interfaces</h3>
 
-<p><strong><code>skills/writing-skills/workflow-skill-pattern.md</code></strong> — The normative document. Contains: the three-fidelity ladder introduction; the 12-block table fenced between <code>&lt;!-- blocks:start --&gt;</code> / <code>&lt;!-- blocks:end --&gt;</code>; per-block prose elaboration; the <code>## Pattern Omissions</code> README format; the six validator rules; the exclusion list fenced between <code>&lt;!-- exclude:start --&gt;</code> / <code>&lt;!-- exclude:end --&gt;</code>.</p>
+<p><strong><code>skills/writing-skills/workflow-skill-pattern.md</code></strong> — The normative document. Contains:</p>
+<ul>
+  <li>The three-fidelity ladder introduction.</li>
+  <li>The 12-block table fenced between <code>&lt;!-- blocks:start --&gt;</code> / <code>&lt;!-- blocks:end --&gt;</code>.</li>
+  <li>Per-block prose elaboration of intent and content expectations.</li>
+  <li>The <code>## Pattern Omissions</code> README section format specification.</li>
+  <li>The six validator rules.</li>
+  <li>The exclusion list fenced between <code>&lt;!-- exclude:start --&gt;</code> / <code>&lt;!-- exclude:end --&gt;</code>.</li>
+  <li><strong>Block 10 (<code>token-cost-monitoring</code>) content expectation:</strong> when present, the section must be an append-only record — one line written per dispatch or model-invocation event to the run's JSONL file. No analysis, no per-source coverage percentages, no completeness assertions.</li>
+</ul>
 
 <p><strong><code>tests/skills/test-workflow-skill-pattern.sh</code></strong> — Bash script. Parses the block table (awk), asserts ≥12 rows (rule 6), reads the exclusion list, applies all six rules to each in-scope skill, runs the self-check fixture, emits one violation line per failure, exits non-zero on any violation.</p>
 
@@ -256,6 +265,8 @@ skills/&lt;each&gt;/README.md            EDIT (sub-project B) — ## Pattern Omi
 <strong>Conditional</strong> = may be omitted with a README reason.<br>
 The ids are the join key between pattern doc, SKILL.md, and README.md.<br>
 The table sits between <code>&lt;!-- blocks:start --&gt;</code> and <code>&lt;!-- blocks:end --&gt;</code> fences.</p>
+
+<p>When block 10 (<code>token-cost-monitoring</code>) is present, its content expectation under this pattern is minimized: the section must be a plain append-only record, writing one line per dispatch or model-invocation event to the run's JSONL file. No analysis or reporting belongs here. This is an explicit contrast with <code>skills/brainstorming/SKILL.md</code>'s current elaborate <code>## Token-cost monitoring</code> section, which tracks per-source (worker and orchestrator) records, computes coverage percentages, and carries "never label a partial subtotal complete" language — that style is specific to brainstorming and is not carried into this pattern.</p>
 
 <h3>README Omission Format</h3>
 
