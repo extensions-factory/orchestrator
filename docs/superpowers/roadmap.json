@@ -77,11 +77,11 @@
     "feature": "Branch-per-feature SDLC",
     "title": "Branch/worktree created at brainstorming start",
     "description": "Create an isolated feature branch and worktree after context exploration and the scope check so the spec, plan, and implementation land on one branch.",
-    "status": "open",
+    "status": "released",
     "spec": "features/worktree-at-brainstorming/design.md",
     "plan": null,
     "created": "2026-08-01",
-    "completed": null
+    "completed": "2026-08-02"
   },
   {
     "slug": "worktree-at-brainstorming--resume-in-progress-feature-branch",
@@ -89,10 +89,10 @@
     "feature": "Branch-per-feature SDLC",
     "title": "Resume an in-progress feature branch in a fresh session",
     "description": "Reuse an existing unmerged feature branch and worktree that matches the slug instead of creating a duplicate in a fresh session.",
-    "status": "open",
+    "status": "released",
     "spec": "features/worktree-at-brainstorming/design.md",
     "plan": null,
     "created": "2026-08-01",
-    "completed": null
+    "completed": "2026-08-02"
   }
 ]
