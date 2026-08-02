@@ -16,7 +16,19 @@ Execute plan by dispatching a fresh implementer subagent per task, a task review
 **Narration:** between tool calls, narrate at most one short line — the
 ledger and the tool results carry the record.
 
-**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
+**Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, a decision-change proposal awaiting its owning human gate, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
+
+## Approved Execution Boundary
+
+The token-cost boundary starts when this skill is announced. Capture the exact cumulative orchestrator counter scope and baseline when the harness exposes them.
+
+**Read `main:docs/superpower/manifest.json` and select the session entry matching the current workspace** by `workspace.type` and `workspace.target`; require exactly one session entry and preserve every other session entry. Require `writing_plans.workflow_id` plus approved `scope`, `exclusions`, `ordering`, `files`, `interfaces`, `tests`, and `verification`. For feature work also require `brainstorming.scope`, `brainstorming.exclusions`, and `brainstorming.acceptance_criteria`.
+
+Use `writing_plans.workflow_id` as the active run. Accept only the exact plan path and content hash handed off by Writing Plans or Receiving Plan Refine, resolve it inside the current worktree, and verify the plan matches the approved records. Capture the exact approved decision snapshot, workspace key, plan path/hash, and optional design path/hash. Ambient run IDs and another session's artifacts never override them.
+
+Every D13–D18 request includes `DECISION_RECORD=main:docs/superpower/manifest.json`, the workspace key, workflow ID, exact approved decision snapshot, exact plan path and content hash, task brief/report/review paths, and this instruction: “Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.” Before editing or reviewing, the worker compares the selected record and plan hash with the request; a mismatch returns a blocked response with reason `stale_input` without acting.
+
+Before every dispatch and after every worker response, reread the selected main-manifest entry and rehash the plan. Stale input blocks Git bookkeeping, review, and the next task.
 
 ## When to Use
 
@@ -94,15 +106,15 @@ digraph process {
 ```
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D13` runs for every plan task in sequence: call `superpowers-orchestrator:dispatch-agent` with `role: software_engineer` and the plan task's task_type, paste `prompts/implementer-prompt.md` into the prompt body, and provide the task brief, global constraints, required prior-task interfaces, and report path so the worker can implement and test that task; after a successful response, the orchestrator performs Git bookkeeping inline, generates the task review package from the recorded pre-task SHA through the new commit, and sends the task to `D14`, repeating D13–D16 for every plan task before `D17`.
+**Dispatch:** `D13` runs for every plan task in sequence: call `superpowers-orchestrator:dispatch-agent` with `role: software_engineer` and the plan task's task_type, paste `prompts/implementer-prompt.md` into the prompt body, and provide the approved execution boundary, task brief, global constraints, required prior-task interfaces, and report path so the worker can implement and test that task; after a successful current-snapshot response, the orchestrator performs Git bookkeeping inline, generates the task review package from the recorded pre-task SHA through the new commit, and sends the same boundary and task artifacts to `D14`, repeating D13–D16 for every plan task before `D17`.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D16` runs when `D14` or conditional `D15` reports Critical/Important findings: call `superpowers-orchestrator:dispatch-agent` once with `role: software_engineer`, the plan task's task_type, `skill: superpowers-worker:receiving-code-review`, the original task brief/report, the complete actionable findings, and the covering test commands; the worker fixes the task and reruns and records those tests, then after a successful response the orchestrator performs Git bookkeeping inline, regenerates the task review package, and re-dispatches `D14` for re-review, repeating D16→D14 until clean.
+**Dispatch:** `D16` runs when `D14` or conditional `D15` reports Critical/Important findings that are implementation defects: call `superpowers-orchestrator:dispatch-agent` once with `role: software_engineer`, the plan task's task_type, `skill: superpowers-worker:receiving-code-review`, the approved execution boundary, original task brief/report, complete actionable findings, and covering test commands; never send a decision-change proposal to D16. The worker fixes the task and reruns and records those tests, then after a successful current-snapshot response the orchestrator performs Git bookkeeping inline, regenerates the task review package, and re-dispatches `D14` with the same boundary for re-review, repeating D16→D14 until clean.
 <!-- riso-tech:orchestrator-split END -->
 
 <!-- riso-tech:orchestrator-split START -->
-**Dispatch:** `D18` runs only when final review `D17` returns findings: send the complete findings list in one fix wave through `superpowers-orchestrator:dispatch-agent` with `role: software_engineer`, `task_type: implementation_coding`, and `skill: superpowers-worker:receiving-code-review`; require the worker to fix the whole-branch issues and report covering/full test results, then after a successful response the orchestrator performs Git bookkeeping inline, regenerates the whole-branch review package, and re-dispatches `D17`; repeat one wave at a time until the final whole-branch review is clean.
+**Dispatch:** `D18` runs only when final review `D17` returns implementation findings: send the complete findings list in one fix wave through `superpowers-orchestrator:dispatch-agent` with `role: software_engineer`, `task_type: implementation_coding`, `skill: superpowers-worker:receiving-code-review`, and the approved execution boundary; never include a decision-change proposal. Require the worker to fix the whole-branch issues and report covering/full test results, then after a successful current-snapshot response the orchestrator performs Git bookkeeping inline, regenerates the whole-branch review package, and re-dispatches `D17` with the same boundary; repeat one wave at a time until the final whole-branch review is clean.
 <!-- riso-tech:orchestrator-split END -->
 
 ## Pre-Flight Plan Review
@@ -118,6 +130,14 @@ each finding beside the plan text that mandates it, asking which governs —
 before execution begins, not one interrupt per discovery mid-plan. If the
 scan is clean, proceed without comment. The review loop remains the net for
 conflicts that only emerge from implementation.
+
+## Decision Changes Stop Execution
+
+Judge a proposed edit by its actual effect, not the worker/reviewer label. If it would change `brainstorming.scope`, `brainstorming.exclusions`, `brainstorming.acceptance_criteria`, or any approved Writing Plans field, record a `decision_change_proposal` with affected fields, exact current values, proposed values, evidence, and originating task/finding.
+
+For a decision proposal, D13/D16/D18 do not edit code, the plan, or the manifest; D14/D15/D17 remain read-only. Stop the task and route product scope, exclusions, or acceptance changes to the Brainstorming Human Gate. Route ordering, files, interfaces, tests, verification, or other build-only changes to Writing Plans' Final build decision gate. When both are affected, Brainstorming resolves first and Writing Plans regenerates afterward.
+
+Human rejection resumes against the unchanged snapshot. Human approval is not permission to patch inline: the owning gate updates the selected main-manifest entry and regenerates/reapproves every affected design and plan artifact. Then capture new hashes and revalidate every completed task against the new decisions and plan, starting again at the earliest affected task. Refine/execute continuity never makes a changed decision retroactive.
 
 ## Model Selection
 
@@ -276,15 +296,33 @@ same run-scoped task directory.
 
 ## Durable Progress
 
-Conversation memory does not survive compaction. Use the active run's
-`manifest.json` as the single progress source.
+Conversation memory does not survive compaction. Append task checkpoints to `.superpowers/runs/<workflow-id>/subagent-driven-development-progress.jsonl` with task ID, status, decision/plan hashes, pre/post commit SHAs, report/review paths, verdicts, and detail.
 
-- At skill start, read `.superpowers/runs/<workflow-id>/manifest.json`. Tasks
-  marked `done` are DONE; resume at the first task not complete.
-- Before dispatch and after a clean review, update status with
-  `node scripts/run-paths.mjs task-status --root <repo-root> --run <workflow-id> --task <task> --status <active|done|blocked> --detail "<evidence>"`.
-- The manifest is the recovery map: trust it and `git log` after compaction.
-- `git clean -fdx` destroys ignored run evidence; recover from Git history.
+Git history and the current worktree are authoritative. On start/resume, derive tasks from the current approved plan and accept a `done` checkpoint only when its workflow/hashes match, its commit is reachable from `HEAD`, its report/review evidence belongs to the same run, and D14 plus any D15 verdicts are clean. On disagreement, resume at the earliest unverified task; never trust or create another `manifest.json`. If approved decisions or plan hashes changed, revalidate every completed task before dispatching new work. `git clean -fdx` may remove ignored evidence, so reconstruct checkpoints from Git and rerun missing reviews.
+
+## Token-cost Monitoring
+
+Use `.superpowers/runs/<workflow-id>/subagent-driven-development-token-cost.jsonl` for SDD-owned work. After every provider call for D13, D16, and D18, append and validate one worker record, retaining retries, revisions, fallbacks, blocked results, and resumed calls:
+
+```json
+{"source":"worker","task":"D13","plan_task":"task-1","turn":1,"attempt":1,"agent":"codex","model":"<exact-model>","input_tokens":123,"output_tokens":45,"unavailable_reason":null}
+```
+
+Within each dispatch number and plan task, `turn` identifies one request envelope/decision-plan snapshot; revisions use the next turn. `attempt` increments for every provider retry or fallback on that envelope and continues after resume.
+
+After each harness-reported SDD main-orchestrator invocation becomes observable, append and validate one orchestrator record before the next SDD action:
+
+```json
+{"source":"orchestrator","task":"orchestrator","turn":1,"attempt":1,"agent":"claude","model":"<exact-model>","input_tokens":456,"output_tokens":78,"unavailable_reason":null}
+```
+
+Copy exact per-invocation metadata. Use monotonic cumulative-counter deltas only; after a reset, record affected counts as `null` with the reason and retain the new baseline. Otherwise keep unavailable fields `null` with a reason. **Do not estimate missing token counts** or treat them as zero. Ordinary tools get no separate record.
+
+Do not copy nested Requesting Code Review usage for D14, D15, or D17 into this file; that skill owns those worker and orchestrator invocations. Resume SDD metering when control returns. Before the finishing handoff, append its orchestrator record with both counts `null` and reason `usage becomes visible only after this turn completes`. Report worker, orchestrator, and combined measured totals, unavailable reasons, full-record coverage as measured records / total records, and independent input/output field coverage. Never call a partial subtotal complete.
+
+## Final Handoff
+
+Before finishing, reread the selected main-manifest entry, rehash the plan/design, and require every task checkpoint and the clean D17 result to match the current approved snapshot. Invoke `superpowers-orchestrator:finishing-a-development-branch` exactly once with the workspace key, workflow ID, decision-record path and snapshot, plan/design paths and hashes, progress file, final review evidence, and token-cost report. Any mismatch returns to the owning gate instead of finishing.
 
 ## Prompt Templates
 

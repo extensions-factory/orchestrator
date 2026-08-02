@@ -15,6 +15,21 @@ Subagent (general-purpose):
     Read your task brief first: [BRIEF_FILE]
     It contains the full task text from the plan.
 
+    ## Approved Execution Boundary
+
+    - Decision record: [DECISION_RECORD]
+    - Workspace: [WORKSPACE_TYPE]:[WORKSPACE_TARGET]
+    - Workflow: [WORKFLOW_ID]
+    - Approved decision snapshot: [DECISION_SNAPSHOT]
+    - Plan: [PLAN_FILE]
+    - Plan content hash: [PLAN_HASH]
+
+    Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.
+    Compare that entry and the current plan hash with this request. If either
+    differs, return `Status: BLOCKED` with reason `stale_input` without editing any file. The brief is this
+    task's scope; the plan path is provenance, not permission to implement
+    another task.
+
     ## Context
 
     [Scene-setting: where this fits, dependencies, architectural context]
@@ -73,6 +88,13 @@ Subagent (general-purpose):
     - You feel uncertain about whether your approach is correct
     - The task involves restructuring existing code in ways the plan didn't anticipate
     - You've been reading file after file trying to understand the system without progress
+
+    A discovery that would change approved scope, exclusions, acceptance
+    criteria, ordering, files, interfaces, tests, or verification is a
+    `decision_change_proposal`, not an implementation choice. Do not edit
+    code, the plan, or the manifest for it. Report the affected fields, exact
+    approved values, proposed values, and evidence so the controller can
+    route it to the owning human gate.
 
     **How to escalate:** Report back with status BLOCKED or NEEDS_CONTEXT. Describe
     specifically what you're stuck on, what you've tried, and what kind of help you need.
@@ -139,3 +161,8 @@ Subagent (general-purpose):
     Use BLOCKED if you cannot complete the task. Use NEEDS_CONTEXT if you need
     information that wasn't provided. Never silently produce work you're unsure about.
 ```
+
+**Boundary placeholders:** `[DECISION_RECORD]`, `[WORKSPACE_TYPE]`,
+`[WORKSPACE_TARGET]`, `[WORKFLOW_ID]`, `[DECISION_SNAPSHOT]`, `[PLAN_FILE]`,
+and `[PLAN_HASH]` come unchanged from the orchestrator's approved execution
+boundary.
