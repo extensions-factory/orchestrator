@@ -18,17 +18,17 @@ BRAINSTORMING
 │   └── fresh graph → collect matching nodes and edges
 │       missing/stale/no matches → continue with normal exploration
 │
+├── ○ Create isolated workspace
+│   ├── kebab-slugify the feature and use `feature/<slug>`
+│   ├── invoke superpowers-orchestrator:using-git-worktrees
+│   └── defer workspace creation until each decomposed sub-project begins
+│
 ├── ○ Understand the idea
 │   ├── detect oversized scope and decompose when necessary
 │   ├── ask one question at a time
 │   └── optionally offer the visual companion just in time
 │       ├── visual question → browser companion
 │       └── textual question → normal conversation
-│
-├── ○ Create isolated workspace
-│   ├── kebab-slugify the feature and use `feature/<slug>`
-│   ├── invoke superpowers-orchestrator:using-git-worktrees
-│   └── defer workspace creation until each decomposed sub-project begins
 │
 ├── ○ Present two or three approaches
 │   └── lead with the recommended approach and trade-offs
