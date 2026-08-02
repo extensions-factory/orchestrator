@@ -1,9 +1,36 @@
 # Receiving Plan Refine
 
+## Description
+
+Evaluates independent plan-review findings, applies only approval-preserving corrections, and prevents proposed build-decision changes from bypassing their human gate.
+
+## Inputs
+
+- The current workspace and its exactly matching session in the single `main:docs/superpower/manifest.json`.
+- The complete approved `writing_plans` record and workflow ID.
+- Exact current-workspace plan/spec paths and hashes plus the unique findings path handed off by Requesting Plan Refine; author/reviewer provenance comes from the active run ledger.
+- Exact per-invocation or comparable cumulative token metadata exposed by the harness/provider.
+
+## Durable Output
+
+Each review turn keeps its immutable `findings-<turn>.md` and writes a matching `resolution-<turn>.md` with write-ahead finding dispositions, plan/HTML hashes, regeneration state, and one stable handoff ID. Approval-preserving corrections update the tracked `plan.md` and synchronized `plan.html`. Receiving-only orchestrator usage is stored separately.
+
+## Token-cost Monitoring
+
+`.superpowers/runs/<workflow-id>/receiving-plan-refine-token-cost.jsonl` records every receiving-phase orchestrator invocation with exact-or-null counts. D11 worker and Requesting Plan Refine costs remain in their owning phase. Reports show measured totals and separate full-record, input-field, and output-field coverage.
+
+## Human Decisions
+
+Receiving never changes the approved scope, exclusions, ordering, files, interfaces, tests, verification, or manifest. Any proposed edit whose actual effect would change an approved value is recorded as `human_decision_required` and routed to Writing Plans' Final build decision gate. Refine and Execute remain blocked until that gate resolves it.
+
+## Handoff
+
+After rereading the selected session and revalidating current artifacts, Receiving sends exactly one route: Writing Plans for a decision proposal, Requesting Plan Refine for another review, or the capability-selected execution workflow. The handoff carries workspace, workflow, decision, artifact, findings/resolution, provenance, and receiving token-cost context.
+
 ## Legend
 
-- `○` — orchestrator validation performed inline
-- `◇` — human workflow choice
+- `○` — inline orchestrator validation or correction
+- `◇` — human workflow choice or decision gate
 - `↻` — request another independent refine pass
 
 ## Lifecycle Tree
@@ -11,37 +38,33 @@
 ```text
 RECEIVE PLAN-REFINE FINDINGS
 │
-├── ○ Read findings.md from requesting-plan-refine
+├── ○ Start token boundary and select current manifest session
+│   └── require exact writing_plans snapshot + handed-off paths/hashes
 │
-├── ○ Evaluate every finding independently
-│   ├── restate the claim
-│   ├── verify against plan
-│   ├── verify against specification when present
-│   ├── verify against codebase evidence
-│   ├── valid finding   → edit plan
-│   └── invalid finding → decline with technical reason
+├── ○ Validate decision and artifact freshness before reading findings
+│   ├── decision stale → Writing Plans decision gate
+│   └── artifact stale → Requesting Plan Refine ↻
 │
-├── ○ Regenerate the plan HTML companion
+├── ○ Evaluate each finding by its actual decision effect
+│   ├── plan_defect preserving approval → apply plan_fix
+│   ├── decision_deviation → align_plan to approved value
+│   ├── invalid → decline with evidence
+│   └── decision change → human_decision_required
 │
-├── ○ Report fixed and declined counts with reasons
+├── ○ Write unique resolution-<turn>.md
+│   ├── checkpoint each edit before and after mutation
+│   └── regenerate, hash, and validate plan.html when plan.md changed
 │
-├── use-tool
-│   ├── plan/spec/codebase file inspection
-│   ├── plan HTML regeneration from writing-plans conventions
-│   ├── superpowers-orchestrator:requesting-plan-refine [loop]
-│   └── selected execution skill [terminal handoff]
+├── ◇ Any human_decision_required item?
+│   ├── yes → Writing Plans' Final build decision gate
+│   └── no  → human chooses Refine or Execute
 │
-├── use-file
-│   ├── read: 30-plan/plan-refine/findings.md
-│   ├── read: design.md and relevant codebase evidence
-│   └── update: plan.md + plan.html
+├── ○ Report receiving orchestrator token usage and coverage
 │
-└── ◇ Human chooses next action
-    ├── Refine
-    │   └── invoke requesting-plan-refine ↻
-    └── Execute
-        ├── subagent-capable harness → subagent-driven-development
-        └── no subagent capability  → executing-plans
+└── exactly one current handoff with stable idempotency key
+    ├── Refine → requesting-plan-refine ↻
+    ├── Execute + subagents → subagent-driven-development
+    └── Execute without subagent capability → executing-plans
 ```
 
 ## File Lifecycle Tree
@@ -50,18 +73,21 @@ RECEIVE PLAN-REFINE FINDINGS
 PLAN-REFINE RECEIVER FILES
 │
 ├── Skill package [tracked]
-│   ├── skills/receiving-plan-refine/SKILL.md
-│   └── skills/receiving-plan-refine/README.md
+│   └── skills/receiving-plan-refine/{SKILL.md,README.md}
 │
-├── Review evidence [ignored, read]
+├── Authoritative inputs [read-only]
+│   ├── main:docs/superpower/manifest.json
+│   │   └── sessions[current workspace].writing_plans
+│   └── .superpowers/runs/<workflow-id>/30-plan/plan-refine/
+│       └── findings-<turn>.md
+│
+├── Receiving evidence [ignored]
 │   └── .superpowers/runs/<workflow-id>/
-│       └── 30-plan/plan-refine/
-│           └── findings.md
+│       ├── receiving-plan-refine-token-cost.jsonl
+│       └── 30-plan/plan-refine/resolution-<turn>.md
 │
-└── Plan artifacts [tracked, updated]
+└── Corrected artifacts [tracked]
     └── docs/superpowers/features/<feature-slug>/
         ├── plan.md
         └── plan.html
 ```
-
-The findings evaluation is never dispatched; it is the orchestrator's validation gate.
