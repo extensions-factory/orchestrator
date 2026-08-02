@@ -207,6 +207,27 @@ if [ "${1:-}" = '--validate' ]; then
   exit $?
 fi
 
+self_check_rule6() {
+  local pattern_doc="$1" fixture_root="$2" temp_dir="$3"
+  local stripped="$temp_dir/stripped-workflow-skill-pattern.md" output
+
+  awk '
+    /<!-- blocks:start -->/ { print; inside=1; next }
+    /<!-- blocks:end -->/ { inside=0; print; next }
+    !inside { print }
+  ' "$pattern_doc" > "$stripped"
+
+  if output="$(validate_tree "$stripped" "$fixture_root" 2>&1)"; then
+    echo '[FAIL] rule6 accepted a stripped block table'
+    return 1
+  fi
+
+  printf '%s\n' "$output" | grep -Fxq -- 'skills/writing-skills: rule6 block-table' || {
+    echo '[FAIL] rule6 did not emit the loud block-table failure'
+    return 1
+  }
+}
+
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 FIXTURE_PATTERN="$TMP/workflow-skill-pattern.md"
@@ -279,6 +300,8 @@ elif [ -n "$output" ]; then
   echo "[FAIL] valid fixture emitted output: $output"
   fail=1
 fi
+
+self_check_rule6 "$PATTERN" "$GOOD" "$TMP" || fail=1
 
 RULE1="$TMP/rule1"
 make_case "$RULE1"
