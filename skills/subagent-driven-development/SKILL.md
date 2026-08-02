@@ -433,7 +433,7 @@ Done!
 ## Integration
 
 **Required workflow skills:**
-- **superpowers-orchestrator:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
+- **superpowers-orchestrator:using-git-worktrees** - Verifies and continues the isolated workspace created during brainstorming; its existing-isolation check prevents duplicate creation
 - **superpowers-orchestrator:writing-plans** - Creates the plan this skill executes
 - **superpowers-orchestrator:requesting-code-review** - Code review template for the final whole-branch review
 - **superpowers-orchestrator:finishing-a-development-branch** - Complete development after all tasks
