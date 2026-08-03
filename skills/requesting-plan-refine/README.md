@@ -119,3 +119,31 @@ PLAN REVIEW FILES
                 ├── review.md
                 └── response.json
 ```
+
+## Pattern Omissions
+
+- `anti-pattern` — baseline testing surfaced no dominant rationalization; no existing skill text can supply one without new content.
+
+## Pattern Migration Notes
+
+- `hard-gate` — DERIVED from `## Next Step`, no new requirements.
+- `checklist` — DERIVED from the intro paragraphs, `## How to Request`, `## Token-cost monitoring`, and `## Next Step`, no new requirements.
+- `process-flow` — DERIVED from the intro paragraphs and `## How to Request`, no new requirements.
+- `the-process` — DERIVED from the intro paragraphs and `## How to Request`, no new requirements.
+- `after-artifact` — DERIVED from `## Next Step`, no new requirements.
+- `token-cost-monitoring` — RETAINED, heading normalized to Title Case; body unchanged.
+- `key-principles` — DERIVED from the core principle, path-resolution rules, `## How to Request`, and `## Next Step`, no new requirements.
+
+### Migration evidence
+
+- Scenario: `refine-dispatch-under-late-night-pressure` (authored from scratch)
+- Baseline (pre-migration): 4/4 PASS
+- After (post-migration): 4/4 PASS — no regression (gate: after >= baseline)
+- Contamination audit: clean — no wording from the pressure scenario
+  (`PaymentIntent`, `payments migration`, `trust your read`, `how long`, `22:15`)
+  appears anywhere in the skill.
+- Gate: no-regression A/B; DERIVED blocks only, no gap-fill content
+- Caveat: baselines in this campaign are contaminated — the measuring subagent
+  carries prior knowledge of this repository, so a pre-migration baseline is
+  not a clean no-skill control. Contamination is symmetric across the A/B, so
+  regression detection remains valid; necessity claims for new content do not.
