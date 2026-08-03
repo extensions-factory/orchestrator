@@ -7,17 +7,52 @@ description: Use when independent plan-review findings are ready to evaluate bef
 
 # Receiving Plan Refine
 
-## Overview
-
 Verify review findings, apply only corrections that preserve the approved build decision, and send proposed decision changes back to their owning human gate.
+
+## Checklist
+
+1. Announce the refine evaluation and capture the token-cost boundary.
+2. Bind the exact handed-off review to its current workspace session and approved `writing_plans` record.
+3. Verify the decision snapshot and artifact hashes before reading findings; reroute stale state.
+4. Record and verify every finding's approval-preserving correction or durable disposition.
+5. Regenerate and self-review `plan.html` when `plan.md` changes.
+6. Revalidate current artifacts and send exactly one selected route.
+
+## Process Flow
+
+```dot
+digraph receiving_plan_refine {
+  rankdir=TB;
+  start [label="Announce refine evaluation and capture token-cost boundary", shape=box];
+  bind [label="Bind exact handed-off review to current workspace session", shape=box];
+  current [label="Decision snapshot and artifact hashes current?", shape=diamond];
+  decision_stale [label="Writing Plans' Final build decision gate", shape=box];
+  artifact_stale [label="Retain stale evidence; Requesting Plan Refine", shape=box];
+  evaluate [label="Evaluate and record every finding", shape=box];
+  human [label="Any human_decision_required item?", shape=diamond];
+  review [label="Human chooses Refine or Execute", shape=box];
+  handoff [label="Revalidate artifacts; send exactly one selected route", shape=box];
+
+  start -> bind -> current;
+  current -> evaluate [label="yes"];
+  current -> decision_stale [label="decision mismatch"];
+  current -> artifact_stale [label="artifact mismatch"];
+  evaluate -> human;
+  human -> decision_stale [label="yes"];
+  human -> review [label="no"];
+  review -> handoff;
+}
+```
+
+## The Process
+
+### Bind the current review
 
 **Core principle:** Reviewer authority never overrides human-approved decisions.
 
 **Announce at start:** "I'm using the receiving-plan-refine skill to evaluate the refine findings."
 
 The token-cost boundary starts when this skill is announced. Capture the exact cumulative orchestrator counter scope and baseline when the harness exposes them.
-
-## Bind the Current Review
 
 **Read `main:docs/superpower/manifest.json` and select the session entry matching the current workspace** by `workspace.type` and `workspace.target`. Require exactly one session entry plus `writing_plans.workflow_id` and approved `scope`, `exclusions`, `ordering`, `files`, `interfaces`, `tests`, and `verification`. Use that workflow ID, not conflicting ambient state. This skill never edits the manifest and must preserve every session entry.
 
@@ -31,7 +66,7 @@ Every downstream handoff must include: “Read main:docs/superpower/manifest.jso
 **Inline validation:** evaluating plan-refine findings is a VALIDATE-equivalent judgment call the orchestrator makes itself and is never dispatched.
 <!-- riso-tech:orchestrator-split END -->
 
-## Evaluate and Record
+### Evaluate and record
 
 Write `.superpowers/runs/<workflow-id>/30-plan/plan-refine/resolution-<turn>.md`; never overwrite another turn. Initialize it with the handoff identities and `status: in_progress`. Record every finding's location, reported type/route, verified evidence, affected decision fields, disposition (`applying`, `applied`, `declined`, or `human_decision_required`), reason, and plan hashes.
 
@@ -48,6 +83,22 @@ Apply approval-preserving corrections to `plan.md`. If it changes, record HTML r
 
 If any `human_decision_required` item remains, do not offer Refine or Execute. Invoke `superpowers-orchestrator:writing-plans` exactly once at Writing Plans' Final build decision gate with the selected workspace/workflow, complete current decision record, proposed values and affected fields, artifact paths, resolution path, provenance, and token-cost report.
 
+### Prepare the handoff
+
+Before any route, reread the selected session entry and rehash the plan, optional spec, and HTML companion. Require the decision snapshot to remain current, the spec to retain its handed-off hash, the plan/HTML to match the recorded resolution and approved fields, and the resolution file to cover every finding. Stale state blocks handoff.
+
+When no human decision is pending, report applied/declined counts and the resolution path, then ask the human to choose Refine or Execute:
+
+- **Refine:** invoke `superpowers-orchestrator:requesting-plan-refine` exactly once.
+- **When the harness supports subagents, Execute:** invoke `superpowers-orchestrator:subagent-driven-development` exactly once.
+- **Only when the harness has no subagent capability, Execute:** invoke `superpowers-orchestrator:executing-plans` exactly once.
+
+Send exactly one selected route the workspace key, workflow ID, current decision snapshot, plan/spec/HTML paths and hashes, findings and resolution paths, author/reviewer provenance, and receiving token-cost report. Before invoking it, record a stable `handoff_id` (`<workflow-id>:plan-refine:<turn>:<final-plan-hash>`), selected route, payload hash, and `status: prepared` in the resolution. Pass `handoff_id` as the downstream idempotency key; retries and resumes reuse that key and route, and downstream acceptance changes the status to `handed_off`. Never select a second route or start a second logical handoff.
+
+## After the Artifact
+
+Before any route, reread the selected session entry and rehash the plan, optional spec, and HTML companion. Require the decision snapshot to remain current, the spec to retain its handed-off hash, the plan/HTML to match the recorded resolution and approved fields, and the resolution file to cover every finding. Stale state blocks handoff.
+
 ## Token-cost Monitoring
 
 Use `.superpowers/runs/<workflow-id>/receiving-plan-refine-token-cost.jsonl`:
@@ -62,18 +113,6 @@ This phase dispatches no workers. Do not copy D11 worker or Requesting Plan Refi
 
 Before rendering any downstream handoff, append its orchestrator record with both counts `null` and reason `usage becomes visible only after this turn completes`. Report measured input/output totals, unavailable reasons, full-record coverage as measured records / total records, and input/output field coverage independently. Never call a partial subtotal complete.
 
-## Handoff
-
-Before any route, reread the selected session entry and rehash the plan, optional spec, and HTML companion. Require the decision snapshot to remain current, the spec to retain its handed-off hash, the plan/HTML to match the recorded resolution and approved fields, and the resolution file to cover every finding. Stale state blocks handoff.
-
-When no human decision is pending, report applied/declined counts and the resolution path, then ask the human to choose Refine or Execute:
-
-- **Refine:** invoke `superpowers-orchestrator:requesting-plan-refine` exactly once.
-- **When the harness supports subagents, Execute:** invoke `superpowers-orchestrator:subagent-driven-development` exactly once.
-- **Only when the harness has no subagent capability, Execute:** invoke `superpowers-orchestrator:executing-plans` exactly once.
-
-Send exactly one selected route the workspace key, workflow ID, current decision snapshot, plan/spec/HTML paths and hashes, findings and resolution paths, author/reviewer provenance, and receiving token-cost report. Before invoking it, record a stable `handoff_id` (`<workflow-id>:plan-refine:<turn>:<final-plan-hash>`), selected route, payload hash, and `status: prepared` in the resolution. Pass `handoff_id` as the downstream idempotency key; retries and resumes reuse that key and route, and downstream acceptance changes the status to `handed_off`. Never select a second route or start a second logical handoff.
-
 ## Red Flags
 
 **Never:**
@@ -82,3 +121,13 @@ Send exactly one selected route the workspace key, workflow ID, current decision
 - Read or apply stale findings
 - Hand off before every finding has a durable disposition
 - Offer Refine or Execute while a decision change awaits human approval
+
+## Key Principles
+
+**Reviewer authority** — Reviewer authority never overrides human-approved decisions.
+
+**Current review** — Before reading findings, compare the selected `writing_plans` object with the handed-off snapshot and compare the current hashes with the handed-off hashes before reading findings.
+
+**Durable disposition** — Record every finding's location, reported type/route, verified evidence, affected decision fields, disposition (`applying`, `applied`, `declined`, or `human_decision_required`), reason, and plan hashes.
+
+**One handoff** — Never select a second route or start a second logical handoff.

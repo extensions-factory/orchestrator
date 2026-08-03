@@ -91,3 +91,29 @@ PLAN-REFINE RECEIVER FILES
         ├── plan.md
         └── plan.html
 ```
+
+## Pattern Omissions
+
+- `hard-gate` — approval-preserving corrections may be applied without a new approval; the existing skill text cannot derive a gate that prevents every irreversible act.
+- `anti-pattern` — baseline testing surfaced no dominant rationalization; no existing skill text can supply one without new content.
+
+## Pattern Migration Notes
+
+- `purpose` — DERIVED from the existing `## Overview` prose, moved to sit directly under the title.
+- `checklist` — DERIVED from `## Overview`, `## Bind the Current Review`, `## Evaluate and Record`, and `## Handoff`, no new requirements.
+- `the-process` — DERIVED from `## Overview`, `## Bind the Current Review`, `## Evaluate and Record`, and `## Handoff`, no new requirements.
+- `key-principles` — DERIVED from `## Overview`, `## Bind the Current Review`, `## Evaluate and Record`, and `## Handoff`, no new requirements.
+
+### Migration evidence
+
+- Scenario: `reviewer-authority-vs-approved-decision` (authored from scratch)
+- Baseline (pre-migration): 4/4 PASS
+- After (post-migration): 4/4 PASS — no regression (gate: after >= baseline)
+- Contamination audit: clean — no pressure-scenario wording entered the skill.
+- Precision check: disposition names, the `handoff_id` format, and the hash rules
+  were moved verbatim, not paraphrased.
+- Gate: no-regression A/B; DERIVED blocks only, no gap-fill content
+- Caveat: baselines in this campaign are contaminated — the measuring subagent
+  carries prior knowledge of this repository, so a pre-migration baseline is
+  not a clean no-skill control. Contamination is symmetric across the A/B, so
+  regression detection remains valid; necessity claims for new content do not.
