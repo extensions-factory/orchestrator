@@ -5,11 +5,45 @@ description: Use when a specification or requirements define a multi-step implem
 
 # Writing Plans
 
-## Overview
-
 Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document the exact files, interfaces, behavior, tests, commands, and expected results for bite-sized tasks without writing implementation or test source code. DRY. YAGNI. TDD. Orchestrator-owned task commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+
+<HARD-GATE>
+Do not offer Refine or Execute until this approval is recorded.
+</HARD-GATE>
+
+## Anti-Pattern: "TBD"
+
+"TBD", "TODO", "implement later", and "fill in details" are plan failures.
+
+## Checklist
+
+1. Announce the skill, capture the token-cost boundary, and select exactly one matching workspace session.
+2. Read the complete applicable upstream records and verify their matching design artifacts.
+3. Reuse or initialize `writing_plans.workflow_id`, then check whether the spec needs separate plans.
+4. Map the file structure and author the plan and HTML companion through D10 or inline when the harness has no subagent capability.
+5. Organize vertical-slice User Stories, optional shared Foundation work, and independently testable tasks using the required template.
+6. Derive the seven-field final build decision and self-review the plan and companion.
+7. Present all seven fields together, record explicit human approval, and return to this gate when an approved value changes.
+8. Verify the approved session, plan artifacts, and upstream records before offering the selected Refine or Execute handoff.
+
+## Process Flow
+
+```dot
+digraph writing_plans {
+  start -> session -> inputs -> scope -> author -> review
+  scope -> separate_plans [label="independent subsystems"]
+  separate_plans -> author
+  review -> author [label="gaps"]
+  review -> gate [label="complete"]
+  gate -> author [label="revise or value changes"]
+  gate -> record [label="approved"]
+  record -> handoff
+}
+```
+
+## The Process
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
@@ -32,11 +66,11 @@ Every D10 request and downstream handoff must include: “Read main:docs/superpo
 **Dispatch:** `D10` dispatches plan authoring through `superpowers-orchestrator:dispatch-agent` with `role: tech_lead` and `task_type: sprint_planning`; from the selected session's approved decisions and matching spec, the worker writes the plan and HTML companion, using `skills/writing-plans/templates/plan-template.md` for the plan and `skills/writing-plans/templates/plan-companion-template.html` for the HTML; remove the sample plan block, replace `{{TITLE}}` and `{{CONTENT}}` with the plan title and complete rendered plan, rendering checkboxes as a readable checklist and regenerating the companion whenever the plan changes, then return both plus the seven-field final build decision for the orchestrator's Self-Review; write them inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
-## Scope Check
+### Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
-## Final Build Decision
+### Final Build Decision
 
 Derive one concrete bundle from the approved upstream records and plan:
 
@@ -50,7 +84,7 @@ Derive one concrete bundle from the approved upstream records and plan:
 
 The plan and HTML companion must express this bundle without contradicting upstream decisions. D10 returns the proposed bundle but never writes the manifest; the orchestrator records it only after human approval.
 
-## Organize Tasks Under User Stories
+### Organize Tasks Under User Stories
 
 Group the plan's Tasks under **User Story (US)** headings. Each US is one
 **complete vertical slice** — a single service/feature that works end-to-end
@@ -75,7 +109,7 @@ right here saves a round trip.
   the spec (see `templates/plan-template.md`).
 <!-- riso-tech:orchestrator-split END -->
 
-## Foundation Section (Optional)
+### Foundation Section (Optional)
 
 If some work blocks MORE THAN ONE user story (project scaffold, shared
 schema, shared data layer), put it in a `## Foundation` section before the
@@ -83,7 +117,7 @@ first US, using the same task format. Setup needed by a single story stays
 folded into that story's tasks, per Task Right-Sizing. Omit the section
 entirely when nothing qualifies — it is not a setup dumping ground.
 
-## File Structure
+### File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
 
@@ -94,7 +128,7 @@ Before defining tasks, map out which files will be created or modified and what 
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
 
-## Task Right-Sizing
+### Task Right-Sizing
 
 A task is the smallest unit that carries its own test cycle and is worth a
 fresh reviewer's gate. When drawing task boundaries: fold setup,
@@ -103,7 +137,7 @@ deliverable needs them; split only where a reviewer could meaningfully
 reject one task while approving its neighbor. Each task ends with an
 independently testable deliverable.
 
-## Bite-Sized Task Granularity
+### Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
 - "Define the failing test behavior" - step
@@ -113,7 +147,7 @@ independently testable deliverable.
 
 Each task ends with a labeled orchestrator-only Git bookkeeping block. It preserves the exact paths and commit message without making commit work part of the worker's steps.
 
-## Plan Document Header
+### Plan Document Header
 
 **Every plan MUST start with this header:**
 
@@ -160,7 +194,7 @@ include this section.]
 ---
 ```
 
-## Task Structure
+### Task Structure
 
 `skills/writing-plans/templates/plan-template.md` is the single source of
 truth for the exact task schema. Copy its complete `Task N` block for every
@@ -171,7 +205,7 @@ After a successful worker response or successful inline task execution with
 passing tests, the orchestrator performs the template's Git bookkeeping before
 review; the worker never commits.
 
-## No Placeholders
+### No Placeholders
 
 Every step must contain the exact decision an engineer needs without source code. These are **plan failures** — never write them:
 - "TBD", "TODO", "implement later", "fill in details"
@@ -184,14 +218,14 @@ Every step must contain the exact decision an engineer needs without source code
 
 **Plans must not contain implementation or test source-code blocks.** Source code belongs to execution, where the implementer can inspect the live repository, write a failing test, and produce the minimal implementation. Shell commands and expected terminal output remain required planning evidence.
 
-## Remember
+### Remember
 - Exact file paths always
 - Exact interfaces, behavior, test cases, and assertions in prose
 - Exact commands with expected output
 - No implementation or test source code
 - DRY, YAGNI, TDD, orchestrator-owned task commits
 
-## Self-Review
+### Self-Review
 
 After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
 
@@ -215,33 +249,15 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
-## Human Gate — Final build decision
+### Human Gate — Final build decision
 
 After self-review, present `scope`, `exclusions`, `ordering`, `files`, `interfaces`, `tests`, and `verification` together. The human must explicitly approve or revise all seven; “looks fine, execute” is not approval unless the complete bundle was presented in that turn. Scope, ordering, files, tests, and verification must be non-empty. Exclusions and interfaces may be empty only when the human explicitly approves none.
 
 Write the approved bundle under `writing_plans` in the selected main-manifest session, preserving `workflow_id`, all upstream records, and every other session. **Do not offer Refine or Execute until this approval is recorded.** If any approved value changes later, return to this gate, update only the selected session, regenerate and self-review both plan artifacts, and obtain approval again before continuing.
 
-## Token-cost monitoring
+## After the Plan
 
-Use `.superpowers/runs/<workflow-id>/writing-plans-token-cost.jsonl` for both sources. After every D10 provider attempt, append and validate one worker record, retaining retries, revisions, blocked results, and fallbacks:
-
-```json
-{"source":"worker","task":"D10","turn":1,"attempt":1,"agent":"codex","model":"<exact-model>","input_tokens":123,"output_tokens":45,"unavailable_reason":null}
-```
-
-`turn` is the D10 request-envelope turn. `attempt` starts at 1 and increments for every same-turn provider call, including same-provider retries and fallbacks; a revision or blocked reroute uses the next turn with attempt 1.
-
-After each harness-reported main-orchestrator invocation becomes observable, append and validate one orchestrator record before the next action; on resume continue at the highest recorded turn plus one:
-
-```json
-{"source":"orchestrator","task":"orchestrator","turn":1,"attempt":1,"agent":"claude","model":"<exact-model>","input_tokens":456,"output_tokens":78,"unavailable_reason":null}
-```
-
-Copy exact per-invocation metadata. For comparable cumulative counters, use only monotonic snapshot deltas; after a reset, record nulls with the reason and retain the new baseline. Otherwise set unavailable counts to `null` with `unavailable_reason`. **Do not estimate missing token counts** or treat them as zero. Ordinary non-model tool calls are included in orchestrator usage and get no separate record.
-
-Before rendering either downstream handoff, append its orchestrator record with null counts and reason `usage becomes visible only after this turn completes`. Report worker, orchestrator, and combined measured totals, unavailable reasons, and coverage as measured records / total records for each source and combined. A measured record has both token counts; also report input-field and output-field coverage independently so a partial record is visible. Never label a partial subtotal complete.
-
-## Execution Handoff
+Write the approved bundle under `writing_plans` in the selected main-manifest session, preserving `workflow_id`, all upstream records, and every other session. The plan and HTML companion must express this bundle without contradicting upstream decisions.
 
 Before either handoff, reread the selected session entry from `main:docs/superpower/manifest.json`. Require `writing_plans.workflow_id` and all seven approved fields, verify both plan artifacts match them and the upstream records, and include the token-cost report plus workspace-aware manifest instruction. Return to the Human Gate on any mismatch.
 
@@ -270,3 +286,37 @@ After the final build decision is approved and recorded, ask the user to choose:
 **Only when the harness has no subagent capability:**
 - Invoke exactly once. **REQUIRED SUB-SKILL:** Use superpowers-orchestrator:executing-plans
 - Batch execution with checkpoints for review
+
+## Token-cost Monitoring
+
+Use `.superpowers/runs/<workflow-id>/writing-plans-token-cost.jsonl` for both sources. After every D10 provider attempt, append and validate one worker record, retaining retries, revisions, blocked results, and fallbacks:
+
+```json
+{"source":"worker","task":"D10","turn":1,"attempt":1,"agent":"codex","model":"<exact-model>","input_tokens":123,"output_tokens":45,"unavailable_reason":null}
+```
+
+`turn` is the D10 request-envelope turn. `attempt` starts at 1 and increments for every same-turn provider call, including same-provider retries and fallbacks; a revision or blocked reroute uses the next turn with attempt 1.
+
+After each harness-reported main-orchestrator invocation becomes observable, append and validate one orchestrator record before the next action; on resume continue at the highest recorded turn plus one:
+
+```json
+{"source":"orchestrator","task":"orchestrator","turn":1,"attempt":1,"agent":"claude","model":"<exact-model>","input_tokens":456,"output_tokens":78,"unavailable_reason":null}
+```
+
+Copy exact per-invocation metadata. For comparable cumulative counters, use only monotonic snapshot deltas; after a reset, record nulls with the reason and retain the new baseline. Otherwise set unavailable counts to `null` with `unavailable_reason`. **Do not estimate missing token counts** or treat them as zero. Ordinary non-model tool calls are included in orchestrator usage and get no separate record.
+
+Before rendering either downstream handoff, append its orchestrator record with null counts and reason `usage becomes visible only after this turn completes`. Report worker, orchestrator, and combined measured totals, unavailable reasons, and coverage as measured records / total records for each source and combined. A measured record has both token counts; also report input-field and output-field coverage independently so a partial record is visible. Never label a partial subtotal complete.
+
+## Red Flags
+
+- **An unpresented bundle** — “looks fine, execute” is not approval unless the complete bundle was presented in that turn.
+- **A placeholder or vague step** — these are plan failures.
+- **A changed approved value** — return to this gate and obtain approval again before continuing.
+
+## Key Principles
+
+- **Use exact decisions** — every step must contain the exact decision an engineer needs without source code.
+- **Slice complete vertical features** — one User Story is a complete vertical slice, not a technical layer.
+- **Keep tasks independently testable** — each task ends with an independently testable deliverable.
+- **Approve the complete bundle** — the human must explicitly approve or revise all seven.
+- **Record approval before routing** — do not offer Refine or Execute until this approval is recorded.

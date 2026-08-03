@@ -179,3 +179,35 @@ PLAN FILES
             ├── request.json
             └── response.json
 ```
+
+## Pattern Omissions
+
+No conditional blocks are omitted; each has existing source material in the skill.
+
+## Pattern Migration Notes
+
+- `purpose` — DERIVED from the existing `## Overview` prose, moved to sit directly under the title.
+- `hard-gate` — DERIVED from `## Human Gate — Final build decision`, including "Do not offer Refine or Execute until this approval is recorded", no new requirements.
+- `anti-pattern` — DERIVED from `## No Placeholders`: "TBD", "TODO", "implement later", and "fill in details" are existing banned forms, no new requirements.
+- `checklist` — DERIVED from `## Overview`, `## Scope Check`, `## Final Build Decision`, `## Organize Tasks Under User Stories`, `## File Structure`, `## Self-Review`, `## Human Gate — Final build decision`, and `## Execution Handoff`, no new requirements.
+- `process-flow` — DERIVED from `## Scope Check`, `## Self-Review`, and `## Human Gate — Final build decision`, no new requirements.
+- `the-process` — DERIVED from `## Overview` through `## Execution Handoff`, no new requirements.
+- `after-artifact` — DERIVED from `## Final Build Decision`, `## Human Gate — Final build decision`, and `## Execution Handoff`, no new requirements.
+- `token-cost-monitoring` — RETAINED, heading normalized to Title Case; body unchanged.
+- `red-flags` — DERIVED from `## No Placeholders` and `## Human Gate — Final build decision`, no new requirements.
+- `key-principles` — DERIVED from `## Organize Tasks Under User Stories`, `## Task Right-Sizing`, `## No Placeholders`, and `## Human Gate — Final build decision`, no new requirements.
+
+### Migration evidence
+
+- Scenario: `plan-gate-and-placeholder-under-lunch-pressure` (adapted from `evals/scenarios/triggering-writing-plans/story.md`)
+- Baseline (pre-migration): 4/4 PASS
+- After (post-migration): 4/4 PASS — no regression (gate: after >= baseline)
+- Note: the first after-run was discarded as stale. The migration had absorbed a
+  phrase from the pressure scenario into an Anti-Pattern block, which the run then
+  cited as decisive — teaching to the test. The block was rebased onto the source's
+  own `"TBD"` example and the run repeated against the corrected file.
+- Gate: no-regression A/B; DERIVED blocks only, no gap-fill content
+- Caveat: baselines in this campaign are contaminated — the measuring subagent
+  carries prior knowledge of this repository, so a pre-migration baseline is
+  not a clean no-skill control. Contamination is symmetric across the A/B, so
+  regression detection remains valid; necessity claims for new content do not.
