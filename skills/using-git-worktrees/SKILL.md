@@ -5,8 +5,6 @@ description: Use when feature work or implementation-plan execution requires an 
 
 # Using Git Worktrees
 
-## Overview
-
 Ensure work happens in an isolated workspace. Prefer your platform's native worktree tools. Fall back to manual git worktrees only when no native tool is available.
 
 **Core principle:** Detect existing isolation first. Then use native tools. Then fall back to git. Never fight the harness.
@@ -15,7 +13,50 @@ Ensure work happens in an isolated workspace. Prefer your platform's native work
 
 The token-cost boundary starts when this skill is announced. Capture the exact cumulative orchestrator counter scope and baseline when the harness exposes them.
 
-## Session Context
+<HARD-GATE>
+Has the user already indicated their worktree preference in your instructions? If not, ask for consent before creating a worktree:
+
+> "Would you like me to set up an isolated worktree? It protects your current branch from changes."
+</HARD-GATE>
+
+## Anti-Pattern: "Fighting the harness"
+
+- **Problem:** Using `git worktree add` when the platform already provides isolation
+- **Fix:** Step 0 detects existing isolation. Step 1a defers to native tools.
+
+## Checklist
+
+1. Announce the skill and capture the token-cost boundary.
+2. Select the caller's session and active workflow ID.
+3. Detect existing isolation and obtain consent when needed.
+4. Resume the exact selected feature workspace when one exists.
+5. Create the selected isolated workspace with a native tool or the Git fallback.
+6. Run project setup and verify the clean baseline.
+7. Validate and report the workspace handoff.
+
+## Process Flow
+
+```dot
+digraph using_git_worktrees {
+  "Session Context" -> "Detect Existing Isolation" -> "Already in a linked worktree";
+  "Already in a linked worktree" -> "Project Setup";
+  "Already in a linked worktree" -> "normal repo checkout";
+  "normal repo checkout" -> "Project Setup" [label="the user declines consent"];
+  "normal repo checkout" -> "Resume an Existing Feature Workspace" [label="the user consents"];
+  "Resume an Existing Feature Workspace" -> "Project Setup" [label="existing worktree"];
+  "Resume an Existing Feature Workspace" -> "Create Isolated Workspace" [label="no branch or worktree matches"];
+  "Create Isolated Workspace" -> "Native Worktree Tools";
+  "Native Worktree Tools" -> "Project Setup" [label="Native worktree tool available"];
+  "Native Worktree Tools" -> "Git Worktree Fallback" [label="no native worktree tool available"];
+  "Git Worktree Fallback" -> "Project Setup" -> "Verify Clean Baseline" -> "Report";
+  "Verify Clean Baseline" -> "Report" [label="If tests pass"];
+  "Verify Clean Baseline" -> "Report" [label="If tests fail: Report failures, ask whether to proceed or investigate."];
+}
+```
+
+## The Process
+
+### Session Context
 
 The caller supplies the selected session key and its active workflow ID:
 
@@ -30,7 +71,7 @@ Git branches and worktrees are the source of truth for whether a session can res
 
 Every D12 request and downstream handoff must say: “Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.”
 
-## Step 0: Detect Existing Isolation
+### Step 0: Detect Existing Isolation
 
 **Before creating anything, check if you are already in an isolated workspace.**
 
@@ -65,7 +106,7 @@ Honor any existing declared preference without asking. If the user declines cons
 
 A human-confirmed selected worktree session is standing consent for its exact target. If the selected session is a branch and the human now wants a worktree, return to the Session Gate to establish that worktree identity; do not repurpose the branch entry or change `WORKFLOW_ID` here.
 
-## Step 0.5: Resume an Existing Feature Workspace
+### Step 0.5: Resume an Existing Feature Workspace
 
 After Step 0 determines that this is a normal checkout and the user consents, if the caller supplied `<slug>`, inspect existing worktrees and matching feature branches before creating anything:
 
@@ -96,7 +137,7 @@ git cat-file -e "$MATCHED_BRANCH:docs/superpowers/features/<slug>/design.md" 2>/
 **Dispatch:** `D12` runs only when Step 0 confirms isolation is needed, the human or standing instructions consent, and Step 0.5 did not enter an existing worktree: dispatch worktree creation or recreation through `superpowers-orchestrator:dispatch-agent` with `role: devops_engineer` and `task_type: workspace_setup`; pass `WORKFLOW_ID` and `DECISION_RECORD`, selected workspace tuple, branch, exact target, and constraints; require `output.artifacts` to contain the created worktree path and return both values unchanged. Verify the path and Git registration match the selected target; any path, workflow, or decision-record mismatch is blocked before `cd`. Continue with exactly one `cd`, setup, and baseline tests only after validation; resolve inline only if the harness has no subagent capability at all.
 <!-- riso-tech:orchestrator-split END -->
 
-## Step 1: Create Isolated Workspace
+### Step 1: Create Isolated Workspace
 
 Use the branch and exact target from the selected session. When the caller supplied `<slug>`, `feature/<slug>` must match that selected branch; otherwise return to the Session Gate instead of inventing or renaming session identity.
 
@@ -159,7 +200,7 @@ cd "$path"
 
 Proceed in place only when the current branch/worktree still matches the selected session. Otherwise stop at the Session Gate; never carry the selected workflow ID into a different workspace.
 
-## Step 2: Project Setup
+### Step 2: Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -178,7 +219,7 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
-## Step 3: Verify Clean Baseline
+### Step 3: Verify Clean Baseline
 
 Run tests to ensure workspace starts clean:
 
@@ -190,6 +231,65 @@ npm test / cargo test / pytest / go test ./...
 **If tests fail:** Report failures, ask whether to proceed or investigate.
 
 **If tests pass:** Report ready.
+
+### Quick Reference
+
+| Situation | Action |
+|-----------|--------|
+| Already in linked worktree | Skip creation (Step 0) |
+| In a submodule | Treat as normal repo (Step 0 guard) |
+| Native worktree tool available | Use it; skip manual ignore validation (Step 1a) |
+| No native tool | Git worktree fallback (Step 1b) |
+| `.worktrees/` exists | Use it (verify ignored) |
+| `worktrees/` exists | Use it (verify ignored) |
+| Both exist | Use `.worktrees/` |
+| Neither exists | Check instruction file, then default `.worktrees/` |
+| Custom project-local preference | Use it; validate exactly `$LOCATION/` |
+| Global location outside project root | Use it; skip repository ignore validation |
+| Selected directory not ignored | Add `$LOCATION/` to `.gitignore` + commit |
+| Permission error on create | Sandbox fallback, work in place |
+| Tests fail during baseline | Report failures + ask |
+| No package.json/Cargo.toml | Skip dependency install |
+
+### Common Mistakes
+
+#### Skipping detection
+
+- **Problem:** Creating a nested worktree inside an existing one
+- **Fix:** Always run Step 0 before creating anything
+
+#### Skipping ignore verification
+
+- **Problem:** Worktree contents get tracked, pollute git status
+- **Fix:** Run `git check-ignore -q -- "$LOCATION/"` for the selected project-local location, including custom preferences
+
+#### Assuming directory location
+
+- **Problem:** Creates inconsistency, violates project conventions
+- **Fix:** Follow priority: explicit instructions > existing project-local directory > default
+
+#### Proceeding with failing tests
+
+- **Problem:** Can't distinguish new bugs from pre-existing issues
+- **Fix:** Report failures, get explicit permission to proceed
+
+## After the Artifact
+
+Before reporting ready, reread the main manifest after entering the workspace and select exactly one entry matching the actual branch/worktree. Require it to be the original selected entry and require `WORKFLOW_ID` and `DECISION_RECORD` to remain unchanged. This skill never writes the manifest.
+
+### Report
+
+```
+Worktree ready at <full-path>
+Workspace: <workspace.type>:<workspace.target>
+Workflow: <WORKFLOW_ID>
+Decision record: main:docs/superpower/manifest.json
+Tests passing (<N> tests, 0 failures)
+Token cost: <worker/orchestrator/combined totals and coverage>
+Ready to implement <feature-name>
+```
+
+Pass this complete context unchanged to the calling planning/execution workflow. A blocked, declined-consent, or in-place fallback report uses the same workspace/workflow/decision-record fields and token-cost report.
 
 ## Token-cost Monitoring
 
@@ -211,70 +311,6 @@ Copy exact per-invocation metadata. Use monotonic cumulative-counter deltas only
 
 Before rendering the ready/blocked handoff, append its orchestrator record with both counts `null` and reason `usage becomes visible only after this turn completes`. Report worker, orchestrator, and combined measured totals, unavailable reasons, full-record coverage as measured records / total records, and input/output field coverage independently. Never call a partial subtotal complete.
 
-## Handoff Validation
-
-Before reporting ready, reread the main manifest after entering the workspace and select exactly one entry matching the actual branch/worktree. Require it to be the original selected entry and require `WORKFLOW_ID` and `DECISION_RECORD` to remain unchanged. This skill never writes the manifest.
-
-### Report
-
-```
-Worktree ready at <full-path>
-Workspace: <workspace.type>:<workspace.target>
-Workflow: <WORKFLOW_ID>
-Decision record: main:docs/superpower/manifest.json
-Tests passing (<N> tests, 0 failures)
-Token cost: <worker/orchestrator/combined totals and coverage>
-Ready to implement <feature-name>
-```
-
-Pass this complete context unchanged to the calling planning/execution workflow. A blocked, declined-consent, or in-place fallback report uses the same workspace/workflow/decision-record fields and token-cost report.
-
-## Quick Reference
-
-| Situation | Action |
-|-----------|--------|
-| Already in linked worktree | Skip creation (Step 0) |
-| In a submodule | Treat as normal repo (Step 0 guard) |
-| Native worktree tool available | Use it; skip manual ignore validation (Step 1a) |
-| No native tool | Git worktree fallback (Step 1b) |
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check instruction file, then default `.worktrees/` |
-| Custom project-local preference | Use it; validate exactly `$LOCATION/` |
-| Global location outside project root | Use it; skip repository ignore validation |
-| Selected directory not ignored | Add `$LOCATION/` to `.gitignore` + commit |
-| Permission error on create | Sandbox fallback, work in place |
-| Tests fail during baseline | Report failures + ask |
-| No package.json/Cargo.toml | Skip dependency install |
-
-## Common Mistakes
-
-### Fighting the harness
-
-- **Problem:** Using `git worktree add` when the platform already provides isolation
-- **Fix:** Step 0 detects existing isolation. Step 1a defers to native tools.
-
-### Skipping detection
-
-- **Problem:** Creating a nested worktree inside an existing one
-- **Fix:** Always run Step 0 before creating anything
-
-### Skipping ignore verification
-
-- **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Run `git check-ignore -q -- "$LOCATION/"` for the selected project-local location, including custom preferences
-
-### Assuming directory location
-
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: explicit instructions > existing project-local directory > default
-
-### Proceeding with failing tests
-
-- **Problem:** Can't distinguish new bugs from pre-existing issues
-- **Fix:** Report failures, get explicit permission to proceed
-
 ## Red Flags
 
 **Never:**
@@ -292,3 +328,15 @@ Pass this complete context unchanged to the calling planning/execution workflow.
 - Verify exactly the selected `$LOCATION/` is ignored for project-local locations
 - Auto-detect and run project setup
 - Verify clean test baseline
+
+## Key Principles
+
+**Existing isolation** — Detect existing isolation first.
+
+**Native tools** — Then use native tools.
+
+**Git fallback** — Then fall back to git.
+
+**Session identity** — The selected manifest entry determines which Git workspace to inspect or create; slug matches and ambient run IDs never override it.
+
+**Clean baseline** — If tests fail: Report failures, ask whether to proceed or investigate.

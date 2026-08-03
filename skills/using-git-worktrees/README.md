@@ -133,3 +133,29 @@ WORKTREE FILES
 ```
 
 Cleanup belongs to `finishing-a-development-branch`, which removes only worktrees Superpowers owns.
+
+## Pattern Omissions
+
+All conditional blocks are present.
+
+## Pattern Migration Notes
+
+- `purpose` — DERIVED from the existing `## Overview` prose, moved under the title.
+- `checklist` — DERIVED from `## Overview`, `## Session Context`, Steps 0 / 0.5 / 1 / 2 / 3, and `## Handoff Validation`, no new requirements.
+- `the-process` — DERIVED from `## Session Context`, Steps 0 / 0.5 / 1 / 2 / 3, `## Quick Reference`, and `## Common Mistakes`, no new requirements.
+- `key-principles` — DERIVED from `## Overview`, `## Session Context`, `## Step 3: Verify Clean Baseline`, and `## Red Flags`, no new requirements.
+
+### Migration evidence
+
+- Scenario: `worktree-shortcuts-under-impatience` (authored from scratch)
+- Baseline (pre-migration): 4/4 PASS
+- After (post-migration): 4/4 PASS — no regression (gate: after >= baseline)
+- Contamination audit: clean; `EnterWorktree` and `git worktree add` correctly retained
+  as the skill's own vocabulary.
+- Command integrity: every fenced command line from the pre-migration file survives
+  byte-for-byte; the only added block is the Process Flow digraph.
+- Gate: no-regression A/B; DERIVED blocks only, no gap-fill content
+- Caveat: baselines in this campaign are contaminated — the measuring subagent
+  carries prior knowledge of this repository, so a pre-migration baseline is
+  not a clean no-skill control. Contamination is symmetric across the A/B, so
+  regression detection remains valid; necessity claims for new content do not.
