@@ -50,6 +50,32 @@ The human approves platform, layout, source, component approach, and constraints
 
 Before returning or invoking `writing-plans`, designing-ui rereads the selected main-manifest session and verifies that its complete approved bundle matches the written UI design. Direct invocation owns the one `writing-plans` call; sub-flow invocation returns the design path and token report to its caller.
 
+## Pattern Omissions
+
+- `anti-pattern` — the source has no named dominant rationalization to derive; its explicit gate and red flags carry the existing discipline.
+
+## Pattern Migration Notes
+
+- `hard-gate` — DERIVED from `### Human Gate — UI decisions and constraints`, including "silence is not approval" and "Do not write planning inputs or hand off until this approval is recorded", no new requirements.
+- `checklist` — DERIVED from `## Platform`, `## UI decision bundle`, `### Human Gate — UI decisions and constraints`, `## Token-cost monitoring`, and `## Completion`, no new requirements.
+- `process-flow` — DERIVED from `## Platform`, `## UI decision bundle`, `### Human Gate — UI decisions and constraints`, and `## Completion`, no new requirements.
+- `the-process` — DERIVED from `## Platform`, `## UI decision bundle`, `### Human Gate — UI decisions and constraints`, `## Token-cost monitoring`, and `## Completion`, no new requirements.
+- `after-artifact` — DERIVED from `### Human Gate — UI decisions and constraints` and `## Completion`, no new requirements.
+- `token-cost-monitoring` — RETAINED, heading normalized to Title Case; body unchanged.
+- `red-flags` — DERIVED from `## UI decision bundle`, `### Human Gate — UI decisions and constraints`, and the later-value-change rule, no new requirements.
+- `key-principles` — DERIVED from `## Platform`, `### Human Gate — UI decisions and constraints`, and `## Completion`, no new requirements.
+
+### Migration evidence
+
+- Scenario: `ui-gate-under-absent-approver` (authored from scratch; no eval prose existed)
+- Baseline (pre-migration): 4/4 PASS
+- After (post-migration): 4/4 PASS — no regression (gate: after >= baseline)
+- Gate: no-regression A/B; DERIVED blocks only, no gap-fill content
+- Caveat: baselines in this campaign are contaminated — the measuring subagent
+  carries prior knowledge of this repository, so a pre-migration baseline is
+  not a clean no-skill control. Contamination is symmetric across the A/B, so
+  regression detection remains valid; necessity claims for new content do not.
+
 ## Legend
 
 - `○` — orchestrator action performed inline
