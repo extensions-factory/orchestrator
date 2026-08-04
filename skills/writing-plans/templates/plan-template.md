@@ -83,25 +83,29 @@ US-1. Every US in the spec must appear as a section here.]
 **task_type:** [one of the 16 values in `sdlc-model-routing.json` — e.g. `implementation_coding`, `code_review_quality`, `testing_qa`, `debugging_root_cause`, `architecture_design`]
 <!-- riso-tech:orchestrator-split END -->
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Define the failing test behavior**
 
-```python
-def test_specific_behavior():
-    result = function(input)
-    assert result == expected
-```
+Test: `tests/path/test.py::test_specific_behavior`
+
+- Setup/input: [exact fixture, state, and input]
+- Exercise: [exact public behavior or interface call]
+- Assert: [exact observable result or error]
+- Existing failure proves: [why the current system cannot satisfy this case]
 
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
 
-- [ ] **Step 3: Write minimal implementation**
+- [ ] **Step 3: Implement the specified behavior**
 
-```python
-def function(input):
-    return expected
-```
+- Target: `src/path/file.py` — [exact function/type/module]
+- Required behavior: [rules and state changes]
+- Interfaces: [exact names, parameters, return values, and errors]
+- Edge cases: [explicit cases this task handles]
+
+No source code belongs in this plan. The execution worker writes the failing
+test and minimal implementation against the live repository.
 
 - [ ] **Step 4: Run test to verify it passes**
 

@@ -31,7 +31,14 @@ normalize_doc_paths(){
     -e 's#docs/superpowers/plans/YYYY-MM-DD-<feature-name>\.md#<PLAN_PATH>#g' \
     -e 's#docs/superpowers/features/<feature-slug>/plan\.md#<PLAN_PATH>#g'
 }
-same_plan_template(){ diff -q <(strip_upstream_commit "$1" | sed -E 's/superpowers(-orchestrator)?://g' | normalize_doc_paths) <(strip_orchestrator_override "$2" | sed -E 's/superpowers(-orchestrator)?://g' | normalize_doc_paths) >/dev/null || { echo "[FAIL] $2 differs from $1 beyond its orchestrator Git override, document paths, and plugin namespace"; fail=1; }; }
+normalize_plan_steps(){
+  awk '
+    /^- \[ \] \*\*Step 1:/ { print "<PLAN_STEPS>"; skip=1; next }
+    skip && /^\*\*US-1 Checkpoint:\*\*/ { skip=0; print; next }
+    !skip
+  '
+}
+same_plan_template(){ diff -q <(strip_upstream_commit "$1" | normalize_plan_steps | sed -E 's/superpowers(-orchestrator)?://g' | normalize_doc_paths) <(strip_orchestrator_override "$2" | normalize_plan_steps | sed -E 's/superpowers(-orchestrator)?://g' | normalize_doc_paths) >/dev/null || { echo "[FAIL] $2 differs from $1 beyond its orchestrator task instructions, Git override, document paths, and plugin namespace"; fail=1; }; }
 same_pr_template(){ diff -q <(normalize_doc_paths < "$1") <(normalize_doc_paths < "$2") >/dev/null || { echo "[FAIL] $2 differs from $1 beyond document paths"; fail=1; }; }
 
 same "$REF/skills/brainstorming/spec-template.md" "$ROOT/skills/brainstorming/templates/spec-template.md"

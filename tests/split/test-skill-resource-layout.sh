@@ -16,7 +16,7 @@ expect() {
 
 templates=(
   skills/brainstorming/templates/document-companion-template.html
-  skills/brainstorming/templates/frame-template.html
+  skills/visual-companion/templates/frame-template.html
   skills/brainstorming/templates/spec-template.md
   skills/finishing-a-development-branch/templates/pr-body-template.md
   skills/project-kickoff/templates/constitution-template.md

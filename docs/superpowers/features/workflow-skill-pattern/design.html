@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workflow Skill Structural Pattern — Design Spec</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --text: #202124;
+    --muted: #5f6368;
+    --line: #d8dce3;
+    --accent: #0759c7;
+    --code: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1015;
+      --panel: #171a22;
+      --text: #edf1f7;
+      --muted: #aeb7c5;
+      --line: #343b49;
+      --accent: #70d6ff;
+      --code: #0a0c10;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; padding: 48px 24px; color: var(--text); background: var(--bg); font: 17px/1.65 system-ui, sans-serif; }
+  main { max-width: 75ch; margin: auto; padding: clamp(24px, 5vw, 48px); border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+  h1, h2, h3 { line-height: 1.2; text-wrap: balance; }
+  h1 { margin-top: 0; font-size: clamp(2rem, 6vw, 3rem); }
+  h2 { margin-top: 2.5rem; padding-top: 0.5rem; border-top: 1px solid var(--line); }
+  p, li { max-width: 70ch; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  .skip-link { position: fixed; top: 8px; left: 8px; z-index: 10; padding: 8px 12px; transform: translateY(-150%); color: var(--panel); background: var(--text); }
+  .skip-link:focus { transform: translateY(0); }
+  code, pre { font-family: ui-monospace, monospace; }
+  :not(pre) > code { padding: 0.1em 0.3em; border-radius: 4px; background: var(--code); }
+  pre { overflow: auto; padding: 16px; border-radius: 9px; background: var(--code); }
+  blockquote { margin-left: 0; padding-left: 16px; border-left: 3px solid var(--muted); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+  th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { font-weight: 650; }
+  @media (max-width: 600px) { body { padding: 0; } main { border: 0; border-radius: 0; } }
+  @media print {
+    :root { --bg: #fff; --panel: #fff; --text: #000; --muted: #444; --line: #bbb; }
+    body { padding: 0; font-size: 11pt; }
+    main { max-width: none; padding: 0; border: 0; }
+    .skip-link { display: none; }
+    a { color: inherit; }
+    pre, blockquote { break-inside: avoid; }
+  }
+  .meta { font-size: 0.85rem; color: var(--muted); margin-bottom: 2rem; }
+  .badge { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--code); border: 1px solid var(--line); margin-left: 0.4em; vertical-align: middle; }
+  .badge.p1 { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+  .badge.p2 { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+  @media (prefers-color-scheme: dark) {
+    .badge.p1 { background: #3b0a0a; color: #fca5a5; border-color: #7f1d1d; }
+    .badge.p2 { background: #2d1e00; color: #fcd34d; border-color: #78350f; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<main id="main-content" tabindex="-1">
+
+<p class="meta">Status: draft &nbsp;·&nbsp; Date: 2026-08-02 &nbsp;·&nbsp; Feature: workflow-skill-pattern</p>
+
+<h1>Workflow Skill Structural Pattern — Design Spec</h1>
+
+<h2>1. Overview</h2>
+
+<p>The 19 skills in <code>skills/</code> share no consistent internal structure. Heading vocabulary forks five ways, only 3 of 19 carry a process-flow diagram, only one carries a numbered checklist, and sizes range from 32 to 693 lines. There is no mechanical check to prevent or detect this drift. This feature defines a canonical structural pattern for workflow skills, documents it in a single normative file, and enforces it with a structural validator script. The outcome is that any agent or human can enter any skill at the fidelity they need — checklist, control-flow diagram, or prose elaboration — and reach the same steps. The validator makes pattern conformance a CI gate, not a social convention.</p>
+
+<h2>2. Context &amp; Assumptions</h2>
+
+<p><code>skills/brainstorming/SKILL.md</code> already embodies the three-fidelity ladder this pattern formalises: a Checklist (trackable contract), a Process Flow digraph (control flow with gates and loops), and The Process prose (elaboration). All other in-scope skills lack at least one of the three. The repo's Iron Law ("no skill edit without a failing test first") applies; the validator satisfies it for migration without demanding 19 RED-GREEN cycles for verbatim text moves.</p>
+
+<p><code>skills/writing-skills/SKILL.md:97</code> already has a generic "## SKILL.md Structure" section that will be superseded; the pattern doc is the new single source of truth. <code>skills/visual-companion/</code> has no README.md, is not listed in <code>skills/SDLC.md</code>, and is excluded per human decision (D10). Implementation language is bash + grep, matching <code>tests/split/*.sh</code>. No new tooling, no new dependencies, no new file formats are introduced.</p>
+
+<p>All design decisions were approved by the human partner in a brainstorming session. This spec records those decisions; it does not propose alternatives.</p>
+
+<h2>3. Scope</h2>
+
+<h3>Goals</h3>
+<ul>
+  <li>Define and document one canonical structural pattern for all in-scope workflow skills.</li>
+  <li>Provide a normative 12-block table with IDs, validator markers, tiers, and omit-when conditions.</li>
+  <li>Specify the <code>## Pattern Omissions</code> README section format for conditional block omissions.</li>
+  <li>Enforce the pattern with a structural validator script that reads the block table directly from the pattern doc.</li>
+  <li>Replace the generic <code>## SKILL.md Structure</code> section in <code>writing-skills/SKILL.md</code> with a pointer to the new pattern doc.</li>
+  <li>Add a self-check fixture proving rule 6 (zero-rows → loud FAIL) cannot be silently disabled.</li>
+  <li>Wire <code>tests/skills/run-all.sh</code> in the same style as <code>tests/split/run-all.sh</code>.</li>
+</ul>
+
+<h3>Non-Goals</h3>
+<ul>
+  <li><strong>Sub-project B (follow-on, separate spec):</strong> migrating the 18 in-scope skills to the pattern, one per commit, in SDLC.md order.</li>
+  <li>Rewriting, re-ordering, or quality-improving any block content during migration.</li>
+  <li>Adding a pattern for <code>skills/visual-companion/</code> (excluded per D10).</li>
+  <li>Enforcing block prose quality (the validator checks presence and order, not content quality — the honest ceiling of the mechanical approach).</li>
+</ul>
+
+<h2>4. User Stories</h2>
+
+<h3>US-1: Pattern doc with normative fenced block table and exclusion fences <span class="badge p1">P1</span></h3>
+
+<p>As a skill author or validator script, I want a single normative file that defines every required block by ID, validator marker, tier, and omit-when condition — with the block table fenced so a parser can extract it and with excluded skills fenced so the list is visible and machine-readable.</p>
+
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN <code>skills/writing-skills/workflow-skill-pattern.md</code> exists WHEN the file is read THEN it contains a block table between <code>&lt;!-- blocks:start --&gt;</code> and <code>&lt;!-- blocks:end --&gt;</code> fences with exactly 12 rows matching the approved table verbatim.</li>
+  <li>GIVEN the pattern doc exists WHEN it is read THEN <code>skills/visual-companion/</code> appears between <code>&lt;!-- exclude:start --&gt;</code> and <code>&lt;!-- exclude:end --&gt;</code> fences, and no other exclusion list exists anywhere else in the repo.</li>
+  <li>GIVEN the pattern doc exists WHEN it is read THEN no block identity is defined anywhere except in this file (validator holds zero block knowledge of its own).</li>
+  <li>GIVEN the pattern doc exists WHEN <code>writing-skills/SKILL.md</code> is read THEN the old <code>## SKILL.md Structure</code> section is replaced by a short pointer to this file.</li>
+</ul>
+
+<h3>US-2: Structural validator script that parses the doc and checks all in-scope skills <span class="badge p1">P1</span></h3>
+
+<p>As the CI gate, I want a bash script that reads the block table from the pattern doc, checks every in-scope <code>skills/*/SKILL.md</code> against all six rules, and exits non-zero with one line per violation.</p>
+
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN <code>tests/skills/test-workflow-skill-pattern.sh</code> exists WHEN it is run against the repo THEN it applies the six validator rules to every in-scope <code>skills/*/SKILL.md</code>.</li>
+  <li>GIVEN a skill is missing a mandatory block WHEN the validator runs THEN it emits <code>skills/&lt;name&gt;: rule1 &lt;block-id&gt;</code> and exits non-zero.</li>
+  <li>GIVEN a conditional block is absent and the skill's README lists it WHEN the validator runs THEN the skill passes that block check (rule 2).</li>
+  <li>GIVEN a conditional block is absent and the README does not list it (or has no README) WHEN the validator runs THEN it emits <code>skills/&lt;name&gt;: rule3 &lt;block-id&gt;</code> and exits non-zero.</li>
+  <li>GIVEN a conditional block is present but the README lists it as omitted WHEN the validator runs THEN it emits <code>skills/&lt;name&gt;: rule4 &lt;block-id&gt;</code> (stale record).</li>
+  <li>GIVEN blocks are present but out of table order WHEN the validator runs THEN it emits <code>skills/&lt;name&gt;: rule5 &lt;block-id&gt;</code> and exits non-zero.</li>
+</ul>
+
+<h3>US-3: README "## Pattern Omissions" section format specified and enforced by rules 2–4 <span class="badge p1">P1</span></h3>
+
+<p>As a skill author, I want a documented and machine-enforced format for recording why a conditional block is absent, so that omission reasons are always explicit and never silently stale.</p>
+
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN the pattern doc exists WHEN it is read THEN it specifies the exact <code>## Pattern Omissions</code> section format.</li>
+  <li>GIVEN a skill's README contains <code>## Pattern Omissions</code> with a valid <code>`&lt;id&gt;`</code> entry WHEN the validator runs THEN that block's absence is accepted (rule 2).</li>
+  <li>GIVEN a skill's README lists an id the skill now actually contains WHEN the validator runs THEN it emits <code>skills/&lt;name&gt;: rule4 &lt;block-id&gt;</code> (stale record).</li>
+  <li>GIVEN a conditional block is absent and no README exists WHEN the validator runs THEN it emits <code>skills/&lt;name&gt;: rule3 &lt;block-id&gt;</code> and exits non-zero.</li>
+</ul>
+
+<h3>US-4: writing-skills/SKILL.md generic structure section replaced by a pointer <span class="badge p2">P2</span></h3>
+
+<p>As a skill author consulting <code>writing-skills/SKILL.md</code>, I want the generic "## SKILL.md Structure" section to point to the normative pattern doc rather than contain a competing template.</p>
+
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN <code>writing-skills/SKILL.md</code> is read WHEN searching for <code>## SKILL.md Structure</code> THEN the section body contains only a short pointer sentence referencing <code>workflow-skill-pattern.md</code> and does not define any block list of its own.</li>
+  <li>GIVEN the pattern doc exists and <code>writing-skills/SKILL.md</code> has been updated WHEN the validator runs THEN <code>writing-skills/SKILL.md</code> itself is validated against the pattern (it is not exempt).</li>
+</ul>
+
+<h3>US-5: Validator self-check fixture proving rule 6 fails loudly <span class="badge p2">P2</span></h3>
+
+<p>As the test suite, I want a fixture that strips the block table from the pattern doc and asserts the validator exits non-zero, so that a doc edit that accidentally breaks the table cannot silently make the validator a no-op.</p>
+
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN the validator is run with a fixture input with an empty or missing block table WHEN it runs THEN it exits non-zero and prints a loud failure message (rule 6).</li>
+  <li>GIVEN the real pattern doc has a valid block table WHEN the self-check runs THEN the self-check passes and does not affect other skill checks.</li>
+  <li>GIVEN the block table is parseable WHEN the validator runs THEN it processes at least 12 rows; fewer rows triggers rule 6.</li>
+</ul>
+
+<h3>US-6: tests/skills/run-all.sh wired in tests/split/run-all.sh style <span class="badge p2">P2</span></h3>
+
+<p>As a developer, I want a <code>tests/skills/run-all.sh</code> runner that discovers and runs all <code>test-*.sh</code> files in <code>tests/skills/</code>, matching the existing convention.</p>
+
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN <code>tests/skills/run-all.sh</code> exists WHEN it is run THEN it executes all <code>test-*.sh</code> files in the same directory in glob order.</li>
+  <li>GIVEN any <code>test-*.sh</code> exits non-zero WHEN <code>run-all.sh</code> runs THEN it exits non-zero after running all tests (not short-circuit).</li>
+  <li>GIVEN all <code>test-*.sh</code> files pass WHEN <code>run-all.sh</code> runs THEN it prints <code>ALL SKILL TESTS PASS</code> and exits zero.</li>
+  <li>GIVEN both runners are examined WHEN compared THEN <code>tests/skills/run-all.sh</code> follows the same structural idiom as <code>tests/split/run-all.sh</code> (<code>set -euo pipefail</code>, glob loop, accumulated <code>fail</code>, summary message).</li>
+</ul>
+
+<h2>5. Approach</h2>
+
+<p>The chosen approach is a <strong>doc-parsing validator</strong>: the validator script reads the block table directly out of <code>skills/writing-skills/workflow-skill-pattern.md</code> using awk, then checks each in-scope <code>skills/*/SKILL.md</code> against the parsed rows. The exclusion list is read from the same doc. The validator holds zero block knowledge of its own — the pattern doc is the single, sole definition of block identity. This makes doc and validator structurally unable to drift apart: if the doc is broken, rule 6 fires immediately.</p>
+
+<h3>Alternatives considered</h3>
+
+<table>
+  <thead><tr><th>Option</th><th>Why rejected</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Hardcoded block list in the validator plus a reconciliation test asserting the doc table matches</td>
+      <td>Ships the pattern with a drift problem baked in — a third file is needed to keep two sources honest, which is the very drift this feature exists to prevent.</td>
+    </tr>
+    <tr>
+      <td>Sidecar <code>workflow-blocks.tsv</code> data file, doc as pure prose</td>
+      <td>Introduces a file format nothing else in the repo uses, for no gain over parsing the table that has to be written anyway; prose can still drift from the data file.</td>
+    </tr>
+    <tr>
+      <td>Manual conformance checklist, no script</td>
+      <td>Zero tooling, but 19 skills drift again with nothing to catch it; <code>writing-skills/SKILL.md</code> itself says mechanical constraints enforceable with regex/validation should be automated.</td>
+    </tr>
+    <tr>
+      <td>Validator plus pressure-testing every migration commit</td>
+      <td>Honours the Iron Law most strictly but costs 19 RED-GREEN cycles for changes that move text verbatim without altering behaviour.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>6. Design</h2>
+
+<h3>Architecture</h3>
+
+<pre><code>skills/writing-skills/
+  workflow-skill-pattern.md        NEW  — normative block table + exclusion fences + prose per block
+  SKILL.md                         EDIT — ## SKILL.md Structure replaced by a pointer (D1)
+
+tests/skills/
+  test-workflow-skill-pattern.sh   NEW  — parses the block table, validates skills/*/SKILL.md
+  run-all.sh                       NEW  — same style as tests/split/run-all.sh
+
+skills/&lt;each&gt;/README.md            EDIT (sub-project B) — ## Pattern Omissions section added</code></pre>
+
+<h3>Components &amp; Interfaces</h3>
+
+<p><strong><code>skills/writing-skills/workflow-skill-pattern.md</code></strong> — The normative document. Contains:</p>
+<ul>
+  <li>The three-fidelity ladder introduction.</li>
+  <li>The 12-block table fenced between <code>&lt;!-- blocks:start --&gt;</code> / <code>&lt;!-- blocks:end --&gt;</code>.</li>
+  <li>Per-block prose elaboration of intent and content expectations.</li>
+  <li>The <code>## Pattern Omissions</code> README section format specification.</li>
+  <li>The six validator rules.</li>
+  <li>The exclusion list fenced between <code>&lt;!-- exclude:start --&gt;</code> / <code>&lt;!-- exclude:end --&gt;</code>.</li>
+  <li><strong>Block 10 (<code>token-cost-monitoring</code>) content expectation:</strong> when present, the section must be an append-only record — one line written per dispatch or model-invocation event to the run's JSONL file. No analysis, no per-source coverage percentages, no completeness assertions.</li>
+</ul>
+
+<p><strong><code>tests/skills/test-workflow-skill-pattern.sh</code></strong> — Bash script. Parses the block table (awk), asserts ≥12 rows (rule 6), reads the exclusion list, applies all six rules to each in-scope skill, runs the self-check fixture, emits one violation line per failure, exits non-zero on any violation.</p>
+
+<p><strong><code>tests/skills/run-all.sh</code></strong> — Mirrors <code>tests/split/run-all.sh</code>. Discovers <code>tests/skills/test-*.sh</code> by glob, runs each, accumulates failures, prints summary, exits with accumulated code.</p>
+
+<p><strong><code>writing-skills/SKILL.md</code> (edit)</strong> — The <code>## SKILL.md Structure</code> section body is replaced with a single pointer sentence. No block list or block format is retained in the SKILL.md itself.</p>
+
+<h3>The 12-Block Table</h3>
+
+<table>
+  <thead>
+    <tr><th>#</th><th>id</th><th>Block</th><th>Validator marker</th><th>Tier</th><th>Omit when</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>frontmatter</td><td>Frontmatter</td><td><code>name:</code> + <code>description:</code> inside a <code>---</code> fence</td><td>Mandatory</td><td>—</td></tr>
+    <tr><td>2</td><td>title</td><td>Title</td><td><code>^# </code> verb phrase</td><td>Mandatory</td><td>—</td></tr>
+    <tr><td>3</td><td>purpose</td><td>Purpose</td><td>non-heading paragraph directly after the title</td><td>Mandatory</td><td>—</td></tr>
+    <tr><td>4</td><td>hard-gate</td><td>Hard gate</td><td><code>&lt;HARD-GATE&gt;</code></td><td>Conditional</td><td>no irreversible act precedes an approval</td></tr>
+    <tr><td>5</td><td>anti-pattern</td><td>Anti-pattern</td><td><code>## Anti-Pattern: "</code></td><td>Conditional</td><td>baseline testing surfaced no dominant rationalization</td></tr>
+    <tr><td>6</td><td>checklist</td><td>Checklist</td><td><code>## Checklist</code></td><td>Mandatory</td><td>—</td></tr>
+    <tr><td>7</td><td>process-flow</td><td>Process flow</td><td><code>## Process Flow</code> plus a <code>```dot</code> fence</td><td>Conditional</td><td>workflow strictly linear — no gates, no loops back</td></tr>
+    <tr><td>8</td><td>the-process</td><td>The process</td><td><code>## The Process</code></td><td>Mandatory</td><td>—</td></tr>
+    <tr><td>9</td><td>after-artifact</td><td>After the artifact</td><td><code>## After </code></td><td>Conditional</td><td>skill produces no durable artifact</td></tr>
+    <tr><td>10</td><td>token-cost-monitoring</td><td>Token-cost monitoring</td><td><code>## Token-cost Monitoring</code></td><td>Conditional</td><td>skill never invokes a model nor dispatches</td></tr>
+    <tr><td>11</td><td>red-flags</td><td>Red flags</td><td><code>## Red Flags</code></td><td>Conditional</td><td>skill enforces no discipline an agent could rationalize past</td></tr>
+    <tr><td>12</td><td>key-principles</td><td>Key principles</td><td><code>## Key Principles</code></td><td>Mandatory</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Mandatory</strong> = cannot be omitted; a file lacking these is not a workflow skill.<br>
+<strong>Conditional</strong> = may be omitted with a README reason.<br>
+The ids are the join key between pattern doc, SKILL.md, and README.md.<br>
+The table sits between <code>&lt;!-- blocks:start --&gt;</code> and <code>&lt;!-- blocks:end --&gt;</code> fences.</p>
+
+<p>When block 10 (<code>token-cost-monitoring</code>) is present, its content expectation under this pattern is minimized: the section must be a plain append-only record, writing one line per dispatch or model-invocation event to the run's JSONL file. No analysis or reporting belongs here. This is an explicit contrast with <code>skills/brainstorming/SKILL.md</code>'s current elaborate <code>## Token-cost monitoring</code> section, which tracks per-source (worker and orchestrator) records, computes coverage percentages, and carries "never label a partial subtotal complete" language — that style is specific to brainstorming and is not carried into this pattern.</p>
+
+<h3>README Omission Format</h3>
+
+<pre><code>## Pattern Omissions
+
+- `hard-gate` — skill only reads and reports; no irreversible act.
+- `token-cost-monitoring` — never invokes a model nor dispatches.</code></pre>
+
+<h3>The Six Validator Rules</h3>
+
+<table>
+  <thead><tr><th>Rule</th><th>Condition</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Mandatory block absent</td><td>FAIL — no omission possible</td></tr>
+    <tr><td>2</td><td>Conditional absent, README lists its id</td><td>pass</td></tr>
+    <tr><td>3</td><td>Conditional absent, README does not list it (or no README)</td><td>FAIL</td></tr>
+    <tr><td>4</td><td>Conditional PRESENT but README lists it as omitted</td><td>FAIL — stale record</td></tr>
+    <tr><td>5</td><td>Present blocks out of table order</td><td>FAIL</td></tr>
+    <tr><td>6</td><td>Block table unparseable or zero rows</td><td>FAIL loudly, never pass-by-default</td></tr>
+  </tbody>
+</table>
+
+<p>Output format: one line per violation, <code>skills/&lt;name&gt;: &lt;rule&gt; &lt;block-id&gt;</code>, exit non-zero.</p>
+
+<h3>Error Handling &amp; Edge Cases</h3>
+
+<ul>
+  <li><strong><code>skills/visual-companion/</code></strong>: excluded via the pattern doc's exclude fences. Exclusion is visible in the doc, not hidden in the script (D10).</li>
+  <li><strong>Short skills</strong> (e.g. <code>skills/worker-healing/SKILL.md</code> at 59 lines): will legitimately omit most conditional blocks. Each omission must be recorded in the README explicitly.</li>
+  <li><strong>Exemplar non-conformance</strong>: <code>skills/brainstorming/SKILL.md</code> itself currently lacks <code>## Red Flags</code> and uses lowercase <code>## Token-cost monitoring</code>. It is migrated in sub-project B like every other skill — no special exemption.</li>
+  <li><strong>Casing collision</strong>: <code>## Token-cost Monitoring</code> (Title Case, D9) is the normalised heading. <code>tests/split/test-project-kickoff.sh:55</code> currently asserts the lowercase literal. The commit that migrates <code>project-kickoff</code> must update that test line atomically.</li>
+  <li><strong>No README exists</strong>: treated as "README does not list the id" — rule 3 fires for each absent conditional.</li>
+</ul>
+
+<h2>7. Testing Strategy</h2>
+
+<p><strong>Structure tests (<code>tests/skills/test-workflow-skill-pattern.sh</code>)</strong> — the ongoing gate. Run over all in-scope <code>skills/*/SKILL.md</code>. After sub-project B, every skill passes every rule. During sub-project B, the validator must be green after each individual skill migration commit.</p>
+
+<p><strong>Self-check fixture (rule 6)</strong> — built into <code>test-workflow-skill-pattern.sh</code>. Creates a temporary stripped block table (zero data rows) and passes it to the parser. Asserts the validator exits non-zero and prints a loud failure message. Without this fixture, a doc edit that breaks the table fence could silently make every check pass-by-default.</p>
+
+<p><strong>Regression (<code>tests/split/run-all.sh</code>)</strong> — must remain green throughout sub-project A (this spec) and sub-project B. No change to <code>tests/split/*.sh</code> is permitted by this spec; any required test-line update (e.g. the <code>## Token-cost monitoring</code> literal at line 55 of <code>test-project-kickoff.sh</code>) belongs in the sub-project B commit that migrates that skill.</p>
+
+<p>Verification command: <code>bash tests/skills/run-all.sh</code> and <code>bash tests/split/run-all.sh</code>.</p>
+
+<h2>8. Success Criteria</h2>
+
+<ul>
+  <li><strong>SC-1:</strong> <code>skills/writing-skills/workflow-skill-pattern.md</code> exists and contains the 12-block table between <code>&lt;!-- blocks:start --&gt;</code> / <code>&lt;!-- blocks:end --&gt;</code> fences, the exclusion list between <code>&lt;!-- exclude:start --&gt;</code> / <code>&lt;!-- exclude:end --&gt;</code> fences, the six validator rules, and the <code>## Pattern Omissions</code> README format — all verbatim per this spec.</li>
+  <li><strong>SC-2:</strong> <code>tests/skills/test-workflow-skill-pattern.sh</code> exists, exits zero when run against the repo, and emits zero violation lines for any skill that has all mandatory blocks and valid omission records.</li>
+  <li><strong>SC-3:</strong> <code>tests/skills/test-workflow-skill-pattern.sh</code> exits non-zero and prints a loud failure message when given a block table with zero data rows (rule 6 self-check).</li>
+  <li><strong>SC-4:</strong> <code>tests/skills/run-all.sh</code> exists, runs <code>test-workflow-skill-pattern.sh</code> via glob, accumulates failure codes, and prints <code>ALL SKILL TESTS PASS</code> on success — matching the <code>tests/split/run-all.sh</code> structural idiom.</li>
+  <li><strong>SC-5:</strong> <code>skills/writing-skills/SKILL.md</code>'s <code>## SKILL.md Structure</code> section body contains only a pointer to <code>workflow-skill-pattern.md</code> and no competing block list.</li>
+  <li><strong>SC-6:</strong> <code>tests/split/run-all.sh</code> exits zero after all sub-project A changes are applied (no regression to any existing test).</li>
+  <li><strong>SC-7:</strong> No block identity is defined in any file other than <code>workflow-skill-pattern.md</code>; the validator script contains no hardcoded block ids or markers.</li>
+  <li><strong>SC-8:</strong> The validator output format is exactly <code>skills/&lt;name&gt;: &lt;rule&gt; &lt;block-id&gt;</code> (one line per violation); no other output format is emitted.</li>
+</ul>
+
+</main>
+</body>
+</html>

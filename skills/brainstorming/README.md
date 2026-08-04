@@ -1,5 +1,57 @@
 # Brainstorming
 
+## Description
+
+Turns one scoped feature idea into an approved decision record, reviewed design artifacts, and a planning handoff.
+
+## Inputs
+
+- The current workspace and its selected entry in the single `main:docs/superpower/manifest.json`.
+- Existing project files, documentation, recent commits, and optional fresh knowledge graph.
+- The human partner's answers and approvals.
+- Exact per-invocation or comparable cumulative token metadata exposed by the harness/provider.
+
+## Durable Output
+
+Brainstorming adds its decisions to only the selected workspace session:
+
+```json
+{
+  "sessions": [
+    {
+      "workspace": {
+        "type": "branch",
+        "target": "feature/example-feature"
+      },
+      "brainstorming": {
+        "workflow_id": "20260802T120000Z-example-feature",
+        "problem": "The approved problem statement",
+        "scope": ["Approved in-scope behavior"],
+        "exclusions": ["Explicitly excluded behavior"],
+        "approach": "The approved approach",
+        "acceptance_criteria": ["A measurable success condition"]
+      }
+    }
+  ]
+}
+```
+
+It also creates `design.md`, `design.html`, and the feature's roadmap updates.
+
+## Token-cost Monitoring
+
+`.superpowers/runs/<workflow-id>/brainstorming-token-cost.jsonl` stores source-tagged records for every D9 worker attempt and every harness-reported main-orchestrator model invocation. Missing counts remain `null` with reasons. Handoff reports worker, orchestrator, and combined measured totals and coverage without treating partial values as complete.
+
+## Human Decisions
+
+Before detailed design, the human explicitly approves one bundle containing the problem, scope, exclusions, approach, and acceptance criteria. Permission to choose is not approval of the resulting values. Later changes return to this gate, update the selected manifest entry, and regenerate affected design artifacts.
+
+The existing section-by-section design approval and written-spec review remain required after the decision gate.
+
+## Handoff
+
+Before `writing-plans`, brainstorming rereads the selected main-manifest session, verifies all five approved decisions and the workflow ID, checks that the written design matches, and includes the token-cost report plus the workspace-aware manifest instruction.
+
 ## Legend
 
 - `◆ Dn` — dispatch through `superpowers-orchestrator:dispatch-agent`
@@ -12,21 +64,30 @@
 ```text
 BRAINSTORMING
 │
+├── ○ Start token-cost boundary and select current manifest session
+│   └── initialize/reuse brainstorming.workflow_id
+│
 ├── ○ Inspect project context
 │   ├── read files, docs, and recent commits
 │   ├── check .ua/knowledge-graph.json freshness
 │   └── fresh graph → collect matching nodes and edges
 │       missing/stale/no matches → continue with normal exploration
 │
+├── ○ Create isolated workspace
+│   ├── kebab-slugify the feature and use `feature/<slug>`
+│   ├── invoke superpowers-orchestrator:using-git-worktrees
+│   └── defer workspace creation until each decomposed sub-project begins
+│
 ├── ○ Understand the idea
 │   ├── detect oversized scope and decompose when necessary
-│   ├── ask one question at a time
-│   └── optionally offer the visual companion just in time
-│       ├── visual question → browser companion
-│       └── textual question → normal conversation
+│   └── ask one question at a time
 │
 ├── ○ Present two or three approaches
 │   └── lead with the recommended approach and trade-offs
+│
+├── ◇ Human approves problem + scope + exclusions + approach + criteria?
+│   ├── no  → revise the decision bundle ↻
+│   └── yes → record it in the selected session entry
 │
 ├── ○ Present the design in reviewable sections
 │
@@ -35,6 +96,8 @@ BRAINSTORMING
 │   └── yes → continue
 │
 ├── ◆ D9 write design artifacts
+│   ├── rename on material feature-name drift before writing: check collision,
+│   │   rename the branch, and use the owning native tool or git fallback move
 │   ├── discovery      → business_analyst / discovery_research
 │   ├── requirements   → product_owner / requirements_user_stories
 │   ├── architecture   → tech_lead / architecture_design
@@ -54,13 +117,16 @@ BRAINSTORMING
 │   └── User Story acceptance criteria
 │
 ├── ◇ Human reviews the written specification
-│   ├── changes requested → update artifacts → self-review again ↻
+│   ├── decision changed  → return to decision gate, update record, rerun D9 ↻
+│   ├── artifact changed  → update artifacts → self-review again ↻
 │   └── approved          → continue
+│
+├── ○ Report worker + orchestrator token usage and combined coverage
 │
 ├── use-tool
 │   ├── Git/file exploration for current project context
 │   ├── graph keyword search [fresh graph only]
-│   ├── visual-companion server [approved visual questions only]
+│   ├── superpowers-orchestrator:using-git-worktrees [create or resume workspace]
 │   ├── superpowers-orchestrator:dispatch-agent [D9]
 │   └── superpowers-orchestrator:writing-plans [terminal handoff]
 │
@@ -83,23 +149,22 @@ approval. The only terminal handoff is writing-plans.
 ```text
 BRAINSTORMING FILES
 │
+├── Decision record [tracked on main, read and updated]
+│   └── docs/superpower/manifest.json
+│       └── sessions[current workspace].brainstorming
+│           ├── workflow_id
+│           └── problem + scope + exclusions + approach + acceptance_criteria
+│
 ├── Skill package [tracked]
 │   └── skills/brainstorming/
 │       ├── SKILL.md
 │       ├── README.md
 │       ├── roadmap.md
-│       ├── visual-companion.md
 │       ├── prompts/
 │       │   └── spec-document-reviewer-prompt.md
-│       ├── scripts/
-│       │   ├── helper.js
-│       │   ├── server.cjs
-│       │   ├── start-server.sh
-│       │   └── stop-server.sh
 │       └── templates/
 │           ├── spec-template.md
-│           ├── document-companion-template.html
-│           └── frame-template.html
+│           └── document-companion-template.html
 │
 ├── Shared roadmap contracts [tracked, read]
 │   └── assets/
@@ -121,13 +186,30 @@ BRAINSTORMING FILES
 └── Runtime evidence [ignored]
     └── .superpowers/runs/<workflow-id>/
         ├── ledger.jsonl
+        ├── brainstorming-token-cost.jsonl
         └── 20-design/
-            ├── brainstorm/<session-id>/
-            │   ├── content/
-            │   └── state/
             └── <task>/turns/<NNN>-documentation/
                 ├── request.json
                 └── response.json
 ```
 
-See the repository-wide [Orchestrator Workflow](../../docs/orchestrator-workflow.md).
+## Pattern Omissions
+
+- `red-flags` — the `<HARD-GATE>` forbids implementation before design approval and `## Anti-Pattern: "This Is Too Simple To Need A Design"` directly counters the dominant rationalization. No additional rationalization/counter material in the file falls outside those two structures; the Anti-Pattern section already does this block's job.
+
+## Pattern Migration Notes
+
+- `token-cost-monitoring` — RETAINED, heading normalized to Title Case; body unchanged.
+- `red-flags` — OMITTED, the existing `<HARD-GATE>` and `## Anti-Pattern: "This Is Too Simple To Need A Design"` already counter the dominant rationalization and enforce the discipline. No additional counter material exists in the file that would belong in a separate Red Flags table without fabricating new rationalizations.
+
+### Migration evidence
+
+- Scenario: not required for this task — no eval-gated block changed. Per
+  decision B3, `Checklist`, `The Process`, and gap-fill content are the
+  eval-gated blocks; a heading rename and a conditional-block decision are not.
+- Baseline / After: not run; no behavior-shaping content was authored.
+- Gate: structural only (validator + both suites).
+- Caveat: baselines in this campaign are contaminated — the measuring subagent
+  carries prior knowledge of this repository, so a pre-migration baseline is
+  not a clean no-skill control. Recorded here for consistency with the other
+  migrated skills.

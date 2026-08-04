@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Branch/worktree per feature, created at brainstorming start</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --text: #202124;
+    --muted: #5f6368;
+    --line: #d8dce3;
+    --accent: #0759c7;
+    --code: #f0f2f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1015;
+      --panel: #171a22;
+      --text: #edf1f7;
+      --muted: #aeb7c5;
+      --line: #343b49;
+      --accent: #70d6ff;
+      --code: #0a0c10;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; padding: 48px 24px; color: var(--text); background: var(--bg); font: 17px/1.65 system-ui, sans-serif; }
+  main { max-width: 75ch; margin: auto; padding: clamp(24px, 5vw, 48px); border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+  h1, h2, h3 { line-height: 1.2; text-wrap: balance; }
+  h1 { margin-top: 0; font-size: clamp(2rem, 6vw, 3rem); }
+  h2 { margin-top: 2.5rem; padding-top: 0.5rem; border-top: 1px solid var(--line); }
+  p, li { max-width: 70ch; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  .skip-link { position: fixed; top: 8px; left: 8px; z-index: 10; padding: 8px 12px; transform: translateY(-150%); color: var(--panel); background: var(--text); }
+  .skip-link:focus { transform: translateY(0); }
+  code, pre { font-family: ui-monospace, monospace; }
+  :not(pre) > code { padding: 0.1em 0.3em; border-radius: 4px; background: var(--code); }
+  pre { overflow: auto; padding: 16px; border-radius: 9px; background: var(--code); }
+  blockquote { margin-left: 0; padding-left: 16px; border-left: 3px solid var(--muted); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+  th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { font-weight: 650; }
+  @media (max-width: 600px) { body { padding: 0; } main { border: 0; border-radius: 0; } }
+  @media print {
+    :root { --bg: #fff; --panel: #fff; --text: #000; --muted: #444; --line: #bbb; }
+    body { padding: 0; font-size: 11pt; }
+    main { max-width: none; padding: 0; border: 0; }
+    .skip-link { display: none; }
+    a { color: inherit; }
+    pre, blockquote { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<main id="main-content" tabindex="-1">
+<h1>Branch/worktree per feature, created at brainstorming start — Design Spec</h1>
+
+<h2>1. Overview</h2>
+<p>Today, <code>superpowers-orchestrator:brainstorming</code> writes and commits the design spec, and <code>superpowers-orchestrator:writing-plans</code> commits the plan, on whatever branch the orchestrator started on—normally <code>main</code>. Only <code>superpowers-orchestrator:executing-plans</code> or <code>superpowers-orchestrator:subagent-driven-development</code> creates an isolated Git worktree and branch, and only at execution time. As a result, a feature's spec and plan land directly on <code>main</code> while only its code is isolated. This feature moves worktree and branch creation to the start of brainstorming so the spec, plan, and code all land on one feature branch from the first commit, while <code>superpowers-orchestrator:finishing-a-development-branch</code> remains unchanged at the end.</p>
+
+<h2>2. Context &amp; Assumptions</h2>
+<ul>
+  <li><code>brainstorming</code> currently invokes no worktree or branch step; <code>using-git-worktrees</code> is referenced only by <code>executing-plans</code> and <code>subagent-driven-development</code>.</li>
+  <li><code>writing-plans/SKILL.md</code> currently says, “If working in an isolated worktree, it should have been created via the <code>superpowers-orchestrator:using-git-worktrees</code> skill at execution time.” That statement becomes false when creation moves to brainstorming and must be corrected.</li>
+  <li><code>using-git-worktrees</code> Step 0 already detects an existing isolated workspace when <code>GIT_DIR != GIT_COMMON</code> and skips creation. If the orchestrator remains in the worktree created during brainstorming, later execution-phase calls are naturally no-ops; no same-session logic change is needed.</li>
+  <li>Assumption: this change applies only to feature work in an existing repository. <code>project-kickoff</code> is out of scope because a greenfield project has no existing <code>main</code> branch to protect.</li>
+  <li>Assumption: the consent prompt in <code>using-git-worktrees</code> Step 0—“Would you like me to set up an isolated worktree?”—stays unchanged. A decline continues work in place on the current branch, as it does today.</li>
+</ul>
+
+<h2>3. Scope</h2>
+<h3>Goals</h3>
+<ul>
+  <li>Create the feature branch and worktree at brainstorming start, after project-context exploration and the scope/decompose check but before clarifying questions, rather than at execution time.</li>
+  <li>Derive the initial branch and worktree slug by kebab-slugifying the user's initial request or idea and truncating it to approximately five words; use the branch name <code>feature/&lt;slug&gt;</code>.</li>
+  <li>Support resuming a feature in a fresh CLI session at the main repository root by checking for an existing unmerged branch that matches the slug before creating a new one.</li>
+  <li>Update <code>writing-plans</code>' stale Context line to describe the new creation time.</li>
+  <li>Update worktree-related wording in <code>executing-plans</code> and <code>subagent-driven-development</code>; their behavior remains unchanged because <code>using-git-worktrees</code> Step 0 already skips creation in an existing isolated workspace.</li>
+</ul>
+<h3>Non-Goals</h3>
+<ul>
+  <li>No change to <code>finishing-a-development-branch</code>'s merge, pull-request, keep, discard, or cleanup behavior.</li>
+  <li>No change to <code>project-kickoff</code> for greenfield projects without an existing repository or <code>main</code> branch.</li>
+  <li>No change to the <code>using-git-worktrees</code> consent prompt or its directory-selection priority.</li>
+  <li>No new automated test framework for skill content. Verification uses manual walkthroughs plus the existing <code>evals/</code> harness through <code>superpowers-orchestrator:writing-skills</code> during implementation.</li>
+</ul>
+
+<h2>4. User Stories</h2>
+<h3>US-1: Branch/worktree created at brainstorming start (Priority: P1)</h3>
+<p>As an orchestrator running the brainstorming skill for a new feature, I want an isolated feature branch/worktree created immediately after project-context exploration and the scope check, before clarifying questions begin, so that the spec, the plan, and all implementation for this feature land on one branch instead of the spec and plan committing directly to <code>main</code>.</p>
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN a new feature idea and a single appropriately-sized project whose scope check did not require decomposition WHEN brainstorming reaches the new step after project-context exploration THEN <code>using-git-worktrees</code> is invoked with a slug auto-slugified from the user's initial request before any clarifying question is asked.</li>
+  <li>GIVEN the user declines the worktree consent prompt WHEN brainstorming continues THEN work proceeds in place on the current branch exactly as it does today.</li>
+  <li>GIVEN the request describes multiple independent subsystems that require decomposition WHEN brainstorming performs the scope check THEN no branch is created for the umbrella request, and each sub-project creates its own branch only when that sub-project's brainstorming begins.</li>
+  <li>GIVEN the feature's real name changes materially during brainstorming before the design document is written WHEN the design is about to be written THEN the branch and worktree directory are renamed to match the new slug, while cosmetic or minor wording drift does not trigger a rename.</li>
+  <li>GIVEN the branch and worktree already exist for this session WHEN <code>writing-plans</code> or an execution-phase skill runs afterward THEN no duplicate worktree is created because <code>using-git-worktrees</code> Step 0 detects the existing isolation and skips creation.</li>
+</ul>
+
+<h3>US-2: Resume an in-progress feature branch in a fresh session (Priority: P1)</h3>
+<p>As an orchestrator resuming work on a feature in a new CLI session started at the main repository root, I want <code>using-git-worktrees</code> to look for an existing unmerged branch/worktree matching the feature's slug before creating a new one, so that resuming work does not create a duplicate branch when the spec and plan exist only on the feature branch.</p>
+<p><strong>Acceptance criteria:</strong></p>
+<ul>
+  <li>GIVEN an unmerged branch <code>feature/&lt;slug&gt;</code> already exists from an earlier session and <code>docs/superpowers/features/&lt;slug&gt;/design.md</code> is present on that branch WHEN <code>using-git-worktrees</code> is invoked again with the same slug THEN it reuses that branch and worktree instead of creating a new one.</li>
+  <li>GIVEN a branch matching the slug exists but has already been merged into <code>main</code> WHEN <code>using-git-worktrees</code> is invoked with that slug THEN it treats the branch as stale or finished and creates a fresh branch instead of reusing it.</li>
+  <li>GIVEN a branch matching the slug exists and is unmerged but has no matching <code>docs/superpowers/features/&lt;slug&gt;/design.md</code> WHEN <code>using-git-worktrees</code> is invoked THEN it reports the ambiguous match and asks the user to confirm resume versus create-new rather than silently reusing it.</li>
+  <li>GIVEN no branch or worktree matches the slug WHEN <code>using-git-worktrees</code> is invoked THEN it creates a new one exactly as it does today.</li>
+</ul>
+
+<h2>5. Approach</h2>
+<p>Add a brainstorming checklist step after project-context exploration and the scope check, but before clarifying questions, that invokes <code>using-git-worktrees</code> with a slug derived from the user's initial request. Extend <code>using-git-worktrees</code> immediately before its existing Step 1 so it searches <code>git worktree list</code> and <code>git branch --list feature/&lt;slug&gt;*</code>: reuse an unmerged match when the matching design document is present, treat a merged match as stale and create fresh, and ask the user when an unmerged match is ambiguous. Keep its consent gate, directory-selection priority, and fallbacks unchanged. Correct wording in <code>writing-plans</code>, <code>executing-plans</code>, and <code>subagent-driven-development</code> so those skills no longer claim that workspace creation happens at execution time; their worktree logic does not change.</p>
+
+<h3>Alternatives considered</h3>
+<table>
+  <thead><tr><th>Option</th><th>Why rejected</th></tr></thead>
+  <tbody>
+    <tr><td>Create the branch only after the design is approved, immediately before writing <code>design.md</code></td><td>This delays isolation until after most of the conversation and makes the trigger inconsistent with protecting work from the first commit. The approved trigger is after context exploration and before clarifying questions.</td></tr>
+    <tr><td>Skip the worktree consent prompt and always create a branch</td><td>The existing Step 0 prompt and decline fallback are intentional. Removing them would be a larger, unrequested behavior change to an already-tuned skill.</td></tr>
+    <tr><td>Ask the user for an explicit short slug as the first clarifying question</td><td>Auto-slugifying avoids adding a question to every brainstorming session. Rename-on-drift handles a material change between the initial wording and the final feature name.</td></tr>
+    <tr><td>Leave fresh-session resume out of scope and require the human to identify the branch manually</td><td>Moving the spec and plan off <code>main</code> removes their visibility from a fresh main-root session. Manual recovery would regress the current implicit resume experience, so resume lookup is included as US-2.</td></tr>
+  </tbody>
+</table>
+
+<h2>6. Design</h2>
+<h3>Architecture</h3>
+<ul>
+  <li><code>brainstorming/SKILL.md</code>: insert checklist item 2, <strong>Create isolated workspace</strong>, between <strong>Explore project context</strong> and <strong>Ask clarifying questions</strong>; renumber later items and update the Process Flow diagram. Run the step only after the existing scope check confirms one appropriately-sized project. For decomposition, defer workspace creation to each sub-project's own brainstorming pass. Pass <code>using-git-worktrees</code> a kebab-case slug of approximately five words derived from the user's initial request.</li>
+  <li><code>using-git-worktrees/SKILL.md</code>: add resume lookup before the existing <strong>Step 1: Create Isolated Workspace</strong>. Run <code>git worktree list</code> and <code>git branch --list feature/&lt;slug&gt;*</code> only after Step 0 determines the session is in a normal checkout and the user consents. Step 0, its consent gate, and all existing creation behavior remain unchanged.</li>
+  <li><code>writing-plans/SKILL.md</code>: revise the Context line to state that brainstorming already created the worktree and that plan writing continues in the same workspace.</li>
+  <li><code>executing-plans/SKILL.md</code> and <code>subagent-driven-development/SKILL.md</code>: revise the <code>using-git-worktrees</code> wording to describe verifying or continuing the workspace created during brainstorming. Their calls remain unchanged, and Step 0 keeps them as same-session no-ops.</li>
+</ul>
+
+<h3>Components &amp; Interfaces</h3>
+<table>
+  <thead><tr><th>Component</th><th>Responsibility and interface</th><th>Dependencies</th></tr></thead>
+  <tbody>
+    <tr><td><code>brainstorming</code> (caller)</td><td>Supplies the slug to <code>using-git-worktrees</code> and consumes the reported state—created, reused, or working in place—to determine where later <code>design.md</code> and <code>plan.md</code> writes land.</td><td><code>using-git-worktrees</code></td></tr>
+    <tr><td><code>using-git-worktrees</code> (callee)</td><td>Keeps its public reporting contract, including <code>Worktree ready at &lt;path&gt;</code> and existing in-place or detached fallbacks. Adds reporting for reused-existing versus newly-created and asks the ambiguous-match question when required.</td><td>Local Git and its existing native-worktree-tool detection; no new external dependency</td></tr>
+    <tr><td><code>writing-plans</code>, <code>executing-plans</code>, and <code>subagent-driven-development</code></td><td>Keep their existing interfaces and calls to or reliance on <code>using-git-worktrees</code>; only their description of when the workspace was created changes.</td><td>Existing skill workflow</td></tr>
+  </tbody>
+</table>
+
+<h3>Data Model &amp; Flow</h3>
+<pre><code>user's initial idea text
+  -&gt; kebab-slugify (approximately five words)
+  -&gt; slug
+  -&gt; branch feature/&lt;slug&gt;
+  -&gt; worktree directory selected by existing priority:
+       explicit preference
+       &gt; existing project-local .worktrees/ or worktrees/
+       &gt; default .worktrees/
+  -&gt; docs/superpowers/features/&lt;slug&gt;/design.md
+  -&gt; docs/superpowers/features/&lt;slug&gt;/plan.md
+
+fresh-session resume
+  -&gt; git branch --list feature/&lt;slug&gt;* + git worktree list
+  -&gt; inspect matched branch for docs/superpowers/features/&lt;slug&gt;/design.md
+  -&gt; reuse | create fresh | ask user
+
+material feature-name drift before design.md
+  -&gt; new slug
+  -&gt; git branch -m old-branch new-branch
+  -&gt; rename or move the worktree directory to match</code></pre>
+<p>The spec and plan paths do not change; only the branch on which they are committed changes.</p>
+
+<h3>Error Handling</h3>
+<table>
+  <thead><tr><th>Condition</th><th>Behavior</th></tr></thead>
+  <tbody>
+    <tr><td>User declines consent in <code>using-git-worktrees</code> Step 0</td><td>Continue in place on the current branch, identical to today's fallback.</td></tr>
+    <tr><td>Sandbox denies worktree creation</td><td>Use the existing work-in-place fallback, unchanged.</td></tr>
+    <tr><td>Matching branch is already merged into <code>main</code></td><td>Treat it as stale or finished; do not reuse it, and create a fresh branch under the same name because the earlier branch is fully integrated.</td></tr>
+    <tr><td>Matching branch is unmerged and contains <code>docs/superpowers/features/&lt;slug&gt;/design.md</code></td><td>Reuse it as the in-progress feature branch.</td></tr>
+    <tr><td>Matching branch is unmerged but lacks the matching design document or otherwise looks unrelated</td><td>Report the match and ask the user to confirm resume versus creating a new branch; never silently reuse it.</td></tr>
+  </tbody>
+</table>
+
+<h3>Edge Cases</h3>
+<ul>
+  <li>If multiple unmerged branches match the slug pattern, such as <code>feature/&lt;slug&gt;</code> and <code>feature/&lt;slug&gt;-v2</code>, report all matches rather than guessing which one to resume.</li>
+  <li>If the worktree directory was deleted or pruned externally but its branch still exists and is unmerged, recreate the worktree at that branch instead of creating another branch.</li>
+  <li>If a material feature-name change produces a slug that collides with an unrelated existing branch, surface the collision before renaming and do not overwrite or rename onto that branch silently.</li>
+</ul>
+
+<h2>7. Testing Strategy</h2>
+<p>This feature changes skill prose rather than application code, so it adds no automated test framework or repository code test. Verification consists of the following manual and eval-based checks:</p>
+<ul>
+  <li><strong>US-1 walkthrough:</strong> Run brainstorming for a single appropriately-sized feature with consent granted. Confirm workspace creation occurs after context exploration and the scope check but before the first clarifying question, and confirm the design and plan commits land on <code>feature/&lt;slug&gt;</code> with no brainstorming or plan-writing commit on <code>main</code>.</li>
+  <li><strong>US-1 fallback and scope variants:</strong> Repeat with consent declined, an umbrella request that requires decomposition, a material feature-name change, and a cosmetic name change. Confirm work-in-place, per-sub-project creation, required rename, and no rename respectively.</li>
+  <li><strong>US-1 same-session continuation:</strong> Continue from brainstorming into <code>writing-plans</code> and each execution workflow. Confirm <code>using-git-worktrees</code> Step 0 recognizes the existing isolated workspace and no duplicate worktree is created.</li>
+  <li><strong>US-2 fresh-session walkthrough:</strong> From a new CLI session at the main repository root, exercise an unmerged branch with a matching design document, a merged matching branch, an ambiguous unmerged match without a design document, and no match. Confirm reuse, fresh creation, an explicit user choice, and unchanged creation respectively. Also exercise multiple matches and a pruned worktree directory.</li>
+  <li><strong>Skill-change evaluation gate:</strong> Per the repository's <code>CLAUDE.md</code> skill-change requirement, the later edits to <code>SKILL.md</code> files must be developed through <code>superpowers-orchestrator:writing-skills</code>, adversarially pressure-tested across multiple sessions, and supported by before/after eval evidence from <code>evals/</code>. This gate belongs to the implementation plan, not this design deliverable.</li>
+</ul>
+
+<h2>8. Success Criteria</h2>
+<ul>
+  <li>SC-1: For a newly brainstormed, appropriately-sized feature with consent given, <code>git log</code> shows both the <code>design.md</code> and <code>plan.md</code> commits on <code>feature/&lt;slug&gt;</code>, with zero new commits added directly to <code>main</code> during brainstorming or plan writing.</li>
+  <li>SC-2: Starting a fresh session at the main repository root and asking to resume an in-progress feature reuses the existing <code>feature/&lt;slug&gt;</code> branch and worktree, as shown by <code>git branch --list</code> and <code>git worktree list</code>, and does not create a second branch for the same feature.</li>
+  <li>SC-3: <code>finishing-a-development-branch</code>'s merge, pull-request, keep, and discard flow and its Step 4b knowledge-graph gate run unchanged against the branch created during brainstorming, with no new integration-time errors caused by the earlier creation point.</li>
+</ul>
+</main>
+</body>
+</html>

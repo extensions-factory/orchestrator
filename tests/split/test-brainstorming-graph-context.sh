@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SKILL="$ROOT/skills/brainstorming/SKILL.md"
-SECTION="$(sed -n '/^1\. \*\*Explore project context\*\*/,/^2\. \*\*Offer the visual companion/p' "$SKILL")"
+SECTION="$(sed -n '/^1\. \*\*Explore project context and confirm scope\*\*/,/^2\. \*\*Create isolated workspace/p' "$SKILL")"
 fail=0
 
 check() {

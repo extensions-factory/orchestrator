@@ -25,6 +25,19 @@ Subagent (general-purpose):
     Global constraints from the spec/design that bind this task:
     [GLOBAL_CONSTRAINTS]
 
+    ## Approved Execution Boundary
+
+    - Decision record: [DECISION_RECORD]
+    - Workspace: [WORKSPACE_TYPE]:[WORKSPACE_TARGET]
+    - Workflow: [WORKFLOW_ID]
+    - Approved decision snapshot: [DECISION_SNAPSHOT]
+    - Plan: [PLAN_FILE]
+    - Plan content hash: [PLAN_HASH]
+
+    Read main:docs/superpower/manifest.json before acting and select the entry matching the current workspace.
+    Compare that entry and the current plan hash with this request. If either
+    differs, return a blocked response with reason `stale_input`; do not review stale work.
+
     ## What the Implementer Claims They Built
 
     Read the implementer's report: [REPORT_FILE]
@@ -85,6 +98,11 @@ Subagent (general-purpose):
       "nice to haves"
     - **Misunderstood:** right feature built the wrong way, wrong problem
       solved
+
+    Judge every suggested correction by its actual effect on the approved
+    decision snapshot, regardless of its label. A correction that would
+    change an approved value is a `decision_change_proposal` for the owning
+    human gate, not an implementation fix.
 
     If a requirement cannot be verified from this diff alone (it lives in
     unchanged code or spans tasks), report it as a ⚠️ item instead of
@@ -156,7 +174,15 @@ Subagent (general-purpose):
     #### Minor (Nice to Have)
 
     For each issue: file:line, what's wrong, why it matters, how to fix
-    (if not obvious).
+    (if not obvious), plus:
+
+    - Type: `implementation_defect` | `decision_deviation` |
+      `decision_change_proposal`
+    - Decision field(s): exact names, or `none`
+    - Approved value: exact snapshot value, or `not applicable`
+    - Observed/proposed value: exact value, or `not applicable`
+    - Route: `implementation_fix` | `align_implementation` |
+      `human_decision_required`
 
     ### Assessment
 
@@ -173,6 +199,9 @@ Subagent (general-purpose):
   the plan's Global Constraints section or the spec: exact values, formats,
   and stated relationships between components (not process rules — those
   are already in this template)
+- `[DECISION_RECORD]`, `[WORKSPACE_TYPE]`, `[WORKSPACE_TARGET]`,
+  `[WORKFLOW_ID]`, `[DECISION_SNAPSHOT]`, `[PLAN_FILE]`, and `[PLAN_HASH]` —
+  REQUIRED approved execution boundary values
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
 - `[BASE_SHA]` — commit before this task

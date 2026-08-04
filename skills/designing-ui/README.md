@@ -1,5 +1,81 @@
 # Designing UI
 
+## Description
+
+Turns approved feature requirements into a human-approved UI decision record and a written UI design for planning. It does not implement the UI.
+
+## Inputs
+
+- The selected current-workspace session in the single `main:docs/superpower/manifest.json`.
+- Approved feature requirements and any caller-provided UI spec path.
+- Installed project files, the project scaffold fallback, and an optional human, existing-code, or Figma layout source.
+- Exact per-invocation or comparable cumulative token metadata exposed by the harness/provider.
+
+## Durable Output
+
+Designing UI adds decisions only to the selected workspace session:
+
+```json
+{
+  "sessions": [
+    {
+      "workspace": {
+        "type": "branch",
+        "target": "feature/example-feature"
+      },
+      "designing_ui": {
+        "workflow_id": "20260802T120000Z-example-feature",
+        "platform": "React",
+        "layout": "Header, sidebar, content grid, and detail panel",
+        "source": "docs/mockups/example.png",
+        "component_approach": "native React and browser primitives",
+        "constraints": ["Keyboard accessible", "Responsive at 768px"]
+      }
+    }
+  ]
+}
+```
+
+The written UI design is saved to `docs/superpowers/features/<feature-slug>/design.md` or a caller-provided UI spec path.
+
+## Token-cost Monitoring
+
+`.superpowers/runs/<workflow-id>/designing-ui-token-cost.jsonl` stores every harness-reported main-orchestrator model invocation. Missing counts remain `null` with reasons; Figma and ReUI tool calls are included in orchestrator usage rather than recorded as workers. The return or handoff reports measured totals and coverage without presenting partial values as complete.
+
+## Human Decisions
+
+The human approves platform, layout, source, component approach, and constraints as one bundle before they become planning inputs. Later decision changes return to the same gate, update the selected manifest entry, and regenerate affected UI design content.
+
+## Handoff
+
+Before returning or invoking `writing-plans`, designing-ui rereads the selected main-manifest session and verifies that its complete approved bundle matches the written UI design. Direct invocation owns the one `writing-plans` call; sub-flow invocation returns the design path and token report to its caller.
+
+## Pattern Omissions
+
+- `anti-pattern` — the source has no named dominant rationalization to derive; its explicit gate and red flags carry the existing discipline.
+
+## Pattern Migration Notes
+
+- `hard-gate` — DERIVED from `### Human Gate — UI decisions and constraints`, including "silence is not approval" and "Do not write planning inputs or hand off until this approval is recorded", no new requirements.
+- `checklist` — DERIVED from `## Platform`, `## UI decision bundle`, `### Human Gate — UI decisions and constraints`, `## Token-cost monitoring`, and `## Completion`, no new requirements.
+- `process-flow` — DERIVED from `## Platform`, `## UI decision bundle`, `### Human Gate — UI decisions and constraints`, and `## Completion`, no new requirements.
+- `the-process` — DERIVED from `## Platform`, `## UI decision bundle`, `### Human Gate — UI decisions and constraints`, `## Token-cost monitoring`, and `## Completion`, no new requirements.
+- `after-artifact` — DERIVED from `### Human Gate — UI decisions and constraints` and `## Completion`, no new requirements.
+- `token-cost-monitoring` — RETAINED, heading normalized to Title Case; body unchanged.
+- `red-flags` — DERIVED from `## UI decision bundle`, `### Human Gate — UI decisions and constraints`, and the later-value-change rule, no new requirements.
+- `key-principles` — DERIVED from `## Platform`, `### Human Gate — UI decisions and constraints`, and `## Completion`, no new requirements.
+
+### Migration evidence
+
+- Scenario: `ui-gate-under-absent-approver` (authored from scratch; no eval prose existed)
+- Baseline (pre-migration): 4/4 PASS
+- After (post-migration): 4/4 PASS — no regression (gate: after >= baseline)
+- Gate: no-regression A/B; DERIVED blocks only, no gap-fill content
+- Caveat: baselines in this campaign are contaminated — the measuring subagent
+  carries prior knowledge of this repository, so a pre-migration baseline is
+  not a clean no-skill control. Contamination is symmetric across the A/B, so
+  regression detection remains valid; necessity claims for new content do not.
+
 ## Legend
 
 - `○` — orchestrator action performed inline
@@ -11,6 +87,9 @@
 
 ```text
 DESIGNING UI
+│
+├── ○ Start token-cost boundary and select current manifest session
+│   └── initialize/reuse designing_ui.workflow_id
 │
 ├── ○ Detect platform
 │   ├── 1. installed project files (package.json, electron config,
@@ -24,15 +103,9 @@ DESIGNING UI
 │   │         superpowers-orchestrator:brainstorming, write no UI code
 │   └── yes → continue [React → references/react-reui.md]
 │
-├── ○ Fill the layout-source slot
-│   ├── layout + source supplied → continue
-│   └── not supplied → ask the human ↻
-│
-├── ◇ Layout approved by a human?
-│   ├── human unavailable or no reply → ⊘ write the proposed slot,
-│   │   report what awaits approval, stop
-│   │   (an unavailable human is not approval)
-│   └── approved → continue
+├── ○ Resolve layout and source
+│   ├── supplied → continue
+│   └── missing → ask the human ↻
 │
 ├── ○ Read the Figma reference [only when the source is a Figma file/node]
 │   ├── get_metadata  → hierarchy
@@ -47,7 +120,15 @@ DESIGNING UI
 │           │   └── approves → REQUIRED SUB-SKILL reui
 │           └── yes → REQUIRED SUB-SKILL reui
 │
-├── ○ Record the approved layout in the feature design spec
+├── ◇ Human approves UI decisions and constraints?
+│   ├── no/unavailable → ⊘ report what awaits approval and stop
+│   └── yes → ○ record platform + layout + source + component approach
+│             + constraints in the selected main-manifest session
+│
+├── ○ Write and approve the UI design planning input
+│   └── later decision change → return to the UI decision gate ↻
+│
+├── ○ Report main-orchestrator token totals and coverage
 │
 ├── use-tool
 │   ├── Figma MCP: get_metadata, get_screenshot
@@ -64,10 +145,10 @@ DESIGNING UI
         caller invokes writing-plans exactly once when its own flow finishes
 
 Hard gates:
-no UI implementation without an approved layout-source slot — an unavailable
-human is not approval. No UI implementation for a framework absent from the
-branch table — hand off to brainstorming instead of self-authorizing support
-by adding a reference file for an unapproved framework.
+no UI planning input without an approved and recorded UI decision bundle — an
+unavailable human is not approval. No UI implementation for a framework absent
+from the branch table — hand off to brainstorming instead of self-authorizing
+support by adding a reference file for an unapproved framework.
 ```
 
 ## File Lifecycle Tree
@@ -93,13 +174,16 @@ DESIGNING UI FILES
 ├── Design source [read-only, optional]
 │   └── Figma file/node reference [get_metadata, get_screenshot]
 │
-└── Durable feature documents [tracked, created or updated]
-    └── docs/superpowers/features/<feature-slug>/
-        └── design.md [approved layout recorded here]
+├── Decision record [tracked on main, read and updated]
+│   └── docs/superpower/manifest.json
+│       └── sessions[current workspace].designing_ui
+│           ├── workflow_id
+│           └── platform + layout + source + component_approach + constraints
+│
+├── Durable feature documents [tracked, created or updated]
+│   └── docs/superpowers/features/<feature-slug>/
+│       └── design.md [approved UI decisions recorded here]
+│
+└── Runtime evidence [ignored]
+    └── .superpowers/runs/<workflow-id>/designing-ui-token-cost.jsonl
 ```
-
-Standalone, direct-invoke skill — not wired into `brainstorming` or
-`project-kickoff`. The auto-injection hand-off described in
-`docs/superpowers/features/designing-ui-skill/design.md` (US-5, US-6) is
-deferred; a baseline probe showed `brainstorming` does not reliably fire for
-UI build requests, so that hand-off point needs resolving before it is built.
